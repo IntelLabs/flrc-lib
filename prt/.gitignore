@@ -8,7 +8,11 @@ Makefile.in
 /aclocal.m4
 /compile
 /configure
+/config.h
+/config.log
+/config.status
 /depcomp
 /install-sh
+/Makefile
 /missing
 /stamp-h1
