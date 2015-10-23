@@ -1,0 +1,189 @@
+#;;; COPYRIGHT_NOTICE_1
+
+	.file "pillar2c.gas"
+	.text
+
+.equ REGISTER_SIZE,8
+
+#; =========================================================================
+
+.globl pillar2cInvokeUnmanagedFunc
+.globl pillar2cInvokeUnmanagedStart
+.globl pillar2cInvokeUnmanagedDestructor
+
+.equ _taskHandle, %rdi
+.equ _prevPseudoFrame, %rsi
+.equ _unmanagedFunc, %rdx
+.equ _argStart, %rcx
+.equ _argSize,  %r8
+.equ _callingConvention, %r9
+
+pillar2cInvokeUnmanagedFunc:
+pillar2cInvokeUnmanagedStart:
+    push %rbx
+    push _prevPseudoFrame
+    sub  $8, %rsp
+
+    ; // task handle into rbx
+    movq _taskHandle, %rbx
+
+    movq  _unmanagedFunc, %rdi
+    movq  _argStart, %rsi
+    movq  _argSize, %rdx
+    movq  _callingConvention, %rcx
+    call  prtInvokeUnmanagedFunc
+
+    add  $16, %rsp
+    pop  %rbx
+    ret
+pillar2cInvokeUnmanagedDestructor:
+
+#; =========================================================================
+
+.globl pillar2cYield
+.globl pillar2cYieldStart
+.globl pillar2cYieldDestructor
+
+.equ _taskHandleStack, REGISTER_SIZE + REGISTER_SIZE
+.equ _prevPseudoFrameStack, _taskHandleStack$ + REGISTER_SIZE
+.equ _taskHandle, %rcx
+.equ _prevPseudoFrame, %rdx
+
+pillar2cYield:
+pillar2cYieldStart:
+    push %rbx
+    push _prevPseudoFrame
+    sub  $8, %rsp
+
+#    ; // task handle into rbx
+    movq  _taskHandle, %rbx
+
+    movq prtYieldUnmanaged, %rdi
+    movq $0, %rsi
+    movq $0, %rdx
+    movq $0, %rcx
+
+    call prtInvokeUnmanagedFunc
+
+    add  $16, %rsp
+    pop  %rbx
+    ret
+pillar2cYieldDestructor:
+
+#; =========================================================================
+
+.globl pillar2c_pcall_target
+.globl pillar2c_pcall_target_start
+.globl pillar2c_pcall_target_end
+
+.equ _managedFunc, %rdi
+.equ _argStart, %rsi
+.equ _argSize, %rdx
+
+pillar2c_pcall_target:
+pillar2c_pcall_target_start:
+    push %rbp
+    movq %rsp, %rbp
+    push %rbx
+    push %r12
+    push %r13
+    push %r14
+    push %r15
+
+    movq _managedFunc, %r12              #    ; // save function to call in r15
+    movq _argStart, %r13
+    movq _argSize, %r14
+
+    call prtGetTaskHandle
+    movq %rax, %rbx
+
+    movq %r12, %r10
+    movq %r13, %r11
+    movq %r14, %r12
+
+    movq %r12, %r13                         #    ;; // r13 = number of 8-byte params
+    shl  $3, %r13                            #   ;; // r13 = size of params in bytes 
+    movq %rsp, %r14                         #    ;; // r14 = current stack pointer
+    sub  %r13, %r14                            #   ;; // r14 = minimum required stack space
+    movq $0x0FFffFFffFFffFFf0, %rax            #    ;; // and then and'ing by 16 for alignment
+    and  %rax, %r14                            #   ;; // and then and'ing by 16 for alignment
+
+    movq %rsp, %r13                           #   ;; // calculate how much space we actually need with alignment
+    sub  %r14, %r13                            #   ;; // r13 = how much extra stack space we need
+
+    sub  %r13, %rsp                            #   ;; // adjust rsp by that amount
+
+    # ;; // copy the stack arguments to the next stack location starting at esp.
+    cld
+    movq  %r12, %rcx                           #    ;; // arg size
+    movq  %r11, %rsi                           #    ;; // arg start
+    movq  %rsp, %rdi                           #    ;; // place to copy
+    # ;; // rep movsd copies "rcx" dwords from [rsi] to [rdi].  cld means rsi and rdi are incremented after each copy.
+    rep  movsq
+
+#    ; // MOVE ARGS INTO REGISTERS?  BUT WE DON'T HAVE TYPE INFORMATION!!!
+    movq  0(%rsp), %rdx
+#    movq xmm2, rdx
+
+    movq  8(%rsp), %rcx
+#    movq xmm3, rcx
+
+    movq  16(%rsp), %r8
+#    movq xmm4, r8
+
+    movq  24(%rsp), %r9
+#    movq xmm5, r9
+
+    movq  %r13, %r11                          #   ; // r11 = space subtracted from stack  
+    movq  %r13, %r12  #   ; 8, 16, 56, 64     #   ; // r12 = space subtracted from stack
+    movq  %r13, %r15  #   ; 8, 16, 56, 64     #   ; // r15 = space subtracted from stack
+    and  %rax, %r13   #  ; 0, 16, 48, 64      #   ; // r13 = space subtracted on 16-byte align
+    not  %rax                                 #   ; // invert mask to get the remainder
+    and  %rax, %r15   #  ; 8,  0,  8,  0      #   ; // r15 = 0 if stack space was 16-byte aligned, 8 otherwise
+    sub  $32, %r13    #  ; -,  -,  0, 16      #   ; // see if all arguments can be passed in regs (4 regs * 8 bytes = 32)
+    movq  %r13, %r14                          #   ; // r14 = amount of stack space used greater than max reg args
+    sar  $63, %r14                            #   ; // make r14 either all 'F' or all '0' depending on sign of r13
+    not  %r14         #   ; 0,  0,  1,  1     #   ; // r14 = 0 if r13 is negative, all '1' otherwise
+    and  %r14, %r13   #  ; 0,  0,  0, 16      #   ; // r13 = 0 if registers enough for args, else amount of args on stack
+    add  %r15, %r13   #  ; 8,  0,  8, 16      #   ; // r13 = amount of stack to keep adjusted for alignment
+    sub  %r13, %r12   #  ; 0, 16, 48, 48      #   ; // r12 = amount to add to rsp to "pop" the args that go in regs
+    add  %r12, %rsp                           #   ; // pop
+
+    sub  %r12, %r11                           #   ; // r11 = amount we need to add to rsp after the call is complete
+    movq %r11, %r12                           #   ; // r12 = save this amount in the callee-saved register r12
+
+    movq $0, %rsi                             #   ; // previous pseudo frame is NULL
+    movq %rbx, %rdi                           #   ; // task handle is first param
+    call *%r10                                #   ; // managedFunc should remove all the args
+
+    add  %r12, %rsp
+
+    pop  %r15    
+    pop  %r14
+    pop  %r13    
+    pop  %r12    
+    pop  %rbx    
+    pop  %rbp    
+    ret
+pillar2c_pcall_target_end:
+
+#; =========================================================================
+
+.globl _pillar2c_continuation_target
+
+_pillar2c_continuation_target:
+    movq %rdx, %r10                        #     ; // the continuation is passed in rdx
+    add  $2*REGISTER_SIZE, %r10            #     ; // r10 now points to the jmp_buf (3rd part) of the continuation
+    movq $0x0FFffFFffFFffFFf0, %rax        #     ; // align the stack
+    and  %rax, %rsp                        #     ; // align the stack
+    movq $1, %rsi                          #     ; // value (2nd arg) to longjmp
+    movq %r10, %rdi                        #     ; // jmp_buf (1st arg) to longjmp
+    call longjmp                           #     ; // call longjmp
+
+#; =========================================================================
+
+.globl _pillar2c_get_next_rip_addr
+
+_pillar2c_get_next_rip_addr:
+    movq %rsp, %rax
+    ret

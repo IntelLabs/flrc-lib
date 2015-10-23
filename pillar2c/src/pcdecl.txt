@@ -1,0 +1,9 @@
+acos
+asin
+cos
+floor
+fmod
+pow
+sin
+sqrt
+tan

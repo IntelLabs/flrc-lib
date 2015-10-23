@@ -1,0 +1,545 @@
+#;;; COPYRIGHT_NOTICE_1
+
+.equ REGISTER_SIZE, 8
+.equ _base, %rdi
+.equ _slot, %rsi
+.equ _value, %rdx
+.equ _baseStack , 1*REGISTER_SIZE
+.equ _slotStack , 2*REGISTER_SIZE
+.equ _valueStack, 3*REGISTER_SIZE
+
+.globl gc_heap_slot_write_ref_p
+.globl gc_heap_slot_write_ref_p_end
+
+gc_heap_slot_write_ref_p:
+    jmp 0
+gc_heap_slot_write_ref_p_end:
+
+#; -----------------------------------------------------------------------
+
+.equ _slot, %rdi
+.equ _value, %rsi
+.equ _offset, %rdx
+.equ _slotStack  , 1*REGISTER_SIZE
+.equ _valueStack , 2*REGISTER_SIZE
+.equ _offsetStack, 3*REGISTER_SIZE
+
+.globl gc_heap_slot_write_interior_ref_p
+.globl gc_heap_slot_write_interior_ref_p_end
+
+gc_heap_slot_write_interior_ref_p:
+    jmp 0
+gc_heap_slot_write_interior_ref_p_end:
+
+#; -----------------------------------------------------------------------
+
+.equ _base, %rdi
+.equ _slot, %rsi
+.equ _value, %rdx
+.equ _task, %rcx
+.equ _prev, %r8
+.equ _baseStack , 1*REGISTER_SIZE
+.equ _slotStack , 2*REGISTER_SIZE
+.equ _valueStack, 3*REGISTER_SIZE
+.equ _taskStack , 4*REGISTER_SIZE
+.equ _prevStack , 5*REGISTER_SIZE
+
+.globl gc_heap_slot_write_ref_p_prt
+.globl gc_heap_slot_write_ref_p_prt_end
+
+gc_heap_slot_write_ref_p_prt:
+    movq _slot, %rax                        #    ; // p_slot into eax
+
+    movq _task, %r10                        #    ; // Pillar task * into ecx
+    add  $REGISTER_SIZE, %r10               #    ; // Go to TLS field in PrtTask
+    movq (%r10), %r10                       #    ; // TLS value (GC_Thread_Info*) into ecx
+    addl (g_tls_offset_bytes), %r10d
+
+    # ; // return if slot is inside the nursery
+    sub  2*REGISTER_SIZE(%r10), %rax        #    ; // ecx+8 is the start field in local nursery
+    cmpl (local_nursery_size), %eax         #    ; // go to done if p_slot is in the local nursery
+    jb   prt_done
+
+    movq _value, %rax                       #    ; // value into eax
+    and  $3, %rax                           #    ; // check if this is normal pointer (two lower bits 0) or a tagged pointer
+    cmp  $0, %rax                           #    ; // compare two lower bits against zero
+    jnz  prt_done                           #    ; // if one of them isn't zero it is a tagged rational and no barrier needed for these
+
+.ifdef CONCURRENT
+    NOT IMPLEMENTED YET!!!
+    lea  edx, [esp+12]                           ; // pointer to new value in edx
+    mov  eax, dword [esp+8]                      ; // p_slot into eax
+
+    push ebx
+    mov  ebx, dword [esp+20]
+    push eax
+    push 0                                       ; // non-interior so offset of 0
+    push edx
+    push ecx
+
+    mov  eax, esp
+    push 0
+    push 4                                       ; // 4 args
+    push eax
+    lea  eax, unmanaged_mark_phase
+    push eax
+    call prtInvokeUnmanagedFunc
+    add  esp, 16
+    pop  ebx
+
+    ret  20
+normal_mode:
+.endif # ; CONCURRENT
+
+.ifdef PUB_PRIV
+    movq _value, %r11
+    cmp  $0, %r11
+    jz   done
+    movl (g_use_pub_priv), %r11d
+    cmpl $0, %r11d
+    jnz  do_unmanaged_check_prt
+.endif
+
+    movq _value, %r11                      #    ; // value into edx
+    # ; // return if value is outside the nursery
+    sub  2*REGISTER_SIZE(%r10), %r11
+    cmpl (local_nursery_size), %r11d
+    jae  prt_done
+
+do_unmanaged_check_prt:
+    movq %r10, %r13                          #    ; GC_Thread_Info *
+    push %rdi
+    push %rsi
+    push %rdx
+    push %rcx
+    push %r8
+
+    call get_m2u_vse_size
+    sub  %rax, %rsp
+    movq %rax, %r12
+
+    movq %rsp, %rdi
+    movq %r8, %rsi
+    movq %rcx, %rdx
+    call tgc_enter_unmanaged
+
+    movq %r13, %rdi
+    lea  16(%rsp,%r12), %rsi     #, [rsp+r12+16]
+    movq 32(%rsp,%r12), %rdx     #, qword [rsp+r12+32]
+    movq 24(%rsp,%r12), %rcx     #, qword [rsp+r12+24]
+    call unmanaged_add_entry
+
+    movq 8(%rsp,%r12), %rdi
+    call tgc_reenter_managed
+
+    add  %r12, %rsp
+
+    pop  %r8
+    pop  %rcx
+    pop  %rdx
+    pop  %rsi
+    pop  %rdi
+prt_done:
+    # ; // write value into *p_slot
+    movq _value, (_slot)    #   ; // *p_slot = value
+    ret
+gc_heap_slot_write_ref_p_prt_end:
+
+#; -----------------------------------------------------------------------
+
+.equ _slot, %rcx
+.equ _value, %rdx
+.equ _offset, %r8
+.equ _task, %r9
+.equ _slotStack  , 1*REGISTER_SIZE
+.equ _valueStack , 2*REGISTER_SIZE
+.equ _offsetStack, 3*REGISTER_SIZE
+.equ _taskStack  , 4*REGISTER_SIZE
+.equ _prevStack  , 5*REGISTER_SIZE
+
+.globl gc_heap_slot_write_interior_ref_p_prt
+.globl gc_heap_slot_write_interior_ref_p_prt_end
+
+gc_heap_slot_write_interior_ref_p_prt:
+    movq _slot, %rax                      #      ; // p_slot into eax
+
+    movq _task, %r10
+    add  $REGISTER_SIZE, %r10              #     ; // Go to TLS field in PrtTask
+    movq (%r10), %r10                     #     ; // TLS value (GC_Thread_Info*) into ecx
+    addl (g_tls_offset_bytes), %r10d
+
+    # ; // return if slot is inside the nursery
+    sub  2*REGISTER_SIZE(%r10), %rax        #    ; // ecx+8 is the start field in local nursery
+    cmpl (local_nursery_size), %eax       #     ; // go to done if p_slot is in the local nursery
+    jb   prt_interior_done
+
+.ifdef CONCURRENT
+    NOT IMPLEMENTED YET!!!
+    mov eax, dword [esp+4]               # ; // p_slot into eax
+    lea edx, [esp+8]                     # ; // value into edx
+
+    push ebx
+    mov  ebx, dword [esp+20]
+    push eax
+    mov  eax, dword [esp+20]             # ; // offset
+    push eax
+    push edx
+    push ecx
+
+    mov  eax, esp
+    push 0
+    push 4
+    push eax
+    lea  eax, unmanaged_mark_phase
+    push eax
+    call prtInvokeUnmanagedFunc
+    add  esp, 16
+    pop  ebx
+
+    ret  20
+normal_mode:
+.endif  # ; CONCURRENT
+
+    movq _value, %r11              #   ; // value into edx
+    # ; // return if value is outside the nursery
+    sub  2*REGISTER_SIZE(%r10), %r11
+    cmpl (local_nursery_size), %r11d
+    jae  prt_interior_done
+
+    movq _slot, _slotStack(%rsp)   # ; // save away args to this function in their stack locations
+    movq _value, _valueStack(%rsp) 
+    movq _offset, _offsetStack(%rsp)
+
+    push %rbx
+    movq _task, %rbx
+
+    movq %r10, %rcx
+    lea  _valueStack(%rsp), %rdx
+    movq _offset, %r8
+    push %r8
+    push %rdx
+    push %rcx
+
+    movq unmanaged_add_entry_interior, %rcx
+    movq %rsp, %rdx
+    movq $3, %r8
+    movq $0, %r9
+    sub  $4*REGISTER_SIZE, %rsp
+
+    call prtInvokeUnmanagedFunc
+
+    add  $7*REGISTER_SIZE, %rsp
+
+    movq _slotStack(%rsp), _slot
+    movq _valueStack(%rsp), _value
+
+    pop  %rbx
+prt_interior_done:
+    # ; // write value into *p_slot
+    movq _value, (_slot)       #  ; // *p_slot = value
+    ret
+gc_heap_slot_write_interior_ref_p_prt_end:
+
+
+#; --------------------------------------------------------------------------------------
+
+
+
+.equ _base, %rdi
+.equ _slot, %rsi
+.equ _value, %rdx
+.equ _cmp, %rcx
+.equ _baseStack , 1*REGISTER_SIZE
+.equ _slotStack , 2*REGISTER_SIZE
+.equ _valueStack, 3*REGISTER_SIZE
+.equ _cmpStack  , 4*REGISTER_SIZE
+
+.ifdef ONE_AT_A_TIME
+
+.globl gc_cas_write_ref_p
+.globl gc_cas_write_ref_p_end
+
+gc_cas_write_ref_p:
+    jmp 0
+gc_cas_write_ref_p_end:
+
+#; -----------------------------------------------------------------------
+
+.equ _slot, %rdi
+.equ _value, %rsi
+.equ _offset, %rdx
+.equ _cmp, %rcx
+.equ _slotStack  , 1*REGISTER_SIZE
+.equ _valueStack , 2*REGISTER_SIZE
+.equ _offsetStack, 3*REGISTER_SIZE
+.equ _cmpStack   , 4*REGISTER_SIZE
+
+.globl gc_cas_write_interior_ref_p
+.globl gc_cas_write_interior_ref_p_end
+
+gc_cas_write_interior_ref_p:
+    jmp 0
+gc_cas_write_interior_ref_p_end:
+
+.endif
+
+#; -----------------------------------------------------------------------
+
+.equ _base, %rdi
+.equ _slot, %rsi
+.equ _value, %rdx
+.equ _cmp, %rcx
+.equ _task, %r8
+.equ _prev, %r9
+.equ _baseStack , 1*REGISTER_SIZE
+.equ _slotStack , 2*REGISTER_SIZE
+.equ _valueStack, 3*REGISTER_SIZE
+.equ _cmpStack  , 4*REGISTER_SIZE
+.equ _taskStack , 5*REGISTER_SIZE
+.equ _prevStack , 6*REGISTER_SIZE
+
+.globl gc_cas_write_ref_p_prt
+.globl gc_cas_write_ref_p_prt_end
+
+gc_cas_write_ref_p_prt:
+    movq _slot, %rax                          #   ; // p_slot into eax
+
+    movq _task, %r10                          #   ; // Pillar task * into ecx
+    add  $REGISTER_SIZE, %r10                 #   ; // Go to TLS field in PrtTask
+    movq (%r10), %r10                         #   ; // TLS value (GC_Thread_Info*) into ecx
+    addl (g_tls_offset_bytes), %r10d
+
+    # ; // return if slot is inside the nursery
+    sub  2*REGISTER_SIZE(%r10), %rax          #   ; // ecx+8 is the start field in local nursery
+    cmpl (local_nursery_size), %eax           #   ; // go to done if p_slot is in the local nursery
+    jb   cas_prt_done
+
+    movq _value, %rax                         #   ; // value into eax
+    and  $3, %rax                             #   ; // check if this is normal pointer (two lower bits 0) or a tagged pointer
+    cmp  $0, %rax                             #   ; // compare two lower bits against zero
+    jnz  cas_prt_done                         #   ; // if one of them isn't zero it is a tagged rational and no barrier needed for these
+
+.ifdef CONCURRENT
+    NOT IMPLEMENTED YET!!!
+    lea  edx, [esp+12]                           ; // pointer to new value in edx
+    mov  eax, dword [esp+8]                      ; // p_slot into eax
+
+    push ebx
+    mov  ebx, dword [esp+20]
+    push eax
+    push 0                                       ; // non-interior so offset of 0
+    push edx
+    push ecx
+
+    mov  eax, esp
+    push 0
+    push 4                                       ; // 4 args
+    push eax
+    lea  eax, unmanaged_mark_phase
+    push eax
+    call prtInvokeUnmanagedFunc
+    add  esp, 16
+    pop  ebx
+
+    ret  20
+normal_mode:
+.endif  # ; CONCURRENT
+
+.ifdef PUB_PRIV
+    movq _value, %r11
+    cmp  $0, %r11
+    jz   done
+    movl (g_use_pub_priv), %r11d
+    cmpl $0, %r11d
+    jnz  do_unmanaged_check_cas_prt
+.endif
+
+    movq _value, %r11                         #   ; // value into edx
+    # ; // return if value is outside the nursery
+    sub  2*REGISTER_SIZE(%r10), %r11
+    cmpl (local_nursery_size), %r11d
+    jae  cas_prt_done
+
+do_unmanaged_check_case_prt:
+    movq %r10, %r13                          #   ; GC_Thread_Info *
+    push %rdi
+    push %rsi
+    push %rdx
+    push %rcx
+    push %r8
+
+    call get_m2u_vse_size
+    sub  %rax, %rsp
+    movq %rax, %r12
+
+    movq %rsp, %rdi
+    movq %r8, %rsi
+    movq %rcx, %rdx
+    call tgc_enter_unmanaged
+
+    movq %r13,  %rdi
+    lea  16(%rsp,%r12), %rsi
+    movq 32(%rsp,%r12), %rdx
+    movq 24(%rsp,%r12), %rcx
+    call unmanaged_add_entry
+
+    movq 8(%rsp,%r12), %rdi
+    call tgc_reenter_managed
+
+    add  %r12, %rsp
+
+    pop  %r8
+    pop  %rcx
+    pop  %rdx
+    pop  %rsi
+    pop  %rdi
+cas_prt_done:
+    # ; // write value into *p_slot
+    movq _cmp, %rax                           # mov rax, _cmp
+    lock cmpxchg _value, (_slot)              # lock cmpxchg [_slot], _value      ; // *p_slot = value
+    ret
+gc_cas_write_ref_p_prt_end:
+
+# ; -----------------------------------------------------------------------
+
+.equ _slot, %rdi
+.equ _value, %rsi
+.equ _offset, %rdx
+.equ _cmp, %rcx
+.equ _task, %r8
+.equ _prev, %r9
+.equ _slotStack  , 1*REGISTER_SIZE
+.equ _valueStack , 2*REGISTER_SIZE
+.equ _offsetStack, 3*REGISTER_SIZE
+.equ _cmpStack   , 4*REGISTER_SIZE
+.equ _taskStack  , 5*REGISTER_SIZE
+.equ _prevStack  , 6*REGISTER_SIZE
+
+.globl gc_cas_write_interior_ref_p_prt
+.globl gc_cas_write_interior_ref_p_prt_end
+
+gc_cas_write_interior_ref_p_prt:
+    movq _slot, %rax                          #   ; // p_slot into eax
+
+    movq _task, %r10
+    add  $REGISTER_SIZE, %r10                  #   ; // Go to TLS field in PrtTask
+    movq (%r10), %r10                         #   ; // TLS value (GC_Thread_Info*) into ecx
+    addl (g_tls_offset_bytes), %r10d
+
+    # ; // return if slot is inside the nursery
+    sub  2*REGISTER_SIZE(%r10), %rax          #   ; // ecx+8 is the start field in local nursery
+    cmpl (local_nursery_size), %eax           #   ; // go to done if p_slot is in the local nursery
+    jb   cas_prt_interior_done
+
+.ifdef CONCURRENT
+    NOT IMPLEMENTED YET!!!
+    mov eax, dword [esp+4]                ; // p_slot into eax
+    lea edx, [esp+8]                      ; // value into edx
+
+    push ebx
+    mov  ebx, dword [esp+20]
+    push eax
+    mov  eax, dword [esp+20]              ; // offset
+    push eax
+    push edx
+    push ecx
+
+    mov  eax, esp
+    push 0
+    push 4
+    push eax
+    lea  eax, unmanaged_mark_phase
+    push eax
+    call prtInvokeUnmanagedFunc
+    add  esp, 16
+    pop  ebx
+
+    ret  20
+normal_mode:
+.endif # ; CONCURRENT
+
+.ifdef PUB_PRIV
+    movq _value, %r11
+    cmp  $0, %r11
+    jz   done
+    movl (g_use_pub_priv), %r11d
+    cmpl $0, %r11d
+    jnz  do_unmanaged_check_cas_interior_prt
+.endif
+
+    movq _value, %r11                         #   ; // value into edx
+    # ; // return if value is outside the nursery
+    sub  2*REGISTER_SIZE(%r10), %r11
+    cmpl (local_nursery_size), %r11d
+    jae  cas_prt_interior_done
+
+do_unamanged_check_cas_interior_prt:
+    movq %r10, %r13                          #   ; GC_Thread_Info *
+    push %rdi
+    push %rsi
+    push %rdx
+    push %rcx
+    push %r8
+
+    call get_m2u_vse_size
+    sub  %rax, %rsp
+    movq %rax, %r12
+
+    movq %rsp, %rdi
+    movq %r8, %rsi
+    movq %rcx, %rdx
+    call tgc_enter_unmanaged
+
+    movq %r13,  %rdi
+    lea  16(%rsp,%r12), %rsi
+    movq 32(%rsp,%r12), %rdx
+    movq 24(%rsp,%r12), %rcx
+    call unmanaged_add_entry
+
+    movq 8(%rsp,%r12), %rdi
+    call tgc_reenter_managed
+
+    add  %r12, %rsp
+
+    pop  %r8
+    pop  %rcx
+    pop  %rdx
+    pop  %rsi
+    pop  %rdi
+cas_prt_interior_done:
+    # ; // write value into *p_slot
+    movq _cmp, %rax
+    lock cmpxchg _value, (_slot)
+    ret
+gc_cas_write_interior_ref_p_prt_end:
+
+
+.globl gc_heap_slot_gen_write_ref_p_prt
+.globl gc_heap_slot_gen_write_ref_p_prt_end
+gc_heap_slot_gen_write_ref_p_prt:
+    movq $0, %rax
+	jmp  *%rax
+gc_heap_slot_gen_write_ref_p_prt_end:
+
+
+.globl gc_heap_slot_gen_write_interior_ref_p_prt
+.globl gc_heap_slot_gen_write_interior_ref_p_prt_end
+gc_heap_slot_gen_write_interior_ref_p_prt:
+    movq $0, %rax
+	jmp  *%rax
+gc_heap_slot_gen_write_interior_ref_p_prt_end:
+
+.globl gc_cas_write_ref_p
+.globl gc_cas_write_ref_p_end
+gc_cas_write_ref_p:
+    movq $0, %rax
+	jmp  *%rax
+gc_cas_write_ref_p_end:
+
+
+.globl gc_cas_write_interior_ref_p
+.globl gc_cas_write_interior_ref_p_end
+gc_cas_write_interior_ref_p:
+    movq $0, %rax
+	jmp  *%rax
+gc_cas_write_interior_ref_p_end:

@@ -1,0 +1,24 @@
+#CPP_EXTRAS = -DGC_LIVE_OBJECT_LISTS_PER_COMPACTION_BLOCK
+
+CPP_EXTRAS = -DGC_DO_NOT_USE_OBJECT_HEADER_CONTENTION_BIT_FOR_GC_MARK
+
+lib_topdir = ../..
+orp_topdir = $(lib_topdir)/../orp
+
+# -I$(orp_topdir)/common/include
+
+LIB_INCLUDES=-I$(lib_topdir)/src/gc_v4/include
+
+SOURCES = allocation.cpp block_store.cpp gc_for_orp.cpp gc_globals.cpp \
+ gc_plan.cpp gc_threads.cpp gc_v4.cpp gc_utils.cpp gc_heap_map.cpp \
+ hash_table.cpp	mark_scan.cpp mark_scan_pools.cpp misc.cpp \
+ object_list.cpp pair_table.cpp \
+ remembered_set.cpp roots.cpp \
+ sliding_compaction.cpp slot_offset_list.cpp sweep.cpp verify.cpp \
+ scan_object.cpp object_placement.cpp old_sweep.cpp moribund_code.cpp \
+ work_packet_manager.cpp verify_live_heap.cpp gc_cache.cpp \
+ delinquent_star.cpp mississippi_delta.cpp delinquent_star_base.cpp \
+ compressed_references.cpp barrier.cpp
+
+
+include $(lib_topdir)/build/MakeInclude

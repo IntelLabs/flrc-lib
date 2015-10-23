@@ -1,0 +1,517 @@
+/*
+;;; COPYRIGHT_NOTICE_1
+; $Header: /nfs/sc/proj/ctg/psl002/CVS/pillar_pthread/src/base/prtstubs.gas,v 1.3 2013/03/06 19:02:49 taanders Exp $
+*/
+
+	.file "prtstubs.gas"
+	.text
+
+# =============================================================================
+# Declare external functions as near ones for calls below.
+
+.equ REGISTER_SIZE,8
+
+.equ MIN_UNMANAGED_STACK,500000
+
+
+.equ PRT_TASK_USER_TLS,REGISTER_SIZE         
+.equ PRT_TASK_LAST_VSE,0                    
+.equ PRT_TASK_THREAD_HANDLE,2*REGISTER_SIZE
+.equ PRT_VSE_ENTRY_TYPE_CODE,0            
+.equ PRT_VSE_NEXT_FRAME,REGISTER_SIZE    
+.equ PRT_VSE_TARGET_CONTINUATION,2*REGISTER_SIZE
+.equ CONTINUATION_EIP_OFFSET,0
+
+.equ ARG_REG1,%rdi
+.equ ARG_REG2,%rsi
+.equ ARG_REG3,%rdx
+.equ ARG_REG4,%rcx
+.equ ARG_REG5,%r8
+.equ ARG_REG6,%r9
+
+/*
+; // Copies a function's arguments to its frame. Also reserves space in the frame for the copied arguments.
+; // Leaves rax and rdx untouched.
+; // At completion, rsi = size of args in bytes, rcx/rdx/r8/r9 are the args to the next function, rdi is trashed.
+; // startReg and sizeReg should not be rbx, rcx, rsi or rdi.
+; %macro copyArgs %1 = startReg, %2 = sizeReg
+;%macro copyArgs 2 
+; r11 = startReg, r12 = sizeReg
+*/
+.macro copyArgs 
+    movq %r12, %r13                             # ;; // r13 = number of 8-byte params
+    shl  $3, %r13                               # ;; // r13 = size of params in bytes 
+    movq %rsp, %r14                             # ;; // r14 = current stack pointer
+    sub  %r13, %r14                             # ;; // r14 = minimum required stack space
+    movq $0xFFffFFffFFffFFf0, %rax              # ;; // and then and'ing by 16 for alignment
+    and  %rax, %r14                             # ;; // and then and'ing by 16 for alignment
+
+    mov  %rsp, %r13                             # ;; // calculate how much space we actually need with alignment
+    sub  %r14, %r13                             # ;; // r13 = how much extra stack space we need
+
+    sub  %r13, %rsp                             # ;; // adjust rsp by that amount
+
+    # ;; // copy the stack arguments to the next stack location starting at esp.
+    cld
+    movq %r12, %rcx                             # ;; // arg size
+    movq %r11, %rsi                             # ;; // arg start
+    movq %rsp, %rdi                             # ;; // place to copy
+    # ;; // rep movsd copies "rcx" dwords from [rsi] to [rdi].  cld means rsi and rdi are incremented after each copy.
+    rep  movsq
+
+    # ; // MOVE ARGS INTO REGISTERS?  BUT WE DON'T HAVE TYPE INFORMATION!!!
+    movq 0(%rsp), %rdi
+#    mov %rdi, %zmm0
+
+    movq 8(%rsp), %rsi
+#    mov %rsi, %zmm1
+
+    movq 16(%rsp), %rdx
+#    mov %rdx, %zmm2
+
+    movq 24(%rsp), %rcx
+#    mov %rcx, %zmm3
+
+    movq 32(%rsp), %r8
+#    mov %r8, %zmm4
+
+    movq 40(%rsp), %r9
+#    mov %r9, %zmm5
+
+    movq %r13, %r11    #                        ;; // r11 = space subtracted from stack  
+    movq %r13, %r12    #    ; 8, 16, 56, 64     ;; // r12 = space subtracted from stack
+    movq %r13, %r15    #    ; 8, 16, 56, 64     ;; // r15 = space subtracted from stack
+    and  %rax, %r13    #    ; 0, 16, 48, 64     ;; // r13 = space subtracted on 16-byte align
+    not  %rax          #                        ;; // invert mask to get the remainder
+    and  %rax, %r15    #    ; 8,  0,  8,  0     ;; // r15 = 0 if stack space was 16-byte aligned, 8 otherwise
+    sub  $48,  %r13    #    ; -,  -,  0, 16     ;; // see if all arguments can be passed in regs (6 regs * 8 bytes = 48)
+    movq %r13, %r14    #                        ;; // r14 = amount of stack space used greater than max reg args
+    sar  $63, %r14     #                        ;; // make r14 either all 'F' or all '0' depending on sign of r13
+    not  %r14          #    ; 0,  0,  1,  1     ;; // r14 = 0 if r13 is negative, all '1' otherwise
+    and  %r14, %r13    #    ; 0,  0,  0, 16     ;; // r13 = 0 if registers enough for args, else amount of args on stack
+    add  %r15, %r13    #    ; 8,  0,  8, 16     ;; // r13 = amount of stack to keep adjusted for alignment
+    sub  %r13, %r12    #    ; 0, 16, 48, 48     ;; // r12 = amount to add to rsp to "pop" the args that go in regs
+    add  %r12, %rsp    #                        ;; // pop
+
+    sub  %r12, %r11    #                        ;; // r11 = amount we need to add to rsp after the call is complete
+    movq %r11, %r12    #                        ;; // r12 = save this amount in the callee-saved register r12
+.endm
+
+#; // Restore the original frame's ebp and esp values using edx, which points to a VSE embedded in the frame.
+#; %macro continuationProlog %1 = espOffsetFromEbp, %2 = vseOffsetFromEbp
+.macro continuationProlog espOffsetFromEbp, vseOffsetFromEbp
+    lea (-vseOffsetFromEbp+espOffsetFromEbp)(%rdx), %rsp
+    lea -vseOffsetFromEbp(%rdx), %rbp
+.endm
+
+#; // Returns the current thread's TLS (its PrtTask pointer) in eax.  Leaves other registers unchanged.
+.macro getTlsIntoEax 
+    call prt_GetTaskNonInline
+.endm
+
+.equ savereg1, %rsi
+.equ savereg2, %rdi
+
+#; =============================================================================================
+
+.globl prtWatermarkPrototype
+.globl prt_WatermarkPrototypeStart
+.globl prt_WatermarkPostTopIndex1
+.globl prt_WatermarkPostStubStackStart
+.globl prt_WatermarkPostStubStart
+.globl prt_WatermarkPostRealEipMove
+.globl prt_WatermarkPrototypeEnd
+
+prtWatermarkPrototype:
+prt_WatermarkPrototypeStart:
+    movq $0x01F2f3F4f5F6f7F8f, %rdx
+prt_WatermarkPostTopIndex1:
+    movl (%rdx), %ecx                   # ; // ecx = current top index
+    inc  %ecx                           # ; // ecx = new top index
+    movl %ecx, (%rdx)                   # ; // increment the stack's top
+
+    movq $0x01F2f3F4f5F6f7F8f, %rdx
+prt_WatermarkPostStubStackStart: 
+    lea  (%rdx,%rcx,REGISTER_SIZE), %rcx   # ; // ecx = address of the top free stub stack array entry
+#    lea  rcx, [rdx+rcx*REGISTER_SIZE]  # ; // ecx = address of the top free stub stack array entry
+
+    movq $0x01F2f3F4f5F6f7F8f, %rdx
+prt_WatermarkPostStubStart:
+    movq %rdx, (%rcx)                   # ; // write the stub start value into the stub stack array
+    movq $0x01F2f3F4f5F6f7F8f, %rcx
+prt_WatermarkPostRealEipMove:
+    jmp  *%rcx                          # ; // any jump target will do...will be replaced in each copy of the stub
+prt_WatermarkPrototypeEnd:
+
+#; ==============================================================================
+
+.globl prtYield
+.globl prt_YieldStart
+.globl prt_YieldEnd
+
+prtYield:
+prt_YieldStart:
+    ret
+prt_YieldEnd:
+
+#; ==============================================================================
+
+#; // void __stdcall prtInvokeManagedFunc(PrtCodeAddress managedFunc, void *argStart, unsigned argSize);
+
+
+#; // Export the different locations within the prtInvokeManagedFunc function.
+.globl prtInvokeManagedFunc             # ; start of the function
+.globl prtInvokeManagedIntRet           # ; start of the function
+.globl prt_InvokeManagedFuncStart       # ; start of the function
+.globl prt_InvokeManagedFuncUnwindContinuation
+.globl prt_InvokeManagedFuncEnd         # ; end of the function
+
+#; // Stack offsets of this function's aguments.
+.equ _managedFunc, REGISTER_SIZE + REGISTER_SIZE
+.equ _argStart, _managedFunc + REGISTER_SIZE
+.equ _argSize, _argStart + REGISTER_SIZE
+
+#; // Stack frame layout:
+#;   ebp+0:  saved ebp
+#;   ebp-4:  saved ebx
+#;   ebp-8:  saved esi
+#;   ebp-12: saved edi
+.equ _savedEbx, -REGISTER_SIZE
+.equ _savedEsi, _savedEbx - REGISTER_SIZE
+.equ _savedEdi, _savedEsi - REGISTER_SIZE
+.equ _contArgHigh32Bits, _savedEdi - REGISTER_SIZE
+.equ _firstFrameLocal, _savedEdi - REGISTER_SIZE  # ; intentionally same
+.equ _contArgLow32Bits, _contArgHigh32Bits - REGISTER_SIZE
+.equ _contVsh, _contArgLow32Bits - REGISTER_SIZE
+.equ _contEip, _contVsh - REGISTER_SIZE
+.equ _contStart, _contVsh - REGISTER_SIZE
+.equ _normalEsp, _contVsh - REGISTER_SIZE
+
+.equ U2MFRAMESIZE, (((_firstFrameLocal) - (_normalEsp)) + (REGISTER_SIZE))
+
+prtInvokeManagedIntRet:
+prtInvokeManagedFunc:
+prt_InvokeManagedFuncStart:
+    movq ARG_REG1, %rax
+    sub  U2MFRAMESIZE, %rsp
+    movq ARG_REG2, %r11
+    movq ARG_REG3, %r12
+    copyArgs                          # ; // reserve space and copy arguments
+
+    call *%rax                        # ; // call the managed function. don't disturb the return registers after this
+
+prt_InvokeManagedFuncAfterCall:
+    add  %rsi, %rsp
+    add  $U2MFRAMESIZE, %rsp
+    ret
+    
+prt_InvokeManagedFuncUnwindContinuation:
+    lea (-_contStart+_normalEsp)(%rdx), %rsp
+    lea -_contStart(%rdx), %rbp
+#    continuationProlog _normalEsp, _contStart
+    movq _contArgLow32Bits(%rbp), %rax
+    movq _contArgHigh32Bits(%rbp), %rdx
+    jmp  prt_InvokeManagedFuncAfterCall
+prt_InvokeManagedFuncEnd:
+
+
+# ; ==============================================================================
+
+#; // void __stdcall prtInvokeUnmanagedFunc(PrtCodeAddress unmanagedFunc, void *argStart, unsigned argSize, PrtCallingConvention callingConvention);
+
+.globl prtInvokeUnmanagedFunc                # ; start of the function
+.globl prtInvokeUnmanagedIntRet              # ; start of the function
+.globl prt_InvokeUnmanagedFuncStart          # ; start of the function
+.globl prt_InvokeUnmanagedFuncPostCall       # ; 
+.globl prt_InvokeUnmanagedFuncDestructor     # ; VSE type identifier (code address)
+.globl prt_InvokeUnmanagedFuncUnwindContinuation
+.globl prt_InvokeUnmanagedFuncEnd            # ; end of the function
+
+#; // Keep these offsets up to date with the definition of struct Prt_M2uFrame.
+#; Stack frame layout:
+#;   ebp+0:  saved rbp
+#;   ebp-8:  saved rbx
+#;   ebp-16: saved r12
+#;   ebp-24: saved r13
+#;   ebp-32: saved r14
+#;   ebp-40: saved r15
+.equ _savedRbx,           -REGISTER_SIZE
+.equ _savedR12,           _savedRbx - REGISTER_SIZE
+.equ _savedR13,           _savedR12 - REGISTER_SIZE
+.equ _savedR14,           _savedR13 - REGISTER_SIZE
+.equ _savedR15,           _savedR14 - REGISTER_SIZE
+.equ _contArg,            _savedR15 - REGISTER_SIZE
+.equ _firstFrameLocal,    _savedR15 - REGISTER_SIZE
+.equ _contVsh,            _contArg  - REGISTER_SIZE
+.equ _contEip,            _contVsh  - REGISTER_SIZE
+.equ _contStart,          _contVsh  - REGISTER_SIZE
+.equ _realM2uUnwinder,    _contStart- REGISTER_SIZE
+#;; end of core VSE fields
+.equ _targetContinuation, _realM2uUnwinder - REGISTER_SIZE
+.equ _nextVsePtr,         _targetContinuation - REGISTER_SIZE
+.equ _frameType,          _nextVsePtr - REGISTER_SIZE
+.equ _vsePtr,             _nextVsePtr - REGISTER_SIZE
+.equ _normalEsp,          _nextVsePtr - REGISTER_SIZE
+#;; start of VSE
+
+
+prtInvokeUnmanagedIntRet:
+prtInvokeUnmanagedFunc:
+prt_InvokeUnmanagedFuncStart:
+    push %rbp
+    movq %rsp, %rbp
+    push %rbx
+    push %r12
+    push %r13
+    push %r14
+    push %r15
+
+    sub  $(7*REGISTER_SIZE), %rsp                     #   ; // make space for M2U frame (6 registers) and align rsp
+
+    movq  ARG_REG3, %r14                            #   ; // save args in callee-saves
+    movq  ARG_REG2, %r13
+    movq  ARG_REG1, %r12
+        
+    getTlsIntoEax
+
+    movq prtPillarCompilerUnwinder, %r10
+    movq %r10, _realM2uUnwinder(%rbp)
+    movq prt_InvokeUnmanagedFuncDestructor, %r10
+    movq %r10, _frameType(%rbp)
+
+    movq PRT_TASK_LAST_VSE(%rax), %r10            #   ; // get last VSE from Prt_Task into r10
+    movq %r10, _nextVsePtr(%rbp)                  #   ; // link up this VSE with the previous one
+    movq $0, _targetContinuation(%rbp)            #   ; // initialize targetContinuation to 0
+    lea _vsePtr(%rbp), %r10                       #   ; // get address of new VSE in r10
+    movq %r10, PRT_TASK_LAST_VSE(%rax)            #   ; // set last VSE in Prt_Task to the new VSE
+
+    movq %rax, ARG_REG1                           #   ; // rcx = Tls sub  rsp, ODD_ARG_MOD
+    call prtToUnmanaged
+
+    movq %r12, %r10
+    movq %r13, %r11
+    movq %r14, %r12
+ 
+    copyArgs                                      #   ; // reserve space and copy arguments, rsi = size of args
+    call *%r10
+    add  %r12, %rsp
+
+prt_InvokeUnmanagedFuncPostCall:
+prt_InvokeUnmanagedFuncAfterCall:
+        
+    movq %rax, %r12                               #   ; // save result away in r12
+        
+    getTlsIntoEax
+
+    movq %rax, ARG_REG1
+    call prtToManaged
+
+    getTlsIntoEax
+
+    movq PRT_TASK_LAST_VSE(%rax), %rcx
+    movq PRT_VSE_NEXT_FRAME(%rcx), %rcx
+    movq %rcx, PRT_TASK_LAST_VSE(%rax)
+    
+    movq %r12, %rax                               #   ; // restore return value
+    add  $(7*REGISTER_SIZE), %rsp                 #   ; // remove the rest of the frame and local vars
+    
+    pop  %r15
+    pop  %r14
+    pop  %r13
+    pop  %r12
+    pop  %rbx
+    pop  %rbp
+    ret
+    
+prt_InvokeUnmanagedFuncDestructor:
+    lea (-_vsePtr+_normalEsp)(%rdx), %rsp
+    lea -_vsePtr(%rdx), %rbp
+#    continuationProlog _normalEsp, _vsePtr
+    movq _targetContinuation(%rbp), ARG_REG1     #   ; // recut
+    sub  $32, %rsp
+    call prtFatCutTo
+    
+prt_InvokeUnmanagedFuncUnwindContinuation:
+    lea (-_contStart+_normalEsp)(%rdx), %rsp
+    lea -_contStart(%rdx), %rbp
+#    continuationProlog _normalEsp, _contStart
+    movq _contArgLow32Bits(%rbp), %rax
+    movq _contArgHigh32Bits(%rbp), %rdx
+    jmp prt_InvokeUnmanagedFuncAfterCall
+    
+prt_InvokeUnmanagedFuncEnd:
+
+#; =============================================================================================
+
+.globl prt_PcallDestructor
+
+prt_PcallDestructor:
+    movq %rdx, %rsp
+
+    movq %rsp, %rax
+    and  $0xF, %rax
+    sub  %rax, %rsp                          # ; // align rsp
+
+    movq $0, ARG_REG4
+    movq $0, ARG_REG3
+    movq $0, ARG_REG2
+    movq prt_PrintIllegalCutMessage, ARG_REG1
+    call prtInvokeUnmanagedFunc
+    call prt_ExitThread
+
+#; =============================================================================================
+
+.globl prt_getStubConstants               # ; start of the function
+
+prt_getStubConstants:
+    movq $PRT_TASK_LAST_VSE, (%rdi)
+    movq $PRT_TASK_USER_TLS, (%rsi)
+    movq $PRT_TASK_THREAD_HANDLE, (%rdx)
+    movq $PRT_VSE_ENTRY_TYPE_CODE, (%rcx)
+    movq $PRT_VSE_NEXT_FRAME, (%r8)
+    movq $PRT_VSE_TARGET_CONTINUATION, (%r9)
+    movq REGISTER_SIZE(%rsp), %rax
+    movq $CONTINUATION_EIP_OFFSET, (%rax)
+    ret
+
+#; =============================================================================================
+
+.globl prt_getCurrentEsp
+
+prt_getCurrentEsp:
+    mov %rsp, %rax
+    ret
+
+#; =============================================================================================
+
+.globl prtThinCutTo
+
+prtThinCutTo:
+    movq ARG_REG1, %rdx
+    movq CONTINUATION_EIP_OFFSET(%rdx), %rax
+    jmp *%rax
+
+#; =============================================================================================
+
+.globl prt_bootstrapTaskAsm                #    ; start of the function
+.globl prt_bootstrapTaskAsmCall
+.globl prt_bootstrapTaskAsmStart
+.globl prt_bootstrapTaskAsmEnd
+
+#; // Stack offsets of this function's aguments.
+.equ _cimCreated, REGISTER_SIZE + REGISTER_SIZE
+.equ _funcToCall, _cimCreated + REGISTER_SIZE
+.equ _argStart, _funcToCall + REGISTER_SIZE
+.equ _argSize, _argStart + REGISTER_SIZE
+
+prt_bootstrapTaskAsm:
+prt_bootstrapTaskAsmStart:
+    #; // This function never returns so don't bother saving the callee-save registers
+    #; // even though we use them.
+    pushq %rcx  #; // argSize
+    pushq %rdx  #; // argStart
+    pushq %rsi  #; // function to call, by pushing 3 registers we align rsp
+
+    test %rdi, %rdi
+    jne  cimAlreadyCreated
+
+    mov  prt_bootstrapTaskAsmEnd, %rsi
+    mov  prt_bootstrapTaskAsmStart, %rdi
+    call registerBootstrapTaskCim
+
+cimAlreadyCreated:
+
+    popq %r10  #; //  function to call
+    popq %r11  #; //  argStart
+    popq %r12  #; //  argSize
+
+    copyArgs   #; // r10, r11
+
+    call *%r10
+prt_bootstrapTaskAsmCall:
+    add  %r12, %rsp
+    call prt_ExitThread                 #  ; // exit the thread
+prt_bootstrapTaskAsmEnd:
+
+#; =============================================================================================
+
+.globl prt_pcallAsm                     #  ; start of the function
+
+prt_pcallAsm:
+    pushq %r12
+
+    movq  %rsp, %r12
+    movq  ARG_REG1, %rsp
+
+    movq  0(%rsp), ARG_REG1
+    movq  1*REGISTER_SIZE(%rsp), ARG_REG2
+    movq  2*REGISTER_SIZE(%rsp), ARG_REG3
+    movq  3*REGISTER_SIZE(%rsp), ARG_REG4
+
+    movq  %rsp, %rax
+    and  $0xF, %rax
+    sub  %rax, %rsp                     #    ; // align rsp
+
+    call pcallOnSystemStack
+
+    movq %r12, %rsp
+
+    popq %r12
+    ret
+
+#; =============================================================================================
+
+.globl prt_testStackSize                   # ; start of the function
+
+#; // Stack offsets of this function's aguments.
+.equ _funcToCall, REGISTER_SIZE + REGISTER_SIZE
+.equ _stackTop,    _funcToCall + REGISTER_SIZE
+
+prt_testStackSize:
+    pushq %rbp
+    movq  %rsp, %rbp
+    pushq %rbx
+    pushq %r12
+    pushq %r13
+    pushq %r13
+    pushq %r15
+
+    movq %rsp, %r12
+    movq  ARG_REG2, %rsp                  # ;; // transition to a new stack
+
+    sub  $40, %rsp
+    call *ARG_REG1                         # ;; // invoke the function
+    add  $40, %rsp
+
+    movq %r12, %rsp
+
+    popq %r15
+    popq %r14
+    popq %r13
+    popq %r12
+    popq %rbx
+    popq %rbp
+    ret
+
+#; =============================================================================================
+
+.globl prt_getTlsRegister
+.globl prt_getTlsRegisterStart
+.globl prt_getTlsRegisterEnd
+
+prt_getTlsRegister:
+prt_getTlsRegisterStart:
+    movq $0, %rax
+    ret
+prt_getTlsRegisterEnd:
+
+#; =============================================================================================
+
+.globl prtYieldUntilDestructor
+prtYieldUntilDestructor:
+    movq  8(%rdx), %rcx                         # ; // edx = target continuation
+    pushq %rcx
+    call prtFatCutTo
+
+#; ==============================================================================
+
