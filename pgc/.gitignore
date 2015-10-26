@@ -11,9 +11,10 @@
 /Makefile
 /Makefile.in
 /missing
+/stamp-h
 /stamp-h1
 
 # /src
 /src/Makefile
 /src/Makefile.in
-/src/libprt.a
+/src/libpgc.a

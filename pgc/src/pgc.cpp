@@ -2,6 +2,8 @@
  * COPYRIGHT_NOTICE_1
  */
 
+#include "config.h"
+
 #ifndef __GNUC__
 #include <windows.h>
 #endif
@@ -11,11 +13,11 @@
 #include "pgc.h"
 #include <stdlib.h>
 
-#ifdef USE_PTHREADS
+#ifdef HAVE_PTHREAD_H
 #include "pthread.h"
-#else // USE_PTHREADS
+#else // HAVE_PTHREAD_H
 #include "mcrt.h"
-#endif // USE_PTHREADS
+#endif // HAVE_PTHREAD_H
 #include "prtcodegenerator.h"
 
 #ifdef WIN32
@@ -78,7 +80,7 @@ typedef struct clss {
 
     FieldTypeInfo *field_ft_info;       // points to an array of FieldTypeInfo structs describing each fixed field
     FieldTypeInfo array_element_ft_info;// if an array, a FieldTypeInfo struct that describes the array elements
-    bool   is_array_elem_vt;            // true if this class is the element type of an array 
+    bool   is_array_elem_vt;            // true if this class is the element type of an array
     struct clss *containing_clss_type;  // if an array, the type (clss*) for the enclosing type
     bool is_pinned;
     void (*finalizer)(Managed_Object_Handle obj);
@@ -128,20 +130,20 @@ static unsigned numGlobalRefs = 0;
 
 typedef struct {
 public:
-#ifdef USE_PTHREADS
+#ifdef HAVE_PTHREAD_H
     int auto_reset_flag;
     int state;
     pthread_mutex_t *event_mutex;
     pthread_cond_t  *event_condition;
-#else // USE_PTHREADS
+#else // HAVE_PTHREAD_H
     McrtBool auto_reset_flag;
 #ifdef USE_MCRT_CLH_LOCK
     McrtClhLock *mcrt_clhlock;
 #else // clh lock
     McrtEvent *mcrt_event;
 #endif // clh lock
-#endif // USE_PTHREADS
-} threadEvent; 
+#endif // HAVE_PTHREAD_H
+} threadEvent;
 
 extern "C" uint32_t heapGetG4(ManagedObject *object, uint32_t offset);
 extern "C" void     heapSetG4(ManagedObject *object, uint32_t offset, uint32_t value);
@@ -165,13 +167,13 @@ void orp_heap_set_uint64_t(ManagedObject *object, uint32_t offset, uint64_t valu
 }
 
 
-VTable * Object::get_vtable() { 
+VTable * Object::get_vtable() {
 #ifdef __X86_64__
     // mask off the two low-order bits that may be used for flags by the GC
-    return (VTable*)(heapGetG8((ManagedObject*)&vt,0) & ~0x3); 
+    return (VTable*)(heapGetG8((ManagedObject*)&vt,0) & ~0x3);
 #else
     // mask off the two low-order bits that may be used for flags by the GC
-    return (VTable*)(heapGetG4((ManagedObject*)&vt,0) & ~0x3); 
+    return (VTable*)(heapGetG4((ManagedObject*)&vt,0) & ~0x3);
 #endif
 }
 
@@ -179,7 +181,7 @@ void Object::set_vtable(VTable *new_vt) {
 #ifdef __X86_64__
 	heapSetG8((ManagedObject*)&vt,0,(uint64_t)new_vt);
 #else
-	heapSetG4((ManagedObject*)&vt,0,(unsigned)new_vt);
+	heapSetG4((ManagedObject*)&vt,0,(uintptr_t)new_vt);
 #endif
 }
 
@@ -190,7 +192,7 @@ extern "C" unsigned short pgc_is_vtable_immutable(struct VTable *vt)
 
 unsigned num_vtables_allocated = 0;
 
-#ifdef USE_PTHREADS
+#ifdef HAVE_PTHREAD_H
 pthread_mutex_t pgc_vtable_lock;
 #endif
 std::list<struct VTable*> pgc_vtable_list;
@@ -214,10 +216,10 @@ extern "C" void pgc_new_indirection_object(struct VTable *new_vt,
 	new_vt->pre_tenure = 0; // everything starts off not being pre-tenured
 
     new_vt->clss = new_clss;
-    if((POINTER_SIZE_INT)new_vt % 16 != 0) {
+    if((uintptr_t)new_vt % 16 != 0) {
         printf("Incoming vtable is not 16-byte aligned %p!!!\n",new_vt);
     }
-    if((POINTER_SIZE_INT)&(new_clss->array_vt) % 16 != 0) {
+    if((uintptr_t)&(new_clss->array_vt) % 16 != 0) {
         printf("New class array_vt field is not 16-byte aligned!!!\n");
     }
 
@@ -263,11 +265,11 @@ extern "C" void pgc_new_indirection_object(struct VTable *new_vt,
 
     gc_class_prepared(new_clss,new_vt);
 
-#ifdef USE_PTHREADS
+#ifdef HAVE_PTHREAD_H
     pthread_mutex_lock(&pgc_vtable_lock);
 #endif
     pgc_vtable_list.push_back(new_vt);
-#ifdef USE_PTHREADS
+#ifdef HAVE_PTHREAD_H
     pthread_mutex_unlock(&pgc_vtable_lock);
 #endif
 }
@@ -302,10 +304,10 @@ extern "C" void pgc_new_object_format(
 	new_vt->pre_tenure = 0; // everything starts off not being pre-tenured
 
     new_vt->clss = new_clss;
-    if((POINTER_SIZE_INT)new_vt % 16 != 0) {
+    if((uintptr_t)new_vt % 16 != 0) {
         printf("Incoming vtable is not 16-byte aligned %p!!!\n",new_vt);
     }
-    if((POINTER_SIZE_INT)&(new_clss->array_vt) % 16 != 0) {
+    if((uintptr_t)&(new_clss->array_vt) % 16 != 0) {
         printf("New class array_vt field is not 16-byte aligned!!!\n");
     }
 
@@ -419,11 +421,11 @@ extern "C" void pgc_new_object_format(
 
     gc_class_prepared(new_clss,new_vt);
 
-#ifdef USE_PTHREADS
+#ifdef HAVE_PTHREAD_H
     pthread_mutex_lock(&pgc_vtable_lock);
 #endif
     pgc_vtable_list.push_back(new_vt);
-#ifdef USE_PTHREADS
+#ifdef HAVE_PTHREAD_H
     pthread_mutex_unlock(&pgc_vtable_lock);
 #endif
 } // pgc_new_object_format
@@ -444,7 +446,7 @@ extern "C" void pgc_new_object_format_2(
 }
 
 extern "C" void * class_get_super_class(Class_Handle ch) {
-    return NULL; 
+    return NULL;
 }
 
 extern "C" void * class_get_vtable(Class_Handle ch) {
@@ -550,7 +552,7 @@ extern "C" void * orp_get_gc_thread_local(void) {
             TaskNotification(task, /*is_new_task*/ PrtTrue);
             res = prtGetTls();
         }
-    } 
+    }
     return res;
 #else
     PrtTaskHandle pth = prtGetTaskHandle();
@@ -580,7 +582,7 @@ extern "C" unsigned int class_is_finalizable(Class_Handle ch) {
 }
 
 extern "C" SynchCriticalSectionHandle orp_synch_create_critical_section(void) {
-#ifdef USE_PTHREADS
+#ifdef HAVE_PTHREAD_H
     pthread_mutex_t *new_mux = (pthread_mutex_t*)malloc(sizeof(pthread_mutex_t));
     pthread_mutex_init(new_mux,NULL);
     return (SynchCriticalSectionHandle)new_mux;
@@ -590,7 +592,7 @@ extern "C" SynchCriticalSectionHandle orp_synch_create_critical_section(void) {
 }
 
 extern "C" unsigned int orp_synch_enter_critical_section(SynchCriticalSectionHandle cs) {
-#ifdef USE_PTHREADS
+#ifdef HAVE_PTHREAD_H
     // FIX FIX FIX...is this right or do we need to yield somehow?
     int res = pthread_mutex_lock((pthread_mutex_t*)cs);
     assert(res == 0);
@@ -607,7 +609,7 @@ extern "C" unsigned int orp_synch_enter_critical_section(SynchCriticalSectionHan
 }
 
 extern "C" void orp_synch_leave_critical_section(SynchCriticalSectionHandle cs) {
-#ifdef USE_PTHREADS
+#ifdef HAVE_PTHREAD_H
     // FIX FIX FIX...is this right or do we need to yield somehow?
     int res = pthread_mutex_unlock((pthread_mutex_t*)cs);
     assert(res == 0);
@@ -617,7 +619,7 @@ extern "C" void orp_synch_leave_critical_section(SynchCriticalSectionHandle cs) 
 }
 
 extern "C" void orp_synch_delete_critical_section(SynchCriticalSectionHandle cs) {
-#ifdef USE_PTHREADS
+#ifdef HAVE_PTHREAD_H
     pthread_mutex_unlock((pthread_mutex_t*)cs);
     free(cs);
 #else
@@ -683,7 +685,7 @@ extern "C" void orp_gc_lock_enum(void) {
     if(num_gc_locks % 20 == 0) {
 //        printf("%d orp_gc_lock_enum calls.\n",num_gc_locks);
     }
-    
+
     assert(gc_lock_count < 2);
 
 //    printf("orp_gc_lock_enum %d\n",gc_lock_count);
@@ -704,38 +706,38 @@ extern "C" void orp_gc_unlock_enum(void) {
 #else
   #define DELTA_EPOCH_IN_MICROSECS  11644473600000000ULL
 #endif
- 
+
 int gettimeofday(struct timeval *tv, struct timezone *tz)
 {
     FILETIME ft;
     unsigned __int64 tmpres = 0;
     static int tzflag;
- 
+
     if (NULL != tv) {
         GetSystemTimeAsFileTime(&ft);
- 
+
         tmpres |= ft.dwHighDateTime;
         tmpres <<= 32;
         tmpres |= ft.dwLowDateTime;
- 
+
         /*converting file time to unix epoch*/
-        tmpres -= DELTA_EPOCH_IN_MICROSECS; 
+        tmpres -= DELTA_EPOCH_IN_MICROSECS;
         tmpres /= 10;  /*convert into microseconds*/
         tv->tv_sec = (long)(tmpres / 1000000UL);
         tv->tv_usec = (long)(tmpres % 1000000UL);
     }
- 
+
     if(tz != NULL) {
         assert(0);
       }
- 
+
     return 0;
 }
 #endif
 #endif
 
 extern "C" void orp_thread_sleep(unsigned int msec) {
-#ifdef USE_PTHREADS
+#ifdef HAVE_PTHREAD_H
     struct timeval cur_time;
     struct timeval timeout;
 
@@ -761,14 +763,14 @@ extern "C" void orp_thread_sleep(unsigned int msec) {
 extern "C" SynchEventHandle orp_synch_create_event(unsigned int man_reset_flag) {
     threadEvent *retval = NULL;
     retval = (threadEvent *)malloc (sizeof(threadEvent));
-#ifdef USE_PTHREADS
+#ifdef HAVE_PTHREAD_H
     retval->auto_reset_flag = !man_reset_flag;
     retval->state = 0;
     retval->event_mutex = (pthread_mutex_t*)malloc(sizeof(pthread_mutex_t));
     retval->event_condition = (pthread_cond_t*)malloc(sizeof(pthread_cond_t));
     pthread_mutex_init(retval->event_mutex,NULL);
     pthread_cond_init(retval->event_condition,NULL);
-#else // USE_PTHREADS
+#else // HAVE_PTHREAD_H
     retval->auto_reset_flag = !man_reset_flag;
 #ifdef USE_MCRT_CLH_LOCK
     retval->mcrt_clhlock = mcrtClhLockNew();
@@ -783,17 +785,17 @@ extern "C" SynchEventHandle orp_synch_create_event(unsigned int man_reset_flag) 
     return (SynchEventHandle)retval;
 }
 
-/* The event is not signaled. */ 
+/* The event is not signaled. */
 extern "C" unsigned int orp_synch_reset_event(SynchEventHandle handle) {
     threadEvent *the_event;
     the_event = (threadEvent *)handle;
 
-#ifdef USE_PTHREADS
+#ifdef HAVE_PTHREAD_H
     pthread_mutex_lock(the_event->event_mutex);
     the_event->state = 0;
     pthread_cond_broadcast(the_event->event_condition);
     pthread_mutex_unlock(the_event->event_mutex);
-#else // USE_PTHREADS
+#else // HAVE_PTHREAD_H
 #ifdef USE_MCRT_CLH_LOCK
     mcrtClhLockTryAcquire(the_event->mcrt_clhlock);
 #else // USE_MCRT_CLH_LOCK
@@ -805,15 +807,15 @@ extern "C" unsigned int orp_synch_reset_event(SynchEventHandle handle) {
 }
 
 /* Signal the event */
-extern "C" unsigned int orp_synch_set_event(SynchEventHandle handle) {  
+extern "C" unsigned int orp_synch_set_event(SynchEventHandle handle) {
     threadEvent *the_event = (threadEvent *)handle;
-#ifdef USE_PTHREADS
+#ifdef HAVE_PTHREAD_H
     pthread_mutex_lock(the_event->event_mutex);
     the_event->state = 1;
     pthread_cond_broadcast(the_event->event_condition);
     pthread_mutex_unlock(the_event->event_mutex);
-#else // USE_PTHREADS
-#ifdef USE_MCRT_CLH_LOCK    
+#else // HAVE_PTHREAD_H
+#ifdef USE_MCRT_CLH_LOCK
     mcrtClhLockTryRelease(the_event->mcrt_clhlock);
 #else  // USE_MCRT_CLH_LOCK
     mcrtEventNotify(the_event->mcrt_event);
@@ -825,7 +827,7 @@ extern "C" unsigned int orp_synch_set_event(SynchEventHandle handle) {
 
 extern "C" unsigned int orp_synch_wait_for_event(SynchEventHandle hHandle, unsigned int dwMillisec) {
     threadEvent *the_threadevent = (threadEvent *)hHandle;
-#ifdef USE_PTHREADS
+#ifdef HAVE_PTHREAD_H
     struct timeval cur_time;
     struct timespec timeout;
 
@@ -859,11 +861,11 @@ extern "C" unsigned int orp_synch_wait_for_event(SynchEventHandle hHandle, unsig
     if(the_threadevent->auto_reset_flag) {
         the_threadevent->state = 0;
     }
-    
+
     pthread_mutex_unlock(the_threadevent->event_mutex);
 
     return EVENT_WAIT_OBJECT_0;
-#else  // USE_PTHREADS
+#else  // HAVE_PTHREAD_H
     McrtSyncResult result;
 #ifdef USE_MCRT_CLH_LOCK
     result = mcrtClhLockAcquire (the_threadevent->mcrt_clhlock,
@@ -876,13 +878,13 @@ extern "C" unsigned int orp_synch_wait_for_event(SynchEventHandle hHandle, unsig
             assert(result == Success);
         }
     }
-#else        
+#else
     if(dwMillisec == INFINITE_TIME)
-        result = mcrtEventWait (the_threadevent->mcrt_event, 
+        result = mcrtEventWait (the_threadevent->mcrt_event,
                                 the_threadevent->auto_reset_flag);
-    else 
-        result = mcrtEventTimedWait (the_threadevent->mcrt_event, 
-                                     the_threadevent->auto_reset_flag, 
+    else
+        result = mcrtEventTimedWait (the_threadevent->mcrt_event,
+                                     the_threadevent->auto_reset_flag,
                 				     mcrtConvertMsecsToCycles(dwMillisec));
 #endif // USE_MCRT_CLH_LOCK
     if (result == Success) {
@@ -910,7 +912,7 @@ extern "C" unsigned int orp_synch_wait_for_multiple_events(unsigned int numobj, 
   unsigned int ret;
   unsigned int i;
 
-#ifdef USE_PTHREADS
+#ifdef HAVE_PTHREAD_H
   if (dwMillisec != INFINITE_TIME) {
       assert(0);
   }
@@ -939,8 +941,8 @@ struct funarg_wrapS {
 
 typedef struct funarg_wrapS funarg_wrap;
 
-static void 
-#ifdef USE_PTHREADS
+static void
+#ifdef HAVE_PTHREAD_H
 *
 #endif
 cdeclThreadWrapper(void *funarg_wrap_args)
@@ -949,7 +951,7 @@ cdeclThreadWrapper(void *funarg_wrap_args)
     funarg_wrap *wrap_args = (funarg_wrap *)funarg_wrap_args;
     start_result = wrap_args->start_address(wrap_args->arglist);
     free(funarg_wrap_args);
-#ifdef USE_PTHREADS
+#ifdef HAVE_PTHREAD_H
     return NULL;
 #endif
 }
@@ -957,30 +959,30 @@ cdeclThreadWrapper(void *funarg_wrap_args)
 extern "C" ThreadThreadHandle orp_thread_create(unsigned int STDCALL_FUNC_OUT (STDCALL_FUNC_IN *start_address)(void *), void *arglist, unsigned *thrdaddr )
 {
     ThreadThreadHandle thread;
-#ifdef USE_PTHREADS
+#ifdef HAVE_PTHREAD_H
     pthread_t *new_thread;
 #endif
     funarg_wrap *wrap_args;
-    
+
     wrap_args = (funarg_wrap *)malloc (sizeof(funarg_wrap));
     wrap_args->arglist = arglist;
     wrap_args->start_address = start_address;
 
-#ifdef USE_PTHREADS
+#ifdef HAVE_PTHREAD_H
     // FIX FIX FIX ....this allocaiton will leak for the moment.
     new_thread = (pthread_t*)malloc(sizeof(pthread_t));
     pthread_create(new_thread, NULL, cdeclThreadWrapper, wrap_args);
     thread = (ThreadThreadHandle)new_thread;
     if(thrdaddr) {
-        *thrdaddr = 
+        *thrdaddr =
 #ifdef WIN32
             (unsigned)pthread_self().p;
 #else // WIN32
             (unsigned)pthread_self();
 #endif // WIN32
     }
-#else // USE_PTHREADS
-    /* mcrtThreadCreate returns a mcrtThread*. */ 
+#else // HAVE_PTHREAD_H
+    /* mcrtThreadCreate returns a mcrtThread*. */
     thread = (ThreadThreadHandle)mcrtThreadCreate(cdeclThreadWrapper, wrap_args);
     if (thread != NULL) {
         /* All threads created for ORP are detached. */
@@ -989,7 +991,7 @@ extern "C" ThreadThreadHandle orp_thread_create(unsigned int STDCALL_FUNC_OUT (S
 		    *thrdaddr = *(unsigned *)thread;
 	    }
     }
-#endif // USE_PTHREADS
+#endif // HAVE_PTHREAD_H
     return thread; /* return 0 on error to match beginthreadex. */
 }
 
@@ -1028,25 +1030,25 @@ typedef struct ManagedObjectUncompressedVtablePtr {
     VTable *vt_raw;
     POINTER_SIZE_INT obj_info;
 
-    VTable *vt_unsafe() { 
-        return (VTable *)orp_heap_get_pointer((ManagedObject *)this, 0); 
+    VTable *vt_unsafe() {
+        return (VTable *)orp_heap_get_pointer((ManagedObject *)this, 0);
     }
     VTable *vt() { return vt_unsafe(); }
 
-    //  VTable * is used for the size of the vt_raw. using orp_heap_get_uint32_t instead of heapGetG4 due to 
+    //  VTable * is used for the size of the vt_raw. using orp_heap_get_uint32_t instead of heapGetG4 due to
     // the fact that these types are used by synch.dll which is not part of orp.
-    POINTER_SIZE_INT get_obj_info() { 
+    POINTER_SIZE_INT get_obj_info() {
         if(sizeof(POINTER_SIZE_INT) == 4)
-            return (uint32_t)orp_heap_get_uint32_t((ManagedObject *)this, sizeof(VTable *)); 
+            return (uint32_t)orp_heap_get_uint32_t((ManagedObject *)this, sizeof(VTable *));
         if(sizeof(POINTER_SIZE_INT) == 8)
-            return (uint32_t)orp_heap_get_uint64_t((ManagedObject *)this, sizeof(VTable *)); 
+            return (uint32_t)orp_heap_get_uint64_t((ManagedObject *)this, sizeof(VTable *));
     }
-    
-    void set_obj_info(POINTER_SIZE_INT value) { 
+
+    void set_obj_info(POINTER_SIZE_INT value) {
         if(sizeof(POINTER_SIZE_INT) == 4)
-            orp_heap_set_uint32_t((ManagedObject *)this, sizeof(VTable *), (uint32_t) value); 
+            orp_heap_set_uint32_t((ManagedObject *)this, sizeof(VTable *), (uint32_t) value);
         if(sizeof(POINTER_SIZE_INT) == 8)
-            orp_heap_set_uint64_t((ManagedObject *)this, sizeof(VTable *), (uint64_t) value); 
+            orp_heap_set_uint64_t((ManagedObject *)this, sizeof(VTable *), (uint64_t) value);
     }
 
     static VTable *allocation_handle_to_vtable(Allocation_Handle ah) {
@@ -1068,9 +1070,9 @@ typedef struct ManagedObject {
     POINTER_SIZE_INT get_obj_info() {
         return ((ManagedObjectUncompressedVtablePtr *)this)->get_obj_info();
     }
-    // if 
-    POINTER_SIZE_INT *get_obj_info_addr() { 
-        return (POINTER_SIZE_INT *)( ((char *)(this)) + header_offset() ); 
+    // if
+    POINTER_SIZE_INT *get_obj_info_addr() {
+        return (POINTER_SIZE_INT *)( ((char *)(this)) + header_offset() );
     }
     POINTER_SIZE_INT get_obj_info_offset() { return (uint32_t)header_offset(); }
     void set_obj_info(POINTER_SIZE_INT value) {
@@ -1082,11 +1084,11 @@ typedef struct ManagedObject {
     static unsigned header_offset() {
         return ManagedObjectUncompressedVtablePtr::header_offset();
     }
- 
+
     bool is_forwarded() {
         return false;
     }
-    
+
     struct ManagedObject *get_forwarding_pointer() {
         assert(0); // This should never be called unless we are in the McRT based SUPPORT_TRANSACTIONS version of the world.
         return NULL;
@@ -1104,7 +1106,7 @@ typedef struct ManagedObject {
 int VTable::vector_get_length(void *o) {
     assert(sizeof(int) == 4);
     assert(array_element_size != 0);
-    return heapGetG4((ManagedObject*)o,array_length_offset); 
+    return heapGetG4((ManagedObject*)o,array_length_offset);
 }
 
 extern "C" int32_t vector_get_length(Vector_Handle vector) {
@@ -1396,13 +1398,13 @@ extern "C" void pgc_root_callback(void *env, void **rootAddr, PrtBool isMP) {
 extern "C" void pgc_root_callback(void *env, void **rootAddr, PrtGcTag tag, void *parameter) {
     int offset;
     assert(rootAddr);
-    
+
     switch(tag) {
     case PrtGcTagDefault:
         gc_add_root_set_entry((void **)rootAddr, FALSE);
         break;
     case PrtGcTagOffset:
-        gc_add_root_set_entry_interior_pointer(rootAddr, (int)parameter, FALSE);
+        gc_add_root_set_entry_interior_pointer(rootAddr, (intptr_t)parameter, FALSE);
         break;
     case PrtGcTagBase:
         offset = (int)(POINTER_SIZE_INT)(*((Byte**)rootAddr) - (Byte*)parameter);
@@ -1411,7 +1413,7 @@ extern "C" void pgc_root_callback(void *env, void **rootAddr, PrtGcTag tag, void
     default:
         if(tag == ((PrtGcTag)(PrtGcTagOffset | (1 << 31)))) {
 //             gc_add_weak_root_set_entry_interior_pointer(rootAddr, (int)parameter);
-            gc_add_root_set_entry_interior_pointer(rootAddr, (int)parameter, FALSE);
+            gc_add_root_set_entry_interior_pointer(rootAddr, (intptr_t)parameter, FALSE);
         } else {
             assert(0);
         }
@@ -1546,7 +1548,7 @@ void TaskNotification(PrtTaskHandle pth, PrtBool is_new_task) {
 extern "C" void pgc_kill(void) {
     gc_wrapup();
 
-#ifdef USE_PTHREADS
+#ifdef HAVE_PTHREAD_H
     pthread_mutex_lock(&pgc_vtable_lock);
 #endif
     while(!pgc_vtable_list.empty()) {
@@ -1563,7 +1565,7 @@ extern "C" void pgc_kill(void) {
 
         pgc_vtable_list.pop_front();
     }
-#ifdef USE_PTHREADS
+#ifdef HAVE_PTHREAD_H
     pthread_mutex_unlock(&pgc_vtable_lock);
 #endif
 } // pgc_kill
@@ -1573,7 +1575,7 @@ extern "C" void pgc_force_gc(void) {
 }
 
 extern "C" void pgc_init(PgcRuntimeCallback runtimeCallback, int update_threads_on_lock) {
-#ifdef USE_PTHREADS
+#ifdef HAVE_PTHREAD_H
     pthread_mutex_init(&pgc_vtable_lock, NULL);
 #endif
 
@@ -1667,7 +1669,7 @@ PrtBool PRT_CDECL pgcPredicateEqualUint32(volatile void *location, void *data)
 #if 0
     return (*(volatile uint64_t*)location) == ((uint64_t)data) ? PrtTrue : PrtFalse;
 #else
-    return (*(volatile uint32_t*)location) == ((uint32_t)data) ? PrtTrue : PrtFalse;
+    return (*(volatile uint32_t*)location) == ((uintptr_t)data) ? PrtTrue : PrtFalse;
 #endif
 }
 
@@ -1679,18 +1681,18 @@ extern "C" void * pgc_allocate_or_null(unsigned size, void *vtable_id) {
     if((size & 0xFFffFFfc) != size) {
         size = (size + sizeof(POINTER_SIZE_INT)) & 0xFFffFFfc;
     }
-    return gc_malloc_or_null_with_thread_pointer(size,(Allocation_Handle)vtable_id,orp_get_gc_thread_local());
+    return gc_malloc_or_null_with_thread_pointer(size,(uintptr_t)vtable_id,orp_get_gc_thread_local());
 }
 
 extern "C" void * pgc_allocate(unsigned size, void *vtable_id) {
-    // While there is a GC in progress, call prtYield to give this 
+    // While there is a GC in progress, call prtYield to give this
     // thread a chance to be stopped.  More importantly, we cannot
     // enter the gc_malloc_with_thread_pointer call because
     // if a thread on this processor was the one to trigger the GC
     // then this processor's TLS nursery entry will be NULL and may
     // really confuse the GC.
     while(gc_lock_count) {
-#ifdef USE_PTHREADS
+#ifdef HAVE_PTHREAD_H
         prtYieldUntil(pgcPredicateEqualUint32, &gc_lock_count, 0, PrtInfiniteWait64);
 #else
         prtYieldUntil((PrtPredicate)mcrtPredicateEqualUint32, &gc_lock_count, 0, InfiniteWaitCycles64);
@@ -1700,14 +1702,14 @@ extern "C" void * pgc_allocate(unsigned size, void *vtable_id) {
     if((size & 0xFFffFFfc) != size) {
         size = (size + sizeof(POINTER_SIZE_INT)) & 0xFFffFFfc;
     }
-    return gc_malloc_with_thread_pointer(size,(Allocation_Handle)vtable_id,orp_get_gc_thread_local());
+    return gc_malloc_with_thread_pointer(size,(uintptr_t)vtable_id,orp_get_gc_thread_local());
 } // pgc_allocate
 
 #if 0
 extern "C" Managed_Object_Handle gc_malloc_with_thread_pointer_escaping(unsigned size, Allocation_Handle ah, void *tp);
 
 extern "C" void * pgc_allocate_escaping(unsigned size, void *vtable_id) {
-    // While there is a GC in progress, call prtYield to give this 
+    // While there is a GC in progress, call prtYield to give this
     // thread a chance to be stopped.  More importantly, we cannot
     // enter the gc_malloc_with_thread_pointer call because
     // if a thread on this processor was the one to trigger the GC
@@ -1757,7 +1759,7 @@ extern "C" void pgc_next_command_line_argument(const char *name, const char *arg
     static bool first_time = true;
     if(first_time) {
         char buf[50];
-#ifdef USE_PTHREADS
+#ifdef HAVE_PTHREAD_H
         sprintf(buf,"num_procs=%d",prtGetNumProcessors());
 #else
         sprintf(buf,"num_procs=%d",mcrtGetNumProcessors());
@@ -1776,7 +1778,7 @@ static VTable * g_filler_vtables[FILLER_VTABLE_SIZE];
 // The size of objects for the new vtable must be at least sizeof(struct VTable*) less than the size of the original object.
 // Returns 1 on success, 0 on failure (due to a violation of the previously stated rule).
 extern "C" int pgc_modify_object_vtable_shorter(Object *object,struct VTable  *new_vt) {
-    return gc_update_vtable((Managed_Object_Handle)object,(Allocation_Handle)new_vt);
+    return gc_update_vtable((Managed_Object_Handle)object,(uintptr_t)new_vt);
 }
 
 
@@ -1849,8 +1851,8 @@ extern "C" void pgc_wrapup()
 
 #ifdef REF_ZEROING
 // BTL 20080313 Explicitly zero out ref fields in newly-allocated objects.
-// If "what_to_zero"=1, zero ref fields in the variable portion of the newly-allocated "object". 
-// If "what_to_zero"=2, zero all ref fields of "object". 
+// If "what_to_zero"=1, zero ref fields in the variable portion of the newly-allocated "object".
+// If "what_to_zero"=2, zero all ref fields of "object".
 extern "C" void __pdecl pgc_zero_ref_fields(struct Object *object, unsigned size, unsigned what_to_zero)
 {
     if (what_to_zero == 0) {
@@ -1872,7 +1874,7 @@ extern "C" void __pdecl pgc_zero_ref_fields(struct Object *object, unsigned size
     // Always clear the 2nd field in the object, which GC_V4 (but not TGC) assumes will be initialized to zero.
     ((unsigned *)object)[1] = 0;
 
-    if ((what_to_zero == 2) && (obj_class->fixed_part_has_ref > 0)) { 
+    if ((what_to_zero == 2) && (obj_class->fixed_part_has_ref > 0)) {
         // Zero refs among the fixed fields too
         PgcIsRef *field_is_ref = obj_class->is_ref;  // NB: this array also describes the VTable* and obj_info words
         assert(field_is_ref);
@@ -1927,7 +1929,7 @@ extern "C" void __pdecl pgc_zero_ref_fields(struct Object *object, unsigned size
 // Called by the GC at the beginning of a private nursery collection.
 extern "C" void pgc_local_nursery_collection_start()
 {
-#ifndef USE_PTHREADS
+#ifndef HAVE_PTHREAD_H
     PrtTaskHandle cur_task = prtGetTaskHandle();
 	if(cur_task) {
 	    prtDisablePrscallStealing(cur_task);
@@ -1939,7 +1941,7 @@ extern "C" void pgc_local_nursery_collection_start()
 // Called by the GC at the end of a private nursery collection.
 extern "C" void pgc_local_nursery_collection_finish()
 {
-#ifndef USE_PTHREADS
+#ifndef HAVE_PTHREAD_H
     PrtTaskHandle cur_task = prtGetTaskHandle();
     if(cur_task) {
 		prtEnablePrscallStealing(cur_task);
