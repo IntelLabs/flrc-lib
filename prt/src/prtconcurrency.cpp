@@ -41,11 +41,11 @@ unsigned cimCreated;
 // a code info manager for prtPcall().
 static void bootstrapTaskGetPreviousFrame(PrtStackIterator *si, PrtCimSpecificDataType opaqueData)
 {
-#ifdef __X86_64__
+#ifdef __x86_64__
     si->ripPtr = NULL;
-#else  // __X86_64__
+#else  // __x86_64__
     si->eipPtr = NULL;
-#endif // __X86_64__
+#endif // __x86_64__
 } //bootstrapTaskGetPreviousFrame
 
 
@@ -118,17 +118,17 @@ void prt_BootstrapTask(Prt_WrappedTaskData *wrappedData, bool deleteWrappedData)
     Prt_PcallVse stackAllocationPcallVse;
     Prt_PcallVse *pcallVse = &stackAllocationPcallVse;
 
-#ifdef __X86_64__
+#ifdef __x86_64__
     // Continuations must be 16-byte aligned.
     pcallVse = (Prt_PcallVse*)((int64_t)pcallVse & 0xFFffFFffFFffFFf0);
-#endif // __X86_64__
+#endif // __x86_64__
 
     pthread_t *new_pthread_thread = new pthread_t;
     *new_pthread_thread = pthread_self();
     // Allocate enough storage for the Prt_Task object and the client's TLS space.
     Prt_Task *pt = new (wrappedData->getNewTaskMemory()) Prt_Task(
                                 new_pthread_thread,
-                                wrappedData->getTlsHandle() 
+                                wrappedData->getTlsHandle()
 								);
 //    printf("prt_BootstrapTask task = %x\n",pt);
     // Add the first entry to the virtual stack.
@@ -201,13 +201,13 @@ static void  * startNewThreadForPcall(void *threadData)
  * prtPcall
  *    Immediately launches a new Pillar task running initialProc.
  */
-extern "C" void pcallOnSystemStack(PrtCodeAddress initialProc, 
-								   void *argStart, 
-								   unsigned argSize, 
+extern "C" void pcallOnSystemStack(PrtCodeAddress initialProc,
+								   void *argStart,
+								   unsigned argSize,
 								   PrtAffinityProcessorId pid,
  								   PrtPcallArgEnumerator argRefEnumerator) {
     PrtProvidedTlsHandle userTls = NULL;
-    Prt_Task *this_task = prt_GetTask(); 
+    Prt_Task *this_task = prt_GetTask();
     if(this_task) {
         userTls = this_task->getUserTls();
     }
@@ -231,7 +231,7 @@ extern "C" void pcallOnSystemStack(PrtCodeAddress initialProc,
     if(this_task && this_task->mPcallStackSize) {
         pthread_attr_setstacksize(&create_attr,this_task->mPcallStackSize);
     }
-    
+
     pthread_create_err = pthread_create(&new_thread, &create_attr, startNewThreadForPcall, wrappedData);
     if(!pthread_create_err) {
         pthread_attr_destroy(&create_attr);
@@ -249,9 +249,9 @@ extern "C" void pcallOnSystemStack(PrtCodeAddress initialProc,
 extern "C" void prt_pcallAsm(PrtRegister *newEsp);
 
 
-PILLAR_EXPORT void __pdecl prtPcall(PrtCodeAddress managedFunc, 
-								    void *argStart, 
-									unsigned argSize, 
+PILLAR_EXPORT void __pdecl prtPcall(PrtCodeAddress managedFunc,
+								    void *argStart,
+									unsigned argSize,
 									PrtAffinityProcessorId pid,
 									PrtPcallArgEnumerator argRefEnumerator) {
     pcallOnSystemStack(managedFunc,argStart,argSize,pid,argRefEnumerator);
@@ -316,7 +316,7 @@ void prt_exitTask(Prt_Task *pt)
         while(pt->mRefcount) {
             pthread_cond_wait(&(pt->mRefcountDecrease), &(pt->mYieldStateLock));
         }
-    
+
         // If anybody tries to stop us after we've started the process of stopping
         // then signal them to wake up now that mIsEnded is true.
         while(pt->mSuspenders.size()) {
@@ -401,7 +401,7 @@ void PrtTaskSetDecRefCount(PrtTaskSet *task_set)
         exit(-9);
     }
 #endif /* BTL_DEBUGGING */
-    
+
     if (--(task_set->ts_refcount) == 0) {
         prt_PthreadLockWrapper theLock(&(prt_GetGlobals()->gTaskSetLock));
 
@@ -446,7 +446,7 @@ void PrtTaskSetDecRefCount(PrtTaskSet *task_set)
 
 
 // This procedure assumes "ThreadListLock" is already held.
-void addThreadToTaskSet(PrtTaskSet *task_set, Prt_Task *task) 
+void addThreadToTaskSet(PrtTaskSet *task_set, Prt_Task *task)
 {
     PrtConstantListNode *new_node = (PrtConstantListNode*)malloc(sizeof(PrtConstantListNode));
 
@@ -464,7 +464,7 @@ void addThreadToTaskSet(PrtTaskSet *task_set, Prt_Task *task)
         }
         ++task->mRefcount;
     }
-     
+
     new_node->next   = NULL;
     new_node->prt_task = task;
 
@@ -485,7 +485,7 @@ void addThreadToTaskSet(PrtTaskSet *task_set, Prt_Task *task)
         exit(-9);
     }
 #endif /* BTL_DEBUGGING */
-    task_set->tail->next = new_node;    
+    task_set->tail->next = new_node;
     task_set->tail       = new_node;
 } //addThreadToTaskSet
 
@@ -585,7 +585,7 @@ void PrtTaskSetEnumeratorCtor(PrtTaskSetEnumeratorInternal *tse, PrtTaskSet *tas
 
 
 
-PrtTaskSetEnumeratorInternal *getTaskSet(PrtTaskSetEnumeratorInternal *tse) 
+PrtTaskSetEnumeratorInternal *getTaskSet(PrtTaskSetEnumeratorInternal *tse)
 {
     PrtTaskSetEnumeratorInternal *new_tse = (PrtTaskSetEnumeratorInternal*)malloc(sizeof(PrtTaskSetEnumeratorInternal));
 //    printf("getTaskSet %x\n", tse);
@@ -615,13 +615,13 @@ PrtTaskSetEnumeratorInternal *getTaskSet(PrtTaskSetEnumeratorInternal *tse)
 } //getTaskSet
 
 // get a task set. if you want the diffs from a previous task set then pass that task set as a param
-PILLAR_EXPORT PRT_CALL_FROM_ANYWHERE struct PrtTaskSetEnumerator* prtGetTaskSet(struct PrtTaskSetEnumerator *tse) 
+PILLAR_EXPORT PRT_CALL_FROM_ANYWHERE struct PrtTaskSetEnumerator* prtGetTaskSet(struct PrtTaskSetEnumerator *tse)
 {
     return (PrtTaskSetEnumerator*)getTaskSet((PrtTaskSetEnumeratorInternal*)tse);
 } // prtGetTaskSet
 
 
-void releaseTaskSet(PrtTaskSetEnumeratorInternal *tse) 
+void releaseTaskSet(PrtTaskSetEnumeratorInternal *tse)
 {
 #ifdef BTL_DEBUGGING
     if (tse == NULL) {
@@ -637,7 +637,7 @@ void releaseTaskSet(PrtTaskSetEnumeratorInternal *tse)
 
 
 // must call this when you're done with a task set so the tasks therein are free to terminate
-PILLAR_EXPORT PRT_CALL_FROM_ANYWHERE void prtReleaseTaskSet(struct PrtTaskSetEnumerator *tse) 
+PILLAR_EXPORT PRT_CALL_FROM_ANYWHERE void prtReleaseTaskSet(struct PrtTaskSetEnumerator *tse)
 {
     releaseTaskSet((PrtTaskSetEnumeratorInternal*)tse);
 } // prtReleaseTaskSet
@@ -733,7 +733,7 @@ Prt_Task *startIterator(PrtTaskSetEnumeratorInternal *tse)
 
 // after a call to getTaskSet you call this to return the first thread from the enumerator
 // can be called multiple times if you want to go over the list more than once.
-PILLAR_EXPORT PRT_CALL_FROM_ANYWHERE PrtTaskHandle prtStartIterator(struct PrtTaskSetEnumerator *tse) 
+PILLAR_EXPORT PRT_CALL_FROM_ANYWHERE PrtTaskHandle prtStartIterator(struct PrtTaskSetEnumerator *tse)
 {
     return (PrtTaskHandle)startIterator((PrtTaskSetEnumeratorInternal*)tse);
 } // prtStartIterator
@@ -769,7 +769,7 @@ PILLAR_EXPORT PRT_CALL_FROM_ANYWHERE unsigned ptkGetNextTlsOffset(unsigned space
 } // ptkGetNextTlsOffset
 
 PILLAR_EXPORT PRT_CALL_FROM_ANYWHERE unsigned ptkGetMinTlsSpace(void) {
-    return next_tls_offset;    
+    return next_tls_offset;
 }
 
 Prt_ResumeHandle prt_SuspendAllTasks(void)

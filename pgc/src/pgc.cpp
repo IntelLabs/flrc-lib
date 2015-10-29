@@ -168,7 +168,7 @@ void orp_heap_set_uint64_t(ManagedObject *object, uint32_t offset, uint64_t valu
 
 
 VTable * Object::get_vtable() {
-#ifdef __X86_64__
+#ifdef __x86_64__
     // mask off the two low-order bits that may be used for flags by the GC
     return (VTable*)(heapGetG8((ManagedObject*)&vt,0) & ~0x3);
 #else
@@ -178,7 +178,7 @@ VTable * Object::get_vtable() {
 }
 
 void Object::set_vtable(VTable *new_vt) {
-#ifdef __X86_64__
+#ifdef __x86_64__
 	heapSetG8((ManagedObject*)&vt,0,(uint64_t)new_vt);
 #else
 	heapSetG4((ManagedObject*)&vt,0,(uintptr_t)new_vt);
@@ -1019,7 +1019,7 @@ extern "C" void orp_gc_cycle_end_notification(void) {
 
 void *orp_heap_get_pointer(ManagedObject *object, uint32_t offset)
 {
-#if defined POINTER64 || defined __X86_64__
+#if defined POINTER64 || defined __x86_64__
     return (void *)heapGetG8(object, offset);
 #else
     return (void *)heapGetG4(object, offset);
@@ -1665,7 +1665,7 @@ extern "C" void pgc_init(PgcRuntimeCallback runtimeCallback, int update_threads_
 
 PrtBool PRT_CDECL pgcPredicateEqualUint32(volatile void *location, void *data)
 {
-//#if defined POINTER64 || defined __X86_64__
+//#if defined POINTER64 || defined __x86_64__
 #if 0
     return (*(volatile uint64_t*)location) == ((uint64_t)data) ? PrtTrue : PrtFalse;
 #else

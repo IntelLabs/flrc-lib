@@ -53,7 +53,7 @@ PILLAR_EXPORT void __pcdecl prtSetTls(PrtProvidedTlsHandle tlsHandle)
 } //prtSetTls
 
 
-PILLAR_EXPORT PrtProvidedTlsHandle __pcdecl prtGetTlsForTask(PrtTaskHandle pth) 
+PILLAR_EXPORT PrtProvidedTlsHandle __pcdecl prtGetTlsForTask(PrtTaskHandle pth)
 {
     Prt_Task *pt = (Prt_Task*)pth;
     return pt->getUserTls();
@@ -98,7 +98,7 @@ static PrtBool predicateAndYieldCheck(volatile void *location, void *data)
 } //predicateAndYieldCheck
 
 
-void YieldUntilRseFunction(PRT_IN PrtVseHandle theHandle, PRT_IN struct PrtRseInfo *rootSetInfo) 
+void YieldUntilRseFunction(PRT_IN PrtVseHandle theHandle, PRT_IN struct PrtRseInfo *rootSetInfo)
 {
     struct YieldUntilVse *yuv = (struct YieldUntilVse*)theHandle;
     if(yuv->root) {
@@ -107,14 +107,14 @@ void YieldUntilRseFunction(PRT_IN PrtVseHandle theHandle, PRT_IN struct PrtRseIn
 } //YieldUntilRseFunction
 
 #include <limits.h>
- 
+
 #define SPIN_NUMBER 5
 
 extern "C" PrtSyncResult PRT_CDECL prtYieldUntilMovable(PrtPredicate predicate,
                                                       volatile void *location,
                                                       void *value,
                                                       PrtTimeCycles64 timeout,
-                                                      PrtGcTag tag, 
+                                                      PrtGcTag tag,
                                                       void *gcTagParameter)
 {
     PrtSyncResult res;
@@ -210,7 +210,7 @@ extern "C" void prt_validateTlsPointer(void *tlsRegister)
 {
     Prt_Task *pt = prt_GetTask();
     if (pt != tlsRegister) {
-        printf("Pillar runtime error: corrupted TLS register in %p[#%u]\n", pt, 
+        printf("Pillar runtime error: corrupted TLS register in %p[#%u]\n", pt,
 #ifdef _WINDOWS
             pthread_self().p
 #else
@@ -320,15 +320,15 @@ void Prt_Task::EnlargeWatermark(void) {
     while (!prtIsActivationPastEnd(si)) {
 		if (prtHasFrameBeenVisited(si)) {
 			// Only get here if this frame has had its watermark set.
-#ifdef __X86_64__
+#ifdef __x86_64__
 			PrtCodeAddress new_rip = getWatermarkStub(*(si->ripPtr));
 			*(si->watermarkPtr)    = new_rip;    // set the return eip to the stub so that we'll know next time through.
 			si->ripPtr             = get_real_eip_ptr(*(si->watermarkPtr));
-#else  // __X86_64__
+#else  // __x86_64__
 			PrtCodeAddress new_eip = getWatermarkStub(*(si->eipPtr));
 			*(si->watermarkPtr)    = new_eip;    // set the return eip to the stub so that we'll know next time through.
 			si->eipPtr             = get_real_eip_ptr(*(si->watermarkPtr));
-#endif // __X86_64__
+#endif // __x86_64__
 		}
 
         USE_OLD_STUBS();
@@ -376,9 +376,9 @@ void Prt_Task::SetupWatermark(unsigned number) {
 	mWatermarkStubEnd = (char*)mWatermarkStubs + (watermark_stub_size * number);
 
 	unsigned top_offset_1      = ((char*)&prt_WatermarkPostTopIndex1      - (char*)&prt_WatermarkPrototypeStart) - sizeof(void*);
-#ifndef __X86_64__
+#ifndef __x86_64__
 	unsigned top_offset_2      = ((char*)&prt_WatermarkPostTopIndex2      - (char*)&prt_WatermarkPrototypeStart) - sizeof(void*);
-#endif // __X86_64__
+#endif // __x86_64__
 	unsigned stub_stack_offset = ((char*)&prt_WatermarkPostStubStackStart - (char*)&prt_WatermarkPrototypeStart) - sizeof(void*);
 	unsigned stub_start_offset = ((char*)&prt_WatermarkPostStubStart      - (char*)&prt_WatermarkPrototypeStart) - sizeof(void*);
 	mRealEipOffset             = ((char*)&prt_WatermarkPostRealEipMove    - (char*)&prt_WatermarkPrototypeStart) - sizeof(void*);
@@ -393,9 +393,9 @@ void Prt_Task::SetupWatermark(unsigned number) {
 		memcpy(mFreeStubIndices[mFreeStubTop],&prt_WatermarkPrototypeStart,watermark_stub_size);
 
 		*(void **)((char*)mFreeStubIndices[mFreeStubTop] + top_offset_1)      = &mFreeStubTop;
-#ifndef __X86_64__
+#ifndef __x86_64__
 		*(void **)((char*)mFreeStubIndices[mFreeStubTop] + top_offset_2)      = &mFreeStubTop;
-#endif // __X86_64__
+#endif // __x86_64__
 		*(void **)((char*)mFreeStubIndices[mFreeStubTop] + stub_stack_offset) = mFreeStubIndices;
 		*(void **)((char*)mFreeStubIndices[mFreeStubTop] + stub_start_offset) = mFreeStubIndices[mFreeStubTop];
 		*(void **)((char*)mFreeStubIndices[mFreeStubTop] + mRealEipOffset)    = NULL;
@@ -578,7 +578,7 @@ PrtBool Prt_Task::suspend(void) {
     if(mIsEnded) {
         return PrtFalse;
     }
-        
+
 #ifdef _WINDOWS
     if(target_thread_id.p == this_thread_id.p) {
 #else
@@ -753,7 +753,7 @@ extern "C" void prtToUnmanaged(Prt_Task *pt) {
     } else {
         while(pt->mSuspenders.size()) {
             TaskSuspendInfo tsi = pt->mSuspenders.front();
-    
+
             pthread_cond_signal(tsi.the_condition_variable);
             // Wait on the current suspender to release us.
             pthread_cond_wait(tsi.the_condition_variable,&(pt->mYieldStateLock));
@@ -795,11 +795,11 @@ void Prt_Task::printStack(const char *legend, PrtStackIterator *si)
     while (!prtIsActivationPastEnd(psi)) {
         char buffer[200];
         char *str = prtGetActivationString(psi, buffer, sizeof(buffer));
-#ifdef __X86_64__
+#ifdef __x86_64__
         printf("%s, rbx %p @ %p\n", str, (psi->rbxPtr? *(psi->rbxPtr) : (char*)0xDEADDEAD), psi->rbxPtr);
-#else  // __X86_64__
+#else  // __x86_64__
         printf("%s, ebx %p @ %p\n", str, (psi->ebxPtr? *(psi->ebxPtr) : (char*)0xDEADDEAD), psi->ebxPtr);
-#endif // __X86_64__
+#endif // __x86_64__
         prtNextActivation(psi);
     }
     printf("===========================================================================\n");
@@ -924,4 +924,3 @@ void Prt_Task::yieldUnmanaged(void) {
         }
     }
 }
-

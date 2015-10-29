@@ -87,22 +87,22 @@ int obj_num = 0;
 
 inline Partial_Reveal_Object *
 fast_gc_malloc_from_thread_chunk_or_null_with_nursery(GC_Nursery_Info *gc_nursery,
-													  unsigned size, 
+													  unsigned size,
 													  Allocation_Handle ah) {
     Partial_Reveal_Object *frontier = (Partial_Reveal_Object *)gc_nursery->tls_current_free;
 	adjust_frontier_to_alignment(frontier, (Partial_Reveal_VTable*)ah);
-    POINTER_SIZE_INT new_free = (size + (POINTER_SIZE_INT)frontier);
+    POINTER_SIZE_INT new_free = (size + (uintptr_t)frontier);
     // check that the old way and the new way are producing
     // the same pointers. This can go once we have it in place.
-    
-    if (new_free <= (POINTER_SIZE_INT) gc_nursery->tls_current_ceiling) {
+
+    if (new_free <= (uintptr_t) gc_nursery->tls_current_ceiling) {
         // success...
-        
+
         // Skip for now so this logic is not visible...
         // stick the vtable in
         //frontier->vt = (Partial_Reveal_VTable *)p_vtable;
         frontier->set_vtable(ah);
-        
+
         // increment free ptr and return object
         gc_nursery->tls_current_free = (void *) new_free;
         // Heap characterization is done only in the GCEXPORT routine
@@ -146,56 +146,56 @@ inline Partial_Reveal_Object * gc_malloc_from_thread_chunk_or_null_with_nursery(
     // chunk - This holds a list of blocks linked throuh the  next_free_block fields
     // Each block is an alloc_block and it has various areas where allocation can happen.
     // The block might not have been swept which means that the allocation areas have
-    // not be initialized. 
+    // not be initialized.
     // The tls holds the tls_current_free and the tls_current_ceiling which are used
     // to allocate within a given allocation area within a given allocation block within
     // a chunk.
-    
-    // The tls ceiling and free are set to zero to zero and all the blocks in the 
+
+    // The tls ceiling and free are set to zero to zero and all the blocks in the
     // allocation chunk are either swept by the GC or have their block_has_been_swept
     // set to false by the GC.
-    
+
     // The fast case just grabs the tls free pointer and increments it by size. If it is
     // less than ceiling then the object fits and we install the vtable.
-    
+
     // If the object does not fit, then we go the the tls and grab the alloc_block and
     // see if it has another area available. If it doesn't we move on to the next block in the
     // chunk. If we run our of blocks in the chunk we return NULL;
-    
+
     // The corner case is what happens right after a GC. Since free and ceiling are set to 0
     // the fast case will add size to 0 and compare against a 0 for ceiling and fall through.
     // The GC will have reset alloc block to the first block in the chunk and that is where
     // we will look for a new area to allocate in.
-    
+
     // Someday this will be part of the interface.
-    
+
     Partial_Reveal_Object *p_return_object = NULL;
-    
+
     p_return_object = fast_gc_malloc_from_thread_chunk_or_null_with_nursery(gc_nursery, size, ah);
     if (p_return_object) {
         // fast case was successful.
-        // Heap characterization is done only in the GCEXPORT routine        
+        // Heap characterization is done only in the GCEXPORT routine
         gc_trace_allocation(p_return_object, "Returned from gc_malloc_from_thread_chunk_or_null");
         return p_return_object;
     }
-    
+
     // We need a new allocation area. Get the current alloc_block
     block_info *alloc_block = (block_info *)gc_nursery->curr_alloc_block;
-    
+
     // If the object size is less than the minimum alloc area just return NULL, If we have a free area we
     // want to know that we can allocate any object that makes it past here in it.....
    	if (size > GC_MAX_CHUNK_BLOCK_OBJECT_SIZE) {
         // PINNED????
         return NULL;
     }
-    
+
     // Loop through the alloc blocks to see if we can find another allocation area.
     while (alloc_block) {
         if(g_gen) {
             assert(alloc_block->num_free_areas_in_block <= 1);
         }
         // We will sweep blocks only right before we start using it. This seems to have good cache benefits
-        
+
 		if (!sweeps_during_gc) {
 			// Sweep the block
 			if (alloc_block->block_has_been_swept == false) {
@@ -212,7 +212,7 @@ inline Partial_Reveal_Object * gc_malloc_from_thread_chunk_or_null_with_nursery(
         }
 #endif // CONCURRENT
 
-        // current_alloc_area will be -1 if the first area has not been used and if it exists is available. 
+        // current_alloc_area will be -1 if the first area has not been used and if it exists is available.
         if ( (alloc_block->num_free_areas_in_block == 0) || ((alloc_block->current_alloc_area + 1) == alloc_block->num_free_areas_in_block) ){
             // No areas left in this block get the next one.
             alloc_block = alloc_block->next_free_block; // Get the next block and loop
@@ -225,7 +225,7 @@ inline Partial_Reveal_Object * gc_malloc_from_thread_chunk_or_null_with_nursery(
             break; // This block has been swept and has an untouched alloc block.
         }
     } // end while (alloc_block)
-    
+
     if (alloc_block == NULL) {
         // ran through the end of the list of blocks in the chunk
         gc_nursery->tls_current_ceiling = NULL;
@@ -234,21 +234,21 @@ inline Partial_Reveal_Object * gc_malloc_from_thread_chunk_or_null_with_nursery(
         // This is the last place we can return NULL from.
         return NULL;
     }
-    
+
     assert(alloc_block->num_free_areas_in_block > 0);
     assert(alloc_block->block_has_been_swept);
     assert(alloc_block->current_alloc_area < alloc_block->num_free_areas_in_block);
-    
+
     // We have a block that has been swept and has at least one allocation area big enough to fit this object so we will be
     // successful..
-    
+
     alloc_block->current_alloc_area++; // Get the next current area. If it is the first one it will be 0.
-    
+
     //XXX assert part of GC_SLOW_ALLOC routines.
     assert (alloc_block->current_alloc_area != -1);
     unsigned int curr_area = alloc_block->current_alloc_area;
-    
-    
+
+
     if (alloc_block->block_free_areas[curr_area].has_been_zeroed == false) {
         gc_trace_block(alloc_block, " Clearing the curr_area in this block.");
 		if(!do_not_zero) {
@@ -257,7 +257,7 @@ inline Partial_Reveal_Object * gc_malloc_from_thread_chunk_or_null_with_nursery(
 		}
         alloc_block->block_free_areas[curr_area].has_been_zeroed = true;
     }
-    
+
     gc_nursery->tls_current_free = alloc_block->block_free_areas[curr_area].area_base;
     // JMS 2003-05-23.  If references are compressed, then the heap base should never be
     // given out as a valid object pointer, since it is being used as the
@@ -272,13 +272,13 @@ inline Partial_Reveal_Object * gc_malloc_from_thread_chunk_or_null_with_nursery(
 #endif // CONCURRENT
     gc_nursery->tls_current_ceiling = alloc_block->block_free_areas[curr_area].area_ceiling;
     gc_nursery->curr_alloc_block = alloc_block;
-    
+
     p_return_object = fast_gc_malloc_from_thread_chunk_or_null_with_nursery(gc_nursery,size, ah);
     //    assert (p_return_object); // We can still fail to find an object even after all of this.
-    
+
     // Heap characterization is done only in the GCEXPORT routine
     gc_trace_allocation(p_return_object, "Returned from gc_malloc_from_thread_chunk_or_null at bottom");
-    
+
     return p_return_object;
 } // gc_malloc_from_thread_chunk_or_null_with_nursery
 
@@ -304,7 +304,7 @@ unsigned adjust_frontier_to_alignment(Partial_Reveal_Object * &frontier, Partial
 #else
 	// first_elem_offset is 0 if this is not array alignment which is fine for base alignment.
 	int first_elem_offset = (!!(unsigned)alignment.alignArray) * pgc_get_array_offset((struct VTable*)vt);
-	POINTER_SIZE_INT new_location_offset = (POINTER_SIZE_INT)frontier + first_elem_offset;
+	POINTER_SIZE_INT new_location_offset = (uintptr_t)frontier + first_elem_offset;
 	POINTER_SIZE_INT new_location_offset_adjust = ((new_location_offset + ((1 << (alignment.powerOfTwoBaseFour+2)) - 1)) >> (alignment.powerOfTwoBaseFour+2) << (alignment.powerOfTwoBaseFour+2));
 	frontier = (Partial_Reveal_Object *)(new_location_offset_adjust - first_elem_offset);
     return new_location_offset_adjust - new_location_offset;
@@ -339,17 +339,17 @@ inline Partial_Reveal_Object * small_local_nursery_alloc_or_null(unsigned size, 
 
 	adjust_frontier_to_alignment(frontier, (Partial_Reveal_VTable*)ah);
 
-    POINTER_SIZE_INT new_free = (size + (POINTER_SIZE_INT)frontier);
+    POINTER_SIZE_INT new_free = (size + (uintptr_t)frontier);
     // check that the old way and the new way are producing
     // the same pointers. This can go once we have it in place.
-    if (new_free <= (POINTER_SIZE_INT) private_nursery->tls_current_ceiling) {
+    if (new_free <= (uintptr_t) private_nursery->tls_current_ceiling) {
         // success...
-        
+
         // Skip for now so this logic is not visible...
         // stick the vtable in
         //frontier->vt = (Partial_Reveal_VTable *)p_vtable;
         frontier->set_vtable(ah);
-        
+
         // increment free ptr and return object
         private_nursery->tls_current_free = (void *) new_free;
 		p_return_object = frontier;
@@ -363,7 +363,7 @@ inline Partial_Reveal_Object * small_local_nursery_alloc_or_null(unsigned size, 
             ls->m_finalize.push_back(p_return_object);
         }
     }
-    
+
 	return p_return_object;
 } // small_local_nursery_alloc_or_null
 
@@ -383,9 +383,9 @@ GCEXPORT(Managed_Object_Handle, gc_malloc_or_null) (unsigned size, Allocation_Ha
 #endif
     //
     // Try to allocate an object from the current chunk.
-    // This can fail if the object won't fit in what is left of the 
-    // chunk. 
-    
+    // This can fail if the object won't fit in what is left of the
+    // chunk.
+
     Partial_Reveal_Object *p_return_object = NULL;
     if(local_nursery_size) {
         p_return_object = small_local_nursery_alloc_or_null(size, ah, get_gc_thread_local());
@@ -398,7 +398,7 @@ GCEXPORT(Managed_Object_Handle, gc_malloc_or_null) (unsigned size, Allocation_Ha
     // return the object we just allocated. It may be NULL and we fall into
     // the slow code of gc_malloc.
     //
-    
+
     // Put the object in the finalize set if it needs a finalizer run eventually.
     // RLH
     // Since we do inline allocation this should never pop up as a hot spot. If it does
@@ -411,7 +411,7 @@ GCEXPORT(Managed_Object_Handle, gc_malloc_or_null) (unsigned size, Allocation_Ha
     p_return_object =  (Partial_Reveal_Object *)mangleBits((HeapObject *)p_return_object);
 
     return p_return_object;
-    
+
 } // gc_malloc_or_null
 
 
@@ -420,18 +420,18 @@ GCEXPORT(Managed_Object_Handle, gc_malloc_or_null_with_thread_pointer) (unsigned
     //Partial_Reveal_VTable *p_vtable = (Partial_Reveal_VTable *) vth;
     // All requests for space should be multiples of 4 (IA32) or 8(IA64)
     assert((size % GC_OBJECT_ALIGNMENT) == 0);
-    
+
 #ifndef GC_FAST_ALLOC
     // This seems to make things more stable but needs to be looked into.
     if (size > 2048) {
     //        orp_cout << "Size = " << size <<std::endl;
         return NULL;
     }
-#endif    
+#endif
     //
     // Try to allocate an object from the current chunk.
-    // This can fail if the object won't fit in what is left of the 
-    // chunk. 
+    // This can fail if the object won't fit in what is left of the
+    // chunk.
     GC_Thread_Info *tls_for_gc = orp_local_to_gc_local(tp);
     Partial_Reveal_Object *p_return_object = NULL;
     if(local_nursery_size) {
@@ -441,7 +441,7 @@ GCEXPORT(Managed_Object_Handle, gc_malloc_or_null_with_thread_pointer) (unsigned
     }
 
     gc_trace_allocation(p_return_object, "gc_malloc_or_null_with_thread_pointer returns this object");
-    
+
     //
     // return the object we just allocated. It may be NULL and we fall into
     // the slow code of gc_malloc.
@@ -449,7 +449,7 @@ GCEXPORT(Managed_Object_Handle, gc_malloc_or_null_with_thread_pointer) (unsigned
 
     // if MANGLEPOINTERS is defined this is used for debugging.
     p_return_object =  (Partial_Reveal_Object *)mangleBits((HeapObject *)p_return_object);
-    
+
     return p_return_object;
 } // gc_malloc_or_null_with_thread_pointer
 
@@ -457,7 +457,7 @@ void reset_nursery(GC_Nursery_Info *nursery) {
     if (nursery->chunk) {
         block_info *spent_block;
         spent_block = (block_info*)nursery->chunk;
-        
+
         while (spent_block) {
             assert(spent_block);
             assert(spent_block->get_nursery_status() == active_nursery);
@@ -473,7 +473,7 @@ void reset_nursery(GC_Nursery_Info *nursery) {
 }
 
 Managed_Object_Handle gc_malloc_slow_no_constraints_with_nursery (
-	unsigned size, 
+	unsigned size,
 	Allocation_Handle ah,
 	GC_Thread_Info *tls_for_gc,
 	GC_Nursery_Info *nursery
@@ -485,46 +485,46 @@ Managed_Object_Handle gc_malloc_slow_no_constraints_with_nursery (
 
     Partial_Reveal_Object *p_return_object;
 restart:
-    
+
     p_return_object = NULL;
-    
+
     //
     // See if this is a large object which needs special treatment:
     //
     if (size >= GC_MAX_CHUNK_BLOCK_OBJECT_SIZE) {
         // CLEANUP - remove this cast.
-        p_return_object = (Partial_Reveal_Object *)gc_pinned_malloc(size, 
-            ah, 
+        p_return_object = (Partial_Reveal_Object *)gc_pinned_malloc(size,
+            ah,
             false, // returnNullOnFail
             false,
 			tls_for_gc
         );
-        // Characterization done in GCEXPORT caller 
+        // Characterization done in GCEXPORT caller
         gc_trace_allocation(p_return_object, "gc_malloc_slow_no_constraints_with_nursery returns this object.");
-        
+
         // if MANGLEPOINTERS is defined this is used for debugging.
         p_return_object =  (Partial_Reveal_Object *)mangleBits((HeapObject *)p_return_object);
-        
+
         return p_return_object;
     }
-    
+
     // End of LOS case.
-    
-    // We have a normal object free of the alignment or pinning 
-    // constraints listed above, however,  it could need to be 
+
+    // We have a normal object free of the alignment or pinning
+    // constraints listed above, however,  it could need to be
     // registered for finalization or be a weak ref.
     //
     p_return_object = gc_malloc_from_thread_chunk_or_null_with_nursery(nursery, size, ah);
 
 	if(p_return_object) {
-        // Characterization done in GCEXPORT caller 
+        // Characterization done in GCEXPORT caller
         gc_trace_allocation (p_return_object, "gc_malloc_slow_no_constraints_with_nursery returns this object.");
         return p_return_object;
     }
-    
+
     // All allocation areas exhausted. Get new set from global chunk store
     assert(p_return_object == NULL);
-    
+
 	//
 	// The chunk for this thread is full. Retrieve the exhausted chunk.
 	//
@@ -532,8 +532,8 @@ restart:
 
     // Remove chunk from thread structure.
 	nursery->chunk = NULL;
-    
-	// Allocate a new chunk for this thread's use. 
+
+	// Allocate a new chunk for this thread's use.
     block_info *p_new_chunk = p_global_gc->p_cycle_chunk(p_old_chunk, false, false
 #ifdef PUB_PRIV
 		, private_heap_block ? tls_for_gc : NULL
@@ -542,7 +542,7 @@ restart:
 #endif // PUB_PRIV
 		, tls_for_gc
 		);
-    
+
 	assert (p_new_chunk);
 	if(p_new_chunk->get_nursery_status() != active_nursery) {
 		assert (p_new_chunk->get_nursery_status() == active_nursery);
@@ -555,16 +555,16 @@ restart:
     }
 	nursery->tls_current_free = NULL;
 	nursery->tls_current_ceiling = NULL;
-    
+
 	goto restart;
 } // gc_malloc_slow_no_constraints_with_nursery
 
-// If there are no alignment or pinning constraints but possible finalization 
+// If there are no alignment or pinning constraints but possible finalization
 // or weak ref constraints then one can use this routine.
-	
+
 Managed_Object_Handle gc_malloc_slow_no_constraints (
-	unsigned size, 
-	Allocation_Handle ah, 
+	unsigned size,
+	Allocation_Handle ah,
 	GC_Thread_Info *tls_for_gc
 #ifdef PUB_PRIV
 , bool private_heap_block
@@ -573,31 +573,31 @@ Managed_Object_Handle gc_malloc_slow_no_constraints (
 {
     orp_initialized = 17;
     Partial_Reveal_Object *p_return_object;
-    
+
 	if(local_nursery_size) {
 		GC_Small_Nursery_Info *private_nursery = tls_for_gc->get_private_nursery();
-    
+
 		// This code should never be called from a local nursery collection.
 		// That code should call gc_malloc_slow_no_constraints_with_nursery.
 		assert(private_nursery->local_gc_info->gc_state != LOCAL_MARK_ACTIVE);
-    
+
         // If the object is very large then allocate it in a global large block.
         if (size >= max_private_nursery_allocation_size()) {
-            p_return_object = (Partial_Reveal_Object *)gc_pinned_malloc(size, 
-                ah, 
+            p_return_object = (Partial_Reveal_Object *)gc_pinned_malloc(size,
+                ah,
                 false, // returnNullOnFail
                 false,
 				tls_for_gc
             );
-            // Characterization done in GCEXPORT caller 
+            // Characterization done in GCEXPORT caller
             gc_trace_allocation(p_return_object, "gc_malloc_slow_no_constraints returns this object.");
-    
+
             // if MANGLEPOINTERS is defined this is used for debugging.
             p_return_object =  (Partial_Reveal_Object *)mangleBits((HeapObject *)p_return_object);
-    
+
             return p_return_object;
         }
-    
+
 		unsigned i;
 		for(i=0;i<2;++i) {
 			p_return_object = small_local_nursery_alloc_or_null(size,ah,tls_for_gc);
@@ -607,7 +607,7 @@ Managed_Object_Handle gc_malloc_slow_no_constraints (
 			if(p_return_object) {
 				return p_return_object;
             }
-    
+
 			local_nursery_collection(tls_for_gc, NULL, NULL, false);
 		}
 		assert(0); // only one local_nursery_collection should be necessary to get enough space.  If not then assert.
@@ -619,7 +619,7 @@ Managed_Object_Handle gc_malloc_slow_no_constraints (
 			, private_heap_block
 #endif // PUB_PRIV
 			);
-    
+
         return p_return_object;
 	}
 } // gc_malloc_slow_no_constraints
@@ -628,7 +628,7 @@ Managed_Object_Handle gc_malloc_slow_no_constraints (
 
 Partial_Reveal_Object * Garbage_Collector::create_single_object_blocks(unsigned size, Allocation_Handle ah) {
     num_large_objects++;
-    
+
     Partial_Reveal_Object *result = NULL;
     // ***SOB LOOKUP*** p_get_multi_block sets the _blocks_in_block_store[sob_index + index].is_single_object_block to true.
     block_info *block = _p_block_store->p_get_multi_block (size, false);   // Do not extend the heap yet.
@@ -637,11 +637,11 @@ Partial_Reveal_Object * Garbage_Collector::create_single_object_blocks(unsigned 
         return NULL;
     }
     assert(block->block_free_areas == NULL);
-    
-    block->in_los_p = false;    
+
+    block->in_los_p = false;
     block->in_nursery_p = false;
     block->is_single_object_block = true;
-    
+
     block->thread_owner    = NULL;
     block->next_free_block = _single_object_blocks;
     _single_object_blocks  = block;
@@ -656,10 +656,10 @@ Partial_Reveal_Object * Garbage_Collector::create_single_object_blocks(unsigned 
     result->set_vtable(ah);
     assert (result);
 
-    block->curr_free    = (void *) ((POINTER_SIZE_INT)p_obj_start + size);
-    block->curr_ceiling = (void *) ((POINTER_SIZE_INT)(GC_BLOCK_INFO (block->curr_free)) + GC_BLOCK_SIZE_BYTES - 1);
+    block->curr_free    = (void *) ((uintptr_t)p_obj_start + size);
+    block->curr_ceiling = (void *) ((uintptr_t)(GC_BLOCK_INFO (block->curr_free)) + GC_BLOCK_SIZE_BYTES - 1);
 
-    // Characterization done in GCEXPORT caller 
+    // Characterization done in GCEXPORT caller
     gc_trace_allocation (result, "create_single_object_blocks returns this object.");
 
     return result;
@@ -671,17 +671,17 @@ Partial_Reveal_Object * Garbage_Collector::create_single_object_blocks(unsigned 
 
 block_info * Garbage_Collector::get_new_los_block() {
     block_info *block = _p_block_store->p_get_new_block (false);
-    
+
     if (block == NULL) {
         return NULL;
     }
     block->in_nursery_p = false;
     block->in_los_p = true;
     block->is_single_object_block = false;
-    
+
     // Blocks in BS always dont have this
     assert(block->block_free_areas == NULL);
-    
+
     // Allocate free areas per block
     block->size_block_free_areas = GC_MAX_FREE_AREAS_PER_BLOCK(GC_MIN_FREE_AREA_SIZE);
     block->block_free_areas = (free_area *)malloc(sizeof(free_area) * block->size_block_free_areas);
@@ -689,23 +689,23 @@ block_info * Garbage_Collector::get_new_los_block() {
         dprintf("malloc failed\n");
         exit (411);
     }
-    
+
     gc_trace_block (block, " calling clear_block_free_areas in get_new_los_block.");
     // Initialize free areas for block....
     clear_block_free_areas(block);
-    
+
     // JUST ONE LARGE FREE AREA initially
     free_area *area = &(block->block_free_areas[0]);
     area->area_base = GC_BLOCK_ALLOC_START(block);
-    area->area_ceiling = (void *)((POINTER_SIZE_INT)GC_BLOCK_ALLOC_START(block) + (POINTER_SIZE_INT)GC_BLOCK_ALLOC_SIZE - 1);
-    area->area_size = (unsigned int)((POINTER_SIZE_INT) area->area_ceiling - (POINTER_SIZE_INT) area->area_base + 1);
+    area->area_ceiling = (void *)((uintptr_t)GC_BLOCK_ALLOC_START(block) + (POINTER_SIZE_INT)GC_BLOCK_ALLOC_SIZE - 1);
+    area->area_size = (unsigned int)((uintptr_t) area->area_ceiling - (uintptr_t) area->area_base + 1);
     block->num_free_areas_in_block = 1;
-    block->current_alloc_area = 0;	
-    
+    block->current_alloc_area = 0;
+
     // Start allocation in this block at the base of the first and only area
     block->curr_free = area->area_base;
     block->curr_ceiling = area->area_ceiling;
-    
+
     return block;
 }
 
@@ -721,19 +721,19 @@ Partial_Reveal_Object  * gc_pinned_malloc(unsigned size, Allocation_Handle ah, b
         // spin on the lock until we have the los lock
         // A thread may have caused GC in here if the LOS couldnt get a new block or a LARGE block.
         // So check if GC has begun, enable GC and block on GC lock if needed.
-        
+
         if (gc_has_begun()) {
             orp_gc_lock_enum();
             orp_gc_unlock_enum();
         }
     }
-    
-    
+
+
     if (size > GC_MAX_CHUNK_BLOCK_OBJECT_SIZE) {
         Partial_Reveal_Object *p_obj = NULL;
         while (p_obj == NULL) {
             p_obj = p_global_gc->create_single_object_blocks(size, ah);
-            
+
             if (p_obj == NULL) {
                 // Do a collection
                 get_chunk_lock(tls_for_gc);
@@ -743,7 +743,7 @@ Partial_Reveal_Object  * gc_pinned_malloc(unsigned size, Allocation_Handle ah, b
                     dprintf("create_single_object_blocks() failed...calling reclaim_full_heap()\n");
                 }
                 p_global_gc->reclaim_full_heap(size, false, true);
-                
+
                 orp_gc_unlock_enum();
                 release_chunk_lock(tls_for_gc);
             } else {
@@ -784,22 +784,22 @@ Partial_Reveal_Object  * gc_pinned_malloc(unsigned size, Allocation_Handle ah, b
         if(use_finalization && class_is_finalizable(allocation_handle_get_class(ah))) {
             p_global_gc->add_finalize_object(p_obj);
         }
-    
+
         return p_obj;
     }
-    
+
     num_los_objects++;
-    
+
     if (p_global_gc->_los_blocks == NULL) {
         p_global_gc->_los_blocks = p_global_gc->get_new_los_block();
     }
-    
+
     assert(p_global_gc->_los_blocks);
-    
+
     Partial_Reveal_Object *p_return_object = NULL;
-    
+
     while (p_return_object == NULL) {
-        
+
         block_info *los_block = p_global_gc->_los_blocks;
         /// XXX GC_SLOW_ALLOC
         if (los_block->current_alloc_area == -1){
@@ -807,17 +807,17 @@ Partial_Reveal_Object  * gc_pinned_malloc(unsigned size, Allocation_Handle ah, b
         }
         /// XXXXXXXX GC_SLOW_ALLOC
         assert(los_block->current_alloc_area != -1);
-        if ((los_block->num_free_areas_in_block == 0) || 
+        if ((los_block->num_free_areas_in_block == 0) ||
             (los_block->current_alloc_area == los_block->num_free_areas_in_block)) { // Topped out on this block
             // Get new LOS block and hook it in
             block_info *block = NULL;
             while (block == NULL) {
                 block = p_global_gc->get_new_los_block();
-                if (block == NULL) {				
+                if (block == NULL) {
                     // do a collection since cant get a block
-                    
+
                     orp_gc_lock_enum();
-                    
+
                     if (stats_gc) {
                         // get_new_los_block() failed....block allocate causing GC
                         dprintf("get_new_los_block() failed...calling reclaim_full_heap()\n");
@@ -828,15 +828,15 @@ Partial_Reveal_Object  * gc_pinned_malloc(unsigned size, Allocation_Handle ah, b
                     p_global_gc->reclaim_full_heap(size, false, true);
                     orp_gc_unlock_enum();
                 }
-            }	
-            
+            }
+
             block->next_free_block = p_global_gc->_los_blocks;
             p_global_gc->_los_blocks = block;
             // Go ahead with the new block
             los_block = p_global_gc->_los_blocks;
             assert(los_block->num_free_areas_in_block > 0);
         }
-        
+
         assert(los_block->curr_free);
         assert(los_block->curr_ceiling);
         // = is possible if the previously allocated object exactly finished off the region
@@ -845,21 +845,21 @@ Partial_Reveal_Object  * gc_pinned_malloc(unsigned size, Allocation_Handle ah, b
         if (los_block->current_alloc_area == -1) {
             los_block->current_alloc_area = 0;
         }
-        
+
         do {
 			Partial_Reveal_Object *p_obj = (Partial_Reveal_Object*)los_block->curr_free;
 			adjust_frontier_to_alignment(p_obj,(Partial_Reveal_VTable*)ah);
-            POINTER_SIZE_INT new_free = (size + (POINTER_SIZE_INT)p_obj);
+            POINTER_SIZE_INT new_free = (size + (uintptr_t)p_obj);
 //            POINTER_SIZE_INT new_free = (size + (POINTER_SIZE_INT)los_block->curr_free);
-            
-            if (new_free <= (POINTER_SIZE_INT) los_block->curr_ceiling) {
+
+            if (new_free <= (uintptr_t) los_block->curr_ceiling) {
                 // success...
 
                 p_return_object = (Partial_Reveal_Object *) los_block->curr_free;
 				if(!do_not_zero) {
                     memset(p_return_object, 0, size); // This costs me 2%
 				}
-                
+
                 // stick the vtable in
                 //p_return_object->vt = (Partial_Reveal_VTable *)p_vtable;
                 p_return_object->set_vtable(ah);
@@ -900,20 +900,20 @@ Partial_Reveal_Object  * gc_pinned_malloc(unsigned size, Allocation_Handle ah, b
                 if(use_finalization && class_is_finalizable(allocation_handle_get_class(ah))) {
                     p_global_gc->add_finalize_object(p_return_object);
                 }
-    
-                return p_return_object;	
-                
+
+                return p_return_object;
+
             } else {
                 // Move to next allocation area in block
                 los_block->current_alloc_area++;
                 los_block->curr_free = los_block->block_free_areas[los_block->current_alloc_area].area_base;
                 los_block->curr_ceiling = los_block->block_free_areas[los_block->current_alloc_area].area_ceiling;
             }
-            
+
         } while (los_block->current_alloc_area < los_block->num_free_areas_in_block);
-        
-    } // while 
-    
+
+    } // while
+
     assert(0);	// cant get here
     printf("Got to an impossible spot in gc_pinned_malloc.\n");
     exit(-1);
@@ -934,7 +934,7 @@ GCEXPORT(void, gc_require_allocate_without_collection)(unsigned size, void *tp) 
     GC_Thread_Info *tls_for_gc = orp_local_to_gc_local(tp);
 	if(local_nursery_size && size < local_nursery_size) {
 		GC_Small_Nursery_Info *private_nursery = tls_for_gc->get_private_nursery();
-    
+
         local_nursery_collection(tls_for_gc, NULL, NULL, false);
         if((char*)private_nursery->tls_current_free + size >= private_nursery->tls_current_ceiling) {
             printf("gc_require_allocate_without_collection failed to free enough space to perform requested allocation.\n");
@@ -945,7 +945,7 @@ restart:
         if(gc_can_allocate_without_collection(size,tp)) {
             return;
         }
-    
+
         if (size >= GC_MAX_CHUNK_BLOCK_OBJECT_SIZE) {
             printf("gc_require_allocation_without_collection cannot guarantee allocation space of more than %d bytes.\n",GC_MAX_CHUNK_BLOCK_OBJECT_SIZE);
             assert(0);
@@ -957,13 +957,13 @@ restart:
                 // spin on the lock until we have the los lock
                 // A thread may have caused GC in here if the LOS couldnt get a new block or a LARGE block.
                 // So check if GC has begun, enable GC and block on GC lock if needed.
-        
+
                 if (gc_has_begun()) {
                     orp_gc_lock_enum();
                     orp_gc_unlock_enum();
                 }
             }
-    
+
             p_global_gc->guarantee_multi_block_allocation(size,tls_for_gc);
             p_global_gc->_los_lock = 0;
             return;
@@ -973,11 +973,11 @@ restart:
 
         // We need a new allocation area. Get the current alloc_block
         block_info *alloc_block = (block_info *)gc_nursery->curr_alloc_block;
-    
+
         // Loop through the alloc blocks to see if we can find another allocation area.
         while (alloc_block) {
             // We will sweep blocks only right before we start using it. This seems to have good cache benefits
-        
+
 		    if (!sweeps_during_gc) {
 			    // Sweep the block
 			    if (alloc_block->block_has_been_swept == false) {
@@ -994,7 +994,7 @@ restart:
             }
 #endif // CONCURRENT
 
-            // current_alloc_area will be -1 if the first area has not been used and if it exists is available. 
+            // current_alloc_area will be -1 if the first area has not been used and if it exists is available.
             if ( (alloc_block->num_free_areas_in_block == 0) || ((alloc_block->current_alloc_area + 1) == alloc_block->num_free_areas_in_block) ){
                 // No areas left in this block get the next one.
                 alloc_block = alloc_block->next_free_block; // Get the next block and loop
@@ -1003,7 +1003,7 @@ restart:
                 break; // This block has been swept and has an untouched alloc block.
             }
         } // end while (alloc_block)
-    
+
         if (alloc_block == NULL) {
             // ran through the end of the list of blocks in the chunk
             gc_nursery->tls_current_ceiling = NULL;
@@ -1017,10 +1017,10 @@ restart:
 
             // Remove chunk from thread structure.
 	        gc_nursery->chunk = NULL;
-    
-	        // Allocate a new chunk for this thread's use. 
+
+	        // Allocate a new chunk for this thread's use.
             block_info *p_new_chunk = p_global_gc->p_cycle_chunk(p_old_chunk, false, false, NULL, tls_for_gc);
-    
+
 	        assert (p_new_chunk);
 	        if(p_new_chunk->get_nursery_status() != active_nursery) {
 		        assert (p_new_chunk->get_nursery_status() == active_nursery);
@@ -1030,23 +1030,23 @@ restart:
 	        gc_nursery->curr_alloc_block = p_new_chunk;
 	        gc_nursery->tls_current_free = NULL;
 	        gc_nursery->tls_current_ceiling = NULL;
-    
+
 	        goto restart;
         }
-    
+
         assert(alloc_block->num_free_areas_in_block > 0);
         assert(alloc_block->block_has_been_swept);
         assert(alloc_block->current_alloc_area < alloc_block->num_free_areas_in_block);
-    
+
         // We have a block that has been swept and has at least one allocation area big enough to fit this object so we will be
         // successful..
-    
+
         alloc_block->current_alloc_area++; // Get the next currenct area. If it is the first one it will be 0.
-    
+
         //XXX assert part of GC_SLOW_ALLOC routines.
         assert (alloc_block->current_alloc_area != -1);
         unsigned int curr_area = alloc_block->current_alloc_area;
-    
+
         if (alloc_block->block_free_areas[curr_area].has_been_zeroed == false) {
             gc_trace_block(alloc_block, " Clearing the curr_area in this block.");
 		    if(!do_not_zero) {
@@ -1055,7 +1055,7 @@ restart:
 		    }
             alloc_block->block_free_areas[curr_area].has_been_zeroed = true;
         }
-    
+
         gc_nursery->tls_current_free = alloc_block->block_free_areas[curr_area].area_base;
         // JMS 2003-05-23.  If references are compressed, then the heap base should never be
         // given out as a valid object pointer, since it is being used as the
@@ -1070,7 +1070,7 @@ restart:
 #endif // CONCURRENT
         gc_nursery->tls_current_ceiling = alloc_block->block_free_areas[curr_area].area_ceiling;
         gc_nursery->curr_alloc_block = alloc_block;
-    
+
         goto restart;
     }
 }
@@ -1087,7 +1087,7 @@ void Garbage_Collector::guarantee_multi_block_allocation(unsigned size,GC_Thread
             dprintf("create_single_object_blocks() failed...calling reclaim_full_heap()\n");
         }
         p_global_gc->reclaim_full_heap(size, false, false);
-                
+
         orp_gc_unlock_enum();
         release_chunk_lock(tls_for_gc);
 	}

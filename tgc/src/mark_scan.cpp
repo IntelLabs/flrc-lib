@@ -5,7 +5,7 @@
 // System header files
 #include <iostream>
 #include <fstream>
-  
+
 // GC header files
 #include "gc_v4.h"
 #include "remembered_set.h"
@@ -16,13 +16,13 @@
 #include "mark_stack.h"
 #include "micro_nursery.h"
 
-#ifdef IGNORE_SOME_ROOTS 
+#ifdef IGNORE_SOME_ROOTS
 extern unsigned num_roots_ignored;
 extern unsigned roots_to_ignore;
 #endif // IGNORE_SOME_ROOTS
 
-static void scan_one_object(Partial_Reveal_Object *, GC_Thread *);     
-extern Field_Handle get_field_handle_from_offset(Partial_Reveal_VTable *vt, unsigned int offset);   
+static void scan_one_object(Partial_Reveal_Object *, GC_Thread *);
+extern Field_Handle get_field_handle_from_offset(Partial_Reveal_VTable *vt, unsigned int offset);
 #ifdef _DEBUG
 extern bool g_profile;
 extern std::ofstream * profile_out;
@@ -33,7 +33,7 @@ extern std::ofstream * live_dump;
 __declspec(dllimport) extern uint32 object_has_shadow_copy(void *);
 __declspec(dllimport) extern uint32 object_get_transaction_info_offset();
 #endif //WRITE_BUFFERING
- 
+
 void scan_one_slot (Slot p_slot, GC_Thread *gc_thread, bool is_weak, Partial_Reveal_Object *p_slot_obj) {
 	assert(p_slot.get_value());
     // is_null() also checks for tagged integers.
@@ -166,7 +166,7 @@ void scan_one_slot (Slot p_slot, GC_Thread *gc_thread, bool is_weak, Partial_Rev
 
 	gc_trace(p_obj, " scan_one_slot(): some slot pointed to this object...\n");
 
-	// I will try to be the first to mark it. If success..I will add it to my mark 
+	// I will try to be the first to mark it. If success..I will add it to my mark
 	// stack, since I will then be owning it.
 
 	if (mark_object_in_block(p_obj)) {
@@ -192,7 +192,7 @@ void scan_one_slot (Slot p_slot, GC_Thread *gc_thread, bool is_weak, Partial_Rev
             // whether it's a Partial_Reveal_Object** or a uint32* pointer.
 			gc_thread->_p_gc->add_slot_to_compaction_block(p_slot, p_obj_block_info, gc_thread->get_id());
 			if (stats_gc) {
-				gc_thread->increment_num_slots_collected_for_later_fixing();	
+				gc_thread->increment_num_slots_collected_for_later_fixing();
 			}
 		}
 //	}
@@ -226,13 +226,13 @@ static inline void scan_one_array_object(Partial_Reveal_Object *p_object, GC_Thr
        type_info_is_general_array(tih)) {
         // Initialize the array scanner which will scan the array from the
         // top to the bottom. IE from the last element to the first element.
-    
+
         int32 array_length = vector_get_length_with_vt((Vector_Handle)p_object,obj_vt);
         for (int32 i=array_length-1; i>=0; i--) {
             Slot p_element(vector_get_element_address_ref_with_vt((Vector_Handle)p_object, i, obj_vt));
             scan_one_slot(p_element, gc_thread, false, p_object);
         }
-    } else if(type_info_is_primitive(tih)) { 
+    } else if(type_info_is_primitive(tih)) {
         // intentionally do nothing
     } else if(type_info_is_unboxed(tih)) {
         Class_Handle ech = type_info_get_class(tih);
@@ -313,14 +313,14 @@ static void scan_one_object(Partial_Reveal_Object *p_obj, GC_Thread *gc_thread) 
     if (obj_gcvt->has_slots()) {
         if (obj_gcvt->is_array() && !obj_gcvt->is_array_of_primitives()) {
             scan_one_array_object(p_obj, gc_thread,obj_vt,obj_gcvt);
-        } 
+        }
 
 		unsigned int *offset_scanner = init_object_scanner (p_obj);
         Slot pp_target_object(NULL);
         while ((pp_target_object.set(p_get_ref(offset_scanner, p_obj))) != NULL) {
             // Each live object in the heap gets scanned exactly once...so each live EDGE in the heap gets looked at exactly once...
-            // So, the logic here is independent of whether the object pointed to by this slot has already been reached and 
-            // marked by the collector...we still need to collect edge counts since this edge is being visited for the first 
+            // So, the logic here is independent of whether the object pointed to by this slot has already been reached and
+            // marked by the collector...we still need to collect edge counts since this edge is being visited for the first
             // and last time...
             // If parent is not a delinquent type we are not interested in this edge at all....
             scan_one_slot (pp_target_object, gc_thread, false, p_obj);
@@ -332,8 +332,8 @@ static void scan_one_object(Partial_Reveal_Object *p_obj, GC_Thread *gc_thread) 
 		offset_scanner = init_object_scanner_weak (p_obj);
         while ((pp_target_object.set(p_get_ref(offset_scanner, p_obj))) != NULL) {
             // Each live object in the heap gets scanned exactly once...so each live EDGE in the heap gets looked at exactly once...
-            // So, the logic here is independent of whether the object pointed to by this slot has already been reached and 
-            // marked by the collector...we still need to collect edge counts since this edge is being visited for the first 
+            // So, the logic here is independent of whether the object pointed to by this slot has already been reached and
+            // marked by the collector...we still need to collect edge counts since this edge is being visited for the first
             // and last time...
             // If parent is not a delinquent type we are not interested in this edge at all....
             scan_one_slot (pp_target_object, gc_thread, true, p_obj);
@@ -347,7 +347,7 @@ static void scan_one_object(Partial_Reveal_Object *p_obj, GC_Thread *gc_thread) 
 
 void process_mark_stack(GC_Thread *gc_thread, MARK_STACK *ms) {
     Partial_Reveal_Object *p_obj;
-    
+
     p_obj = pop_bottom_object_from_local_mark_stack(ms);
     while (p_obj != NULL) {
         if(is_young_gen_collection()) {
@@ -396,9 +396,9 @@ void mark_scan_heap(GC_Thread *gc_thread) {
     pp_slot = gc_thread->_p_gc->get_fresh_root_to_trace();
     while (pp_slot != NULL) {
         Partial_Reveal_Object *p_obj = (Partial_Reveal_Object*)((POINTER_SIZE_INT)(*pp_slot) & ~(0x3));
-        
+
         gc_trace(p_obj, " mark_scan_heap(): this object was found to be a root...\n");
-        
+
 #ifdef _DEBUG
         if(live_dump) {
             *live_dump << p_global_gc->get_gc_num() << " 0 " << p_obj << "\n";
@@ -406,9 +406,9 @@ void mark_scan_heap(GC_Thread *gc_thread) {
 #endif
 
         process_object(p_obj, gc_thread, ms);
-        
+
         assert(mark_stack_is_empty(ms));
-        
+
         // MARK STACK IS EMPTY....GO AND GET SOME MORE ROOTS FROM GC
         pp_slot = gc_thread->_p_gc->get_fresh_root_to_trace();
     } // while (true)
@@ -416,7 +416,7 @@ void mark_scan_heap(GC_Thread *gc_thread) {
 	gc_thread->_p_gc->this_gc_cheney_spaces.mark_phase_process(gc_thread);
 
 #if 0
-    if (stats_gc) {      
+    if (stats_gc) {
         printf ("%u: collected %u slots for later fixing\n",  gc_thread->get_id(), gc_thread->get_num_slots_collected_for_later_fixing() );
         //		orp_cout << gc_thread->get_id() << ": collected " << gc_thread->get_num_slots_collected_for_later_fixing() << " slots for later fixing\n";
     }
@@ -435,7 +435,7 @@ void cheney_spaces::mark_phase_process(GC_Thread *gc_thread) {
 void cheney_space_pair::mark_phase_process(GC_Thread *gc_thread) {
 	if(!marked) {
         // Atomically grab a root....multiple GC threads compete for roots
-        if (LockedCompareExchangePOINTER_SIZE_INT( 
+        if (LockedCompareExchangePOINTER_SIZE_INT(
             (POINTER_SIZE_INT *)&marked,
             (POINTER_SIZE_INT) 1,
             (POINTER_SIZE_INT) 0
@@ -461,7 +461,7 @@ void cheney_space::mark_phase_process(GC_Thread *gc_thread) {
 #endif
 
 			process_object(p_obj, gc_thread, ms);
-        
+
 			assert(mark_stack_is_empty(ms));
         }
         p_obj = (Partial_Reveal_Object*)(((char*)p_obj) + obj_size);
@@ -484,7 +484,7 @@ void pn_space::mark_phase_process(GC_Thread *gc_thread) {
 #endif
 
 			process_object(p_obj, gc_thread, ms);
-        
+
 			assert(mark_stack_is_empty(ms));
         }
         p_obj = (Partial_Reveal_Object*)(((char*)p_obj) + obj_size);
@@ -497,14 +497,14 @@ void pn_space::mark_phase_process(GC_Thread *gc_thread) {
 //
 // These are not at all optimized but do have the funcationality required.
 // Optimization can obviously avoid the call to orp_get_stm_properties.
-// 
+//
 Boolean is_public(Partial_Reveal_Object *obj) {
     TgcStmProperties props;
     orp_get_stm_properties(&props);
     uint32 offset = props.transaction_info_offset;
     uint32 *transaction_info_slot;
     if (obj == NULL) {
-        return TRUE; // NULL is considered public. 
+        return TRUE; // NULL is considered public.
     }
     transaction_info_slot = (uint32 *)((char *)obj + offset);
     if (*transaction_info_slot != props.private_object_indicator) {
@@ -519,7 +519,7 @@ void set_public(Partial_Reveal_Object *obj) {
     orp_get_stm_properties(&props);
     uint32 offset = props.transaction_info_offset;
     uint32 *transaction_info_slot = (uint32 *)((char *)obj + offset);
-    *transaction_info_slot = (((uint32)obj) + props.initial_lock_value) & props.initial_lock_value_mask;
+    *transaction_info_slot = (((uintptr_t)obj) + props.initial_lock_value) & props.initial_lock_value_mask;
 }
 
 /*
@@ -528,8 +528,8 @@ void set_public(Partial_Reveal_Object *obj) {
  *
  */
 
-/* 
- * We do not inline a lot of the obvious things here since they haven't popped up on 
+/*
+ * We do not inline a lot of the obvious things here since they haven't popped up on
  * any of our VTune reports. If this routine does pop up then look to inline a lot of this
  * code.
  */
@@ -545,7 +545,7 @@ static void make_one_array_public(Partial_Reveal_Object *p_object, mark_stack_co
        type_info_is_general_array(tih)) {
         // Initialize the array scanner which will scan the array from the
         // top to the bottom. IE from the last element to the first element.
-    
+
         int32 array_length = vector_get_length_with_vt((Vector_Handle)p_object,p_object->vt());
         for (int32 i=array_length-1; i>=0; i--) {
             Slot p_element(vector_get_element_address_ref_with_vt((Vector_Handle)p_object, i, p_object->vt()));
@@ -554,7 +554,7 @@ static void make_one_array_public(Partial_Reveal_Object *p_object, mark_stack_co
                 mark_stack_push(ms, p_element.dereference());
             }
         }
-    } else if(type_info_is_primitive(tih)) { 
+    } else if(type_info_is_primitive(tih)) {
         // intentionally do nothing
     } else if(type_info_is_unboxed(tih)) {
         Class_Handle ech = type_info_get_class(tih);
@@ -586,10 +586,10 @@ static void make_one_array_public(Partial_Reveal_Object *p_object, mark_stack_co
     } else {
         assert(!"Tried to scan an array of unknown internal type.");
     }
-    return; 
+    return;
 }
 
-static void make_one_object_public(Partial_Reveal_Object *p_object, mark_stack_container *ms) {   
+static void make_one_object_public(Partial_Reveal_Object *p_object, mark_stack_container *ms) {
     // Object had better be marked.
     assert(is_public(p_object));
 
@@ -601,8 +601,8 @@ static void make_one_object_public(Partial_Reveal_Object *p_object, mark_stack_c
             Slot pp_target_object(NULL);
             while ((pp_target_object.set(p_get_ref(offset_scanner, p_object))) != NULL) {
                 // Each live object in the heap gets scanned exactly once...so each live EDGE in the heap gets looked at exactly once...
-                // So, the logic here is independent of whether the object pointed to by this slot has already been reached and 
-                // marked by the collector...we still need to collect edge counts since this edge is being visited for the first 
+                // So, the logic here is independent of whether the object pointed to by this slot has already been reached and
+                // marked by the collector...we still need to collect edge counts since this edge is being visited for the first
                 // and last time...
                 // If parent is not a delinquent type we are not interested in this edge at all....
                 if (!is_public(pp_target_object.dereference())) {
@@ -627,9 +627,9 @@ static void make_public_helper(Partial_Reveal_Object *obj, mark_stack_container 
         make_one_object_public(current_obj, ms);
         current_obj = mark_stack_pop(ms);
     }
-  
+
     mark_stack_cleanup(ms);
-}  
+}
 
 GCEXPORT(void, gc_make_public) (Managed_Object_Handle object) {
     mark_stack_container ms_container;
@@ -640,6 +640,3 @@ GCEXPORT(void, gc_make_public) (Managed_Object_Handle object) {
     set_public(obj);      /* Set to avoid infinite recursion */
     make_public_helper(obj, &ms_container);
 }
-
-
-

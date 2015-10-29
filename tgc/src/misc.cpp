@@ -76,9 +76,9 @@ void Garbage_Collector::trace_verify_sub_heap(std::stack<Partial_Reveal_Object *
 #endif // FILTER_NON_HEAP
 		if (mark_object_header(p_obj)) {
 			// verify the newly found object
-        
+
 			verify_object(p_obj, get_object_size_bytes(p_obj));
-        
+
 			if (before_gc) {
 				_num_live_objects_found_by_first_trace_heap++;
 				_live_objects_found_by_first_trace_heap->add_entry(p_obj);
@@ -99,7 +99,7 @@ void Garbage_Collector::trace_verify_sub_heap(std::stack<Partial_Reveal_Object *
 			obj_stack.push(txn_info_obj);
 		}
 #endif // WRITE_BUFFERING
-    
+
 		if (is_array(p_obj)) {
 			if (is_array_of_primitives(p_obj)) {
 				continue;
@@ -112,12 +112,12 @@ void Garbage_Collector::trace_verify_sub_heap(std::stack<Partial_Reveal_Object *
 					obj_stack.push(p_element.dereference());
 				}
 			}
-        
-		} 
+
+		}
 
 		unsigned int *offset_scanner = init_object_scanner (p_obj);
 		Slot pp_target_object(NULL);
-    
+
 		while (pp_target_object.set(p_get_ref(offset_scanner, p_obj)) != NULL) {
 			// Move the scanner to the next reference.
 			offset_scanner = p_next_ref (offset_scanner);
@@ -146,7 +146,7 @@ unsigned int Garbage_Collector::trace_verify_heap(bool before_gc) {
         _live_objects_found_by_second_trace_heap->reset();
         assert(_live_objects_found_by_second_trace_heap);
     }
-    
+
 	std::stack<Partial_Reveal_Object *,std::vector<Partial_Reveal_Object *> > obj_stack;
 
     unsigned int root_index = 0;
@@ -167,9 +167,9 @@ unsigned int Garbage_Collector::trace_verify_heap(bool before_gc) {
 			assert(obj_stack.empty());
         }
     } // for
-    
+
     p_obj = NULL;
-    
+
     unsigned int result = 0;
     if (before_gc) {
         _live_objects_found_by_first_trace_heap->rewind();
@@ -186,7 +186,7 @@ unsigned int Garbage_Collector::trace_verify_heap(bool before_gc) {
         }
         result = _num_live_objects_found_by_second_trace_heap;
     }
-    
+
     return result;
 }
 
@@ -196,7 +196,7 @@ void verify_marks_for_live_object(Partial_Reveal_Object *p_obj) {
     unsigned int bit_index_into_byte = 0;
     get_mark_byte_and_mark_bit_index_for_object(p_obj, &object_index_byte, &bit_index_into_byte);
     uint8 *p_byte = &(GC_BLOCK_INFO(p_obj)->mark_bit_vector[object_index_byte]);
-    
+
     // the base of the object is marked...
     if ((*p_byte & (1 << bit_index_into_byte)) == 0) {
         // We have a problem, lets try to focus in on it first - is this a legal object?
@@ -222,15 +222,15 @@ void Garbage_Collector::verify_marks_for_all_lives() {
             verify_marks_for_live_object(_gc_threads[j]->get_marked_object(k));
         }
     }
-#endif 
-    
+#endif
+
     if (verify_gc) {
         // If the verifier is turned on, use the trace heap utility.
         if (_live_objects_found_by_first_trace_heap) {
             _live_objects_found_by_first_trace_heap->rewind();
             Partial_Reveal_Object *p_obj = NULL;
             while ((p_obj = _live_objects_found_by_first_trace_heap->next())) {
-                verify_marks_for_live_object(p_obj);			
+                verify_marks_for_live_object(p_obj);
             } // while
         } // if
     } // if
@@ -254,7 +254,7 @@ void close_dump_file() {
 void dump_object_layouts_in_compacted_block(block_info *block, unsigned int num_lives) {
     // This is not used and is broken since pair tables are now SSB structures that
     // don't remove duplicates
-    assert (0); 
+    assert (0);
 }
 
 
@@ -269,7 +269,7 @@ void dump_object_layouts_in_compacted_block(block_info *block, unsigned int num_
 // of the objectn to the object we want to trace.
 
 void *object1 = (void *)0x0;                // The bogus object
-void *object2 = (void *)0x0;                // the object that should be moved to the bogus object    //  
+void *object2 = (void *)0x0;                // the object that should be moved to the bogus object    //
 void *object3 = (void *)0x0;                // The object that obliterate the object to be moved to the bogus object. ..
 void *object4 = (void *)0x0;                // The bogus slot in company points to the middle of this object
 void *object5 = (void *)0x0;
@@ -293,7 +293,7 @@ void trace_object (void *obj_to_trace) {
 
 // This is called from a lot of places and if the object passed in
 // and non-NULL and equal one of the objects being traced then
-// string_x is printed out along with the object. 
+// string_x is printed out along with the object.
 void gc_trace (void *object, const char *string_x) {
     // The NULL object is not interesting
     if (!object) {
@@ -301,14 +301,14 @@ void gc_trace (void *object, const char *string_x) {
     }
     if ((object==object1)||(object==object2)||(object==object3)||(object==object4)||(object==object5)||(object==object6)||(object==object7)) {
         orp_cout << " GC Trace " << object << " " << string_x << std::endl;
-#if 0 
+#if 0
         if (((Partial_Reveal_Object *)object)->vt()) {
             printf ( "The vt is %p.\n", ((Partial_Reveal_Object *)object)->vt());
             // This breaks with the new ->() in ways the debugger can't deal with.
             //printf (" of type %s \n", ((Partial_Reveal_Object *)object)->vt()->gc_class_name );
         } else {
             // On IA32, some of the JITs don't pass the base of the object instead
-            // they pass the slot. This is not what the interface says but for historical 
+            // they pass the slot. This is not what the interface says but for historical
             // reasons (Changing the JIT would require too much effort) this has not
             // been done.
             orp_cout << " This object has a null vtable, it might be broken." << std::endl;
@@ -338,7 +338,7 @@ void **object_slot4 = (void **)0x0;
 void **object_slot5 = (void **)0x0;
 
 void gc_trace_slot (void **object_slot, void *object, const char *string_x) {
-    
+
     if ((object_slot==object_slot1)||(object_slot==object_slot2)||(object_slot==object_slot3)
         ||(object_slot==object_slot4)||(object_slot==object_slot5)) {
         if (!object) {
@@ -356,13 +356,13 @@ block_info *block4 = (block_info *)0x0;
 
 void gc_trace_block (void *the_block, const char *string_x) {
     assert (the_block);
-    if (((block_info *)the_block == block1) || ((block_info *)the_block == block2) || 
+    if (((block_info *)the_block == block1) || ((block_info *)the_block == block2) ||
         ((block_info *)the_block == block3) || ((block_info *)the_block == block4)) {
         orp_cout << (void *)the_block << " " << string_x  << "------ block trace --------" << std::endl;
     }
 }
 
-#endif // _DEBUG 
+#endif // _DEBUG
 
 
 
@@ -370,30 +370,29 @@ bool is_vtable(Partial_Reveal_VTable *p_vtable) {
     if (p_vtable == 0) {
         return false;
     }
-    
+
     if ((POINTER_SIZE_INT)p_vtable < 0x0100) {
         // Pick up random low bits.
         return false;
     }
-    
+
     // Best guess is that it is legal.
     return true;
 }
 
 unsigned int get_object_size_bytes_with_vt(Partial_Reveal_Object *p_obj, Partial_Reveal_VTable *vt) {
-	if((unsigned)vt < 1<<16) {
-		return (unsigned)vt;
+	if((uintptr_t)vt < 1<<16) {
+		return (uintptr_t)vt;
 	}
 
     bool arrayp = is_vt_array(vt);
     if (arrayp) {
         unsigned int sz;
         sz = orp_vector_size(vt->get_gcvt()->gc_clss, vector_get_length_with_vt((Vector_Handle)p_obj,vt));
-        return sz; 
+        return sz;
     } else {
         return vt->get_gcvt()->gc_allocated_size;
     }
 }
 
 // end file misc.cpp
-

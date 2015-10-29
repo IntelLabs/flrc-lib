@@ -10,7 +10,7 @@
 #include "gc_header.h"
 #include "gc_v4.h"
 #include "gcv4_synch.h"
- 
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 inline bool IS_DESIRED_BIT_VALUE(bool IS_ZERO_STR, uint8 *BYTE_ADDR, unsigned BIT_INDEX) {
@@ -60,12 +60,12 @@ static const uint8 right_most_bit [256] =
 // 3 if & branch return compares for every call.
 // Split the top 4 bits from the bottom then split the bottom 2 and then figur out which on is set.
 inline unsigned int get_right_most_bit (uint8 x) {
-    assert (x);    
-    if (x & 0xf) { 
+    assert (x);
+    if (x & 0xf) {
         if (x & 3) {
             if (x & 1) {
                 return 0;
-            } else { 
+            } else {
                 return 1;
             }
         } else if (x & 4) {
@@ -80,7 +80,7 @@ inline unsigned int get_right_most_bit (uint8 x) {
             } else {
                 return 5;
             }
-        } else { 
+        } else {
             if (x & 0x40) {
                 return 6;
             } else {
@@ -98,10 +98,10 @@ inline unsigned int get_right_most_bit (uint8 x) {
 }
 
 #endif // USE_ORP_STW
-/** The loop through the zero words is where all the time is spent. 
+/** The loop through the zero words is where all the time is spent.
     Some prefetching might be worth considering.
 **/
-void get_next_set_bit(set_bit_search_info *info) {				 
+void get_next_set_bit(set_bit_search_info *info) {
 	uint8 *p_byte_start = info->p_start_byte;
 	unsigned int start_bit_index = info->start_bit_index;
 	uint8 *p_ceil = info->p_ceil_byte;
@@ -129,11 +129,11 @@ void get_next_set_bit(set_bit_search_info *info) {
 	p_byte++;
 
 	// Skip "0" bytes till we get to a word boundary
-	while ((p_byte < p_ceil) && (*p_byte == 0) && ((POINTER_SIZE_INT) p_byte & alignment_mask)) {	
+	while ((p_byte < p_ceil) && (*p_byte == 0) && ((uintptr_t) p_byte & alignment_mask)) {
 		p_byte++;
 	}
 
-	if (p_byte >= p_ceil) { 
+	if (p_byte >= p_ceil) {
 		// Reached the end....there is no "1" after (p_byte_start, start_bit_index)
 		info->bit_set_index = 0;
 		info->p_non_zero_byte = NULL;
@@ -148,13 +148,13 @@ void get_next_set_bit(set_bit_search_info *info) {
 
     // We are definitely at a word boundary
 	POINTER_SIZE_INT *p_word = (POINTER_SIZE_INT *) p_byte;
-	assert(((POINTER_SIZE_INT) p_word & alignment_mask) == 0);
-    // This loop is where we spend all of out time. So lets do some optimization. 
-    // Originally we had the conditional (((uint8 *)((POINTER_SIZE_INT) p_word + sizeof(POINTER_SIZE_INT)) < p_ceil) && (*p_word == 0)) 
+	assert(((uintptr_t) p_word & alignment_mask) == 0);
+    // This loop is where we spend all of out time. So lets do some optimization.
+    // Originally we had the conditional (((uint8 *)((POINTER_SIZE_INT) p_word + sizeof(POINTER_SIZE_INT)) < p_ceil) && (*p_word == 0))
     // Lets adjust p_ceil to subtract sizeof(POINTER_SIZE_INT) and hoist it. This will speed up the loop by about 10%.
     uint8 *p_ceil_last_to_check = p_ceil - sizeof(POINTER_SIZE_INT);
 
-	while (((uint8 *)(POINTER_SIZE_INT) p_word < p_ceil_last_to_check) && (*p_word == 0)) {
+	while (((uint8 *)(uintptr_t) p_word < p_ceil_last_to_check) && (*p_word == 0)) {
 		p_word++;	// skip a zero word each time
 	}
 
@@ -165,7 +165,7 @@ void get_next_set_bit(set_bit_search_info *info) {
 		p_byte++;
 	}
 
-	if (p_byte >= p_ceil) { 
+	if (p_byte >= p_ceil) {
 		// Reached the end....there is no "1" after (p_byte_start, start_bit_index)
 		info->bit_set_index = 0;
 		info->p_non_zero_byte = NULL;
@@ -197,7 +197,7 @@ bool get_num_consecutive_similar_bits(uint8 *p_byte_start, unsigned int bit_inde
 	POINTER_SIZE_INT alignment_mask = 0x00000003;
 #endif // _IA64_
 
-	assert(((POINTER_SIZE_INT)p_ceil & alignment_mask) == 0);	//????
+	assert(((uintptr_t)p_ceil & alignment_mask) == 0);	//????
 
 	uint8 *p_byte = p_byte_start;
 	unsigned int bit_index = bit_index_to_search_from + 1;
@@ -207,7 +207,7 @@ bool get_num_consecutive_similar_bits(uint8 *p_byte_start, unsigned int bit_inde
 		bit_index++;
 		num_all_same_bits++;
 	}
-	
+
 	if (bit_index != GC_NUM_BITS_PER_BYTE) {
 		*num_consec_bits = num_all_same_bits;	// failed because some bit in the same byte was dissimilar
 		return is_zero_str ? false : true;
@@ -216,16 +216,16 @@ bool get_num_consecutive_similar_bits(uint8 *p_byte_start, unsigned int bit_inde
 	// move to next byte
 	p_byte++;
 
-	while ((p_byte < p_ceil) && (*p_byte == byte_search_value) && ((POINTER_SIZE_INT) p_byte & alignment_mask)) {	// skip bytes till we get to a word boundary
-		num_all_same_bits += GC_NUM_BITS_PER_BYTE;		
+	while ((p_byte < p_ceil) && (*p_byte == byte_search_value) && ((uintptr_t) p_byte & alignment_mask)) {	// skip bytes till we get to a word boundary
+		num_all_same_bits += GC_NUM_BITS_PER_BYTE;
 		p_byte++;
 	}
 
 	if (p_byte >= p_ceil) { // reached the end
-		*num_consec_bits = num_all_same_bits;	
+		*num_consec_bits = num_all_same_bits;
 		return is_zero_str ? false : true;
 	}
-	
+
 	if (*p_byte != byte_search_value) {
 		// there might be more bits in this of interest..
 		bit_index = 0;
@@ -233,15 +233,15 @@ bool get_num_consecutive_similar_bits(uint8 *p_byte_start, unsigned int bit_inde
 			bit_index++;
 			num_all_same_bits++;
 		}
-		*num_consec_bits = num_all_same_bits;	
+		*num_consec_bits = num_all_same_bits;
 		return is_zero_str ? false : true;
 	}
 
 	// We are definitely at a word boundary
 	POINTER_SIZE_INT *p_word = (POINTER_SIZE_INT *) p_byte;
-	assert(((POINTER_SIZE_INT) p_word & alignment_mask) == 0);
+	assert(((uintptr_t) p_word & alignment_mask) == 0);
 
-	while (((uint8 *)((POINTER_SIZE_INT) p_word + sizeof(POINTER_SIZE_INT)) < p_ceil) && (*p_word == word_search_value)) {
+	while (((uint8 *)((uintptr_t) p_word + sizeof(POINTER_SIZE_INT)) < p_ceil) && (*p_word == word_search_value)) {
 		num_all_same_bits += (sizeof(POINTER_SIZE_INT) * GC_NUM_BITS_PER_BYTE);	// jump ahead 32 bits or 64 bits
 		p_word++;	// skip a word each time
 		p_byte = (uint8 *) p_word;
@@ -251,13 +251,13 @@ bool get_num_consecutive_similar_bits(uint8 *p_byte_start, unsigned int bit_inde
 		num_all_same_bits += GC_NUM_BITS_PER_BYTE;
 		p_byte++;
 	}
-	
+
 	bit_index = 0;
 	while ((p_byte < p_ceil) && (bit_index < GC_NUM_BITS_PER_BYTE) && IS_DESIRED_BIT_VALUE(is_zero_str, p_byte, bit_index)){
 		bit_index++;
 		num_all_same_bits++;
 	}
 
-	*num_consec_bits = num_all_same_bits;	
+	*num_consec_bits = num_all_same_bits;
 	return is_zero_str ? false : true;
 }

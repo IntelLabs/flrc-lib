@@ -48,8 +48,8 @@ static const struct PrtEipUnwinder *getEipUnwinder(PrtCodeAddress eip)
     return &iter->second;
 } //getEipUnwinder
 
-static inline PrtRegister *unwindRegister(PrtRegister *original, 
-                                          const struct PrtRegisterAdjustment *adjustment, 
+static inline PrtRegister *unwindRegister(PrtRegister *original,
+                                          const struct PrtRegisterAdjustment *adjustment,
                                           struct PrtStackIterator *si)
 {
     if (adjustment->base == PrtSiRegisterBaseNone)
@@ -62,7 +62,7 @@ static void printEipRegisterAdjustment(struct PrtRegisterAdjustment adj) {
     enum PrtStackIteratorRegister base = adj.base;
     printf("[");
 
-#ifdef __X86_64__
+#ifdef __x86_64__
     if (base == PrtSiRegisterBaseRsp) {
         printf("Rsp");
     } else if (base == PrtSiRegisterBaseVsh) {
@@ -84,7 +84,7 @@ static void printEipRegisterAdjustment(struct PrtRegisterAdjustment adj) {
     } else if (base == PrtSiRegisterBaseNone) {
         printf("None");
     }
-#else  // __X86_64__
+#else  // __x86_64__
     if (base == PrtSiRegisterBaseEsp) {
         printf("Esp");
     } else if (base == PrtSiRegisterBaseVsh) {
@@ -102,7 +102,7 @@ static void printEipRegisterAdjustment(struct PrtRegisterAdjustment adj) {
     } else if (base == PrtSiRegisterBaseNone) {
         printf("None");
     }
-#endif // __X86_64__
+#endif // __x86_64__
 
     if (base != PrtSiRegisterBaseNone) {
         printf("+%u", adj.adjustment);
@@ -113,7 +113,7 @@ static void printEipRegisterAdjustment(struct PrtRegisterAdjustment adj) {
 
 static void printEipUnwindDescriptor(const struct PrtEipUnwinder *descriptor)
 {
-#ifdef __X86_64__
+#ifdef __x86_64__
     printf("    RipUnwind Descriptor:\n");
     printf("      rsp: ");  printEipRegisterAdjustment(descriptor->rspAdjustment);  printf("\n");
     printf("      rbp: ");  printEipRegisterAdjustment(descriptor->rbpAdjustment);  printf("\n");
@@ -123,7 +123,7 @@ static void printEipUnwindDescriptor(const struct PrtEipUnwinder *descriptor)
     printf("      r14: ");  printEipRegisterAdjustment(descriptor->r14Adjustment);  printf("\n");
     printf("      r15: ");  printEipRegisterAdjustment(descriptor->r15Adjustment);  printf("\n");
     printf("      rbx: ");  printEipRegisterAdjustment(descriptor->rbxAdjustment);  printf("\n");
-#else  // __X86_64__
+#else  // __x86_64__
     printf("    EipUnwind Descriptor:\n");
     printf("      esp: ");  printEipRegisterAdjustment(descriptor->espAdjustment);  printf("\n");
     printf("      ebp: ");  printEipRegisterAdjustment(descriptor->ebpAdjustment);  printf("\n");
@@ -131,7 +131,7 @@ static void printEipUnwindDescriptor(const struct PrtEipUnwinder *descriptor)
     printf("      edi: ");  printEipRegisterAdjustment(descriptor->ediAdjustment);  printf("\n");
     printf("      esi: ");  printEipRegisterAdjustment(descriptor->esiAdjustment);  printf("\n");
     printf("      ebx: ");  printEipRegisterAdjustment(descriptor->ebxAdjustment);  printf("\n");
-#endif // __X86_64__
+#endif // __x86_64__
     printf("      vshFramesToPop: %u\n", descriptor->vshFramesToPop);
 } //printEipUnwindDescriptor
 
@@ -144,7 +144,7 @@ static PrtBool unwindUsingEipUnwinder(struct PrtStackIterator *si)
     if (descriptor == NULL)
         return PrtFalse;
 
-#ifdef __X86_64__
+#ifdef __x86_64__
     PrtRegister  newRsp = (PrtRegister)unwindRegister((PrtRegister *)si->rsp, &descriptor->rspAdjustment, si);
     PrtRegister *newRbp = unwindRegister(si->rbpPtr, &descriptor->rbpAdjustment, si);
     PrtRegister *newRip = unwindRegister((PrtRegister *)si->ripPtr, &descriptor->ripAdjustment, si);
@@ -158,7 +158,7 @@ static PrtBool unwindUsingEipUnwinder(struct PrtStackIterator *si)
         newVsh = prtGetNextVse(newVsh);
 
     prtSetStackIteratorFields(si, (PrtCodeAddress *)newRip, newRsp, newRbx, newRbp, newR12, newR13, newR14, newR15, newVsh, 0);
-#else  // __X86_64__
+#else  // __x86_64__
     PrtRegister  newEsp = (PrtRegister)unwindRegister((PrtRegister *)si->esp, &descriptor->espAdjustment, si);
     PrtRegister *newEbp = unwindRegister(si->ebpPtr, &descriptor->ebpAdjustment, si);
     PrtRegister *newEip = unwindRegister((PrtRegister *)si->eipPtr, &descriptor->eipAdjustment, si);
@@ -170,7 +170,7 @@ static PrtBool unwindUsingEipUnwinder(struct PrtStackIterator *si)
         newVsh = prtGetNextVse(newVsh);
 
     prtSetStackIteratorFields(si, (PrtCodeAddress *)newEip, newEsp, newEbx, newEbp, newEsi, newEdi, newVsh, 0);
-#endif // __X86_64__
+#endif // __x86_64__
     return PrtTrue;
 } //unwindUsingEipUnwinder
 
@@ -217,11 +217,11 @@ static PrtBool enumerateUsingEipRse(struct PrtStackIterator *si, struct PrtRseIn
         rootSetInfo->callback(rootSetInfo->env, addr, descriptor->registerRoots[i].tag, descriptor->registerRoots[i].parameter);
     }
     for (i=0; i<descriptor->numStackEspRoots; i++) {
-#ifdef __X86_64__
+#ifdef __x86_64__
         addr = (void **)((int)descriptor->stackEspRoots[i].offset.stackOffset + si->rsp);
-#else  // __X86_64__
+#else  // __x86_64__
         addr = (void **)((int)descriptor->stackEspRoots[i].offset.stackOffset + si->esp);
-#endif // __X86_64__
+#endif // __x86_64__
         rootSetInfo->callback(rootSetInfo->env, addr, descriptor->stackEspRoots[i].tag, descriptor->stackEspRoots[i].parameter);
     }
     return PrtTrue;
@@ -235,7 +235,7 @@ static PrtBool enumerateUsingEipRse(struct PrtStackIterator *si, struct PrtRseIn
 //#define DEBUG_STACK_WALKING 1
 //#define DEBUG_ROOT_SET_ENUMERATION 1
 
-#ifdef __X86_64__
+#ifdef __x86_64__
 PILLAR_EXPORT void prtSetStackIteratorFields(struct PrtStackIterator *context,
                                              PrtCodeAddress *ripPtr,
                                              PrtRegister rsp,
@@ -259,7 +259,7 @@ PILLAR_EXPORT void prtSetStackIteratorFields(struct PrtStackIterator *context,
     context->vsh    = vsh;
     context->virtualFrameNumber = virtualFrameNumber;
 } //prtSetStackIteratorFields
-#else  // __X86_64__
+#else  // __x86_64__
 PILLAR_EXPORT void prtSetStackIteratorFields(struct PrtStackIterator *context,
                                                     PrtCodeAddress *eipPtr,
                                                     PrtRegister esp,
@@ -279,7 +279,7 @@ PILLAR_EXPORT void prtSetStackIteratorFields(struct PrtStackIterator *context,
     context->vsh = vsh;
     context->virtualFrameNumber = virtualFrameNumber;
 } //prtSetStackIteratorFields
-#endif // __X86_64__
+#endif // __x86_64__
 
 
 static void initializeStackIteratorFromUnmanagedFrame(PrtStackIterator *si, Prt_Task *task)
@@ -341,15 +341,15 @@ PILLAR_EXPORT void prtNextActivation(PrtStackIterator *si)
     PrtCodeAddress new_ip = prtGetActivationIP(si);
     Prt_Task *pt = (Prt_Task*)si->task_for_this_stack;
     if (new_ip &&
-        new_ip >= pt->mWatermarkStubs && 
+        new_ip >= pt->mWatermarkStubs &&
         new_ip <= pt->mWatermarkStubEnd) {
-#ifdef __X86_64__
+#ifdef __x86_64__
         si->watermarkPtr = si->ripPtr;
         si->ripPtr = pt->get_real_eip_ptr(*(si->watermarkPtr));
-#else  // __X86_64__
+#else  // __x86_64__
         si->watermarkPtr = si->eipPtr;
         si->eipPtr = pt->get_real_eip_ptr(*(si->watermarkPtr));
-#endif // __X86_64__
+#endif // __x86_64__
     } else {
         si->watermarkPtr = NULL; // not a special watermark frame
     }
@@ -370,13 +370,13 @@ PILLAR_EXPORT char *prtGetActivationString(PrtStackIterator *si, char *buffer, u
         return cim->getStringForFrame(si, buffer, bufferSize, opaqueData);
     } else {
         PrtCodeAddress ip = prtGetActivationIP(si);
-#ifdef __X86_64__
+#ifdef __x86_64__
         _snprintf(buffer, bufferSize, "Unmanaged frame: ip=%p, rsp=%p, vsh=%p, vfn=%u",
             ip, si->rsp, si->vsh, si->virtualFrameNumber);
-#else  // __X86_64__
+#else  // __x86_64__
         _snprintf(buffer, bufferSize, "Unmanaged frame: ip=%p, esp=%p, vsh=%p, vfn=%u",
             ip, si->esp, si->vsh, si->virtualFrameNumber);
-#endif // __X86_64__
+#endif // __x86_64__
         return buffer;
     }
 } //prtGetActivationString
@@ -521,8 +521,8 @@ PILLAR_EXPORT struct PrtContinuation *prtGetUnwindContinuation(struct PrtStackIt
 } //prtGetUnwindContinuation
 
 
-// Returns the value associated with the smallest span tagged with "key" and containing the program point 
-// where "si" is suspended.  Returns (PrtDataPointer)NULL if there is no such span. 
+// Returns the value associated with the smallest span tagged with "key" and containing the program point
+// where "si" is suspended.  Returns (PrtDataPointer)NULL if there is no such span.
 PILLAR_EXPORT PrtDataPointer prtGetSpanDescriptor(struct PrtStackIterator *si, unsigned key)
 {
     assert(si);
@@ -548,17 +548,17 @@ PILLAR_EXPORT PrtCodeAddress prtGetActivationIP(PrtStackIterator *si)
 {
     assert(si);
     PrtCodeAddress ip = 0;
-#ifdef __X86_64__
+#ifdef __x86_64__
     assert(si->ripPtr);
     if (si->ripPtr != NULL) {
         ip = *si->ripPtr;
     }
-#else  // __X86_64__
+#else  // __x86_64__
     assert(si->eipPtr);
     if (si->eipPtr != NULL) {
         ip = *si->eipPtr;
     }
-#endif // __X86_64__
+#endif // __x86_64__
     return ip;
 } //prtGetActivationIP
 
@@ -570,11 +570,11 @@ PILLAR_EXPORT PrtCodeAddress prtGetActivationIP(PrtStackIterator *si)
 PILLAR_EXPORT PrtBool prtIsActivationPastEnd(PrtStackIterator *si)
 {
     assert(si);
-#ifdef __X86_64__
+#ifdef __x86_64__
     return ((si->ripPtr == NULL)? PrtTrue : PrtFalse);
-#else  // __X86_64__
+#else  // __x86_64__
     return ((si->eipPtr == NULL)? PrtTrue : PrtFalse);
-#endif // __X86_64__
+#endif // __x86_64__
 } //prtIsActivationPastEnd
 
 
@@ -583,21 +583,21 @@ PILLAR_EXPORT void PRT_CDECL prtMarkFrameAsVisited(PRT_IN struct PrtStackIterato
 {
 	Prt_Task *pt = (Prt_Task*)context->task_for_this_stack;
 
-#ifdef __X86_64__
+#ifdef __x86_64__
 	PrtCodeAddress new_rip = pt->getWatermarkStub(*(context->ripPtr));
 	*(context->ripPtr) = new_rip;    // set the return eip to the stub so that we'll know next time through.
 
 	// fix the two eip pointers
 	context->watermarkPtr = context->ripPtr;
 	context->ripPtr       = pt->get_real_eip_ptr(*(context->watermarkPtr));
-#else  // __X86_64__
+#else  // __x86_64__
 	PrtCodeAddress new_eip = pt->getWatermarkStub(*(context->eipPtr));
 	*(context->eipPtr) = new_eip;    // set the return eip to the stub so that we'll know next time through.
 
 	// fix the two eip pointers
 	context->watermarkPtr = context->eipPtr;
 	context->eipPtr       = pt->get_real_eip_ptr(*(context->watermarkPtr));
-#endif // __X86_64__
+#endif // __x86_64__
 } // prtMarkFrameAsVisited
 
 /* Returns true if the frame was previously marked with prtMarkFrameAsVisited. */
@@ -606,4 +606,3 @@ PILLAR_EXPORT PrtBool PRT_CDECL prtHasFrameBeenVisited(PRT_IN const struct PrtSt
 	if (context->watermarkPtr != NULL) return PrtTrue;
 	else                               return PrtFalse;
 } // prtHasFrameBeenVisited
-

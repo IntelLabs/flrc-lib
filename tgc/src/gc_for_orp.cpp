@@ -52,7 +52,7 @@ extern "C" STDCALL_FUNC_OUT void (STDCALL_FUNC_IN *gc_heap_slot_write_barrier_in
             Managed_Object_Handle *p_slot,
             Managed_Object_Handle value,
 #ifndef NO_P2C_TH
-            PrtTaskHandle taskHandle, 
+            PrtTaskHandle taskHandle,
 #endif  // NO_P2C_TH
             void *prev_frame);
 extern "C" STDCALL_FUNC_OUT void (STDCALL_FUNC_IN *gc_heap_slot_write_interior_indirect_prt)(
@@ -60,7 +60,7 @@ extern "C" STDCALL_FUNC_OUT void (STDCALL_FUNC_IN *gc_heap_slot_write_interior_i
             Managed_Object_Handle value,
 			unsigned offset,
 #ifndef NO_P2C_TH
-            PrtTaskHandle taskHandle, 
+            PrtTaskHandle taskHandle,
 #endif  // NO_P2C_TH
             void *prev_frame);
 
@@ -81,7 +81,7 @@ extern "C" STDCALL_FUNC_OUT Managed_Object_Handle (STDCALL_FUNC_IN *gc_cas_write
             Managed_Object_Handle value,
             Managed_Object_Handle cmp,
 #ifndef NO_P2C_TH
-            PrtTaskHandle taskHandle, 
+            PrtTaskHandle taskHandle,
 #endif  // NO_P2C_TH
             void *prev_frame);
 extern "C" STDCALL_FUNC_OUT Managed_Object_Handle (STDCALL_FUNC_IN *gc_cas_write_interior_indirect_prt)(
@@ -90,7 +90,7 @@ extern "C" STDCALL_FUNC_OUT Managed_Object_Handle (STDCALL_FUNC_IN *gc_cas_write
 			unsigned offset,
             Managed_Object_Handle cmp,
 #ifndef NO_P2C_TH
-            PrtTaskHandle taskHandle, 
+            PrtTaskHandle taskHandle,
 #endif  // NO_P2C_TH
             void *prev_frame);
 
@@ -124,7 +124,7 @@ extern "C" void *gc_heap_slot_gen_write_interior_ref_p_prt_end;
  * DECLARATION:
  *   1. You need to declare an exported function through GCEXPORT, for example
  *         DECLARE
- *             type func(arg list) 
+ *             type func(arg list)
  *         AS:
  *             GCEXPORT(type, func)(arg list).
  *   2. If you want to call one exported function "func" from another exported function,
@@ -134,7 +134,7 @@ extern "C" void *gc_heap_slot_gen_write_interior_ref_p_prt_end;
 */
 
 /* EXPLANATION:
- *   On Linux, system will be confused by function pointer variable pointing to a exported 
+ *   On Linux, system will be confused by function pointer variable pointing to a exported
  *     function with the same name, for example,
  *   In ORP, we have:
  *      void (*gc_thread_init)(void *);
@@ -152,11 +152,11 @@ extern "C" void *gc_heap_slot_gen_write_interior_ref_p_prt_end;
  *   And in DLL context, if you need to call the exported function, you need to use:
  *      INTERNAL(gc_thread_init)(XXX);
  *
- *   In Dll_GC.cpp, you need to use INTERNAL_FUNC_NAME to refer the function 
+ *   In Dll_GC.cpp, you need to use INTERNAL_FUNC_NAME to refer the function
  *      names.
- *   
+ *
  */
- 
+
 /* NOTE:
  *   There're also exported functions in allocation.cpp and scan_object.cpp.
  */
@@ -185,7 +185,7 @@ GCEXPORT(void, gc_heap_write_global_slot_compressed)(uint32 *p_slot,
                                Managed_Object_Handle value);
 #endif
 
-GCEXPORT(void, gc_heap_write_global_slot)(volatile uint32 *txnRec, 
+GCEXPORT(void, gc_heap_write_global_slot)(volatile uint32 *txnRec,
                                           Managed_Object_Handle *p_slot,
                                           Managed_Object_Handle value);
 
@@ -205,7 +205,7 @@ GCEXPORT(void, gc_thread_init)(void *gc_information, void *thread_handle) ;
 GCEXPORT(void, gc_thread_init_no_nursery)(void *gc_information, void *thread_handle) ;
 GCEXPORT(void, gc_thread_kill)(void *gc_information) ;
 GCEXPORT(void, gc_force_gc)() ;
-GCEXPORT(int64, gc_total_memory)(); 
+GCEXPORT(int64, gc_total_memory)();
 GCEXPORT(int64, gc_free_memory)();
 GCEXPORT(int64, gc_max_memory)();
 GCEXPORT(unsigned int, gc_time_since_last_gc)();
@@ -248,7 +248,7 @@ extern void (*wpo_finalizer_callback)(void *);
 const int BITS_PER_BYTE = 8;
 
 // We want to use signed arithmetic when we do allocation pointer/limit compares.
-// In order to do this all sizes must be positive so when we want to overflow instead of 
+// In order to do this all sizes must be positive so when we want to overflow instead of
 // setting the high bit we set the next to high bit. If we set the high bit and the allocation buffer
 // is at the top of memory we might not detect an overflow the unsigned overflow would produce
 // a small positive number that is smaller then the limit.
@@ -259,17 +259,17 @@ const int NEXT_TO_HIGH_BIT_CLEAR_MASK = ~NEXT_TO_HIGH_BIT_SET_MASK;
 inline unsigned int get_instance_data_size (unsigned int encoded_size) {
     return (encoded_size & NEXT_TO_HIGH_BIT_CLEAR_MASK);
 }
- 
+
 // ******************************************************************
 /****
 *
 *  Routines to support the initialization and termination of GC.
-* 
+*
 *****/
 
 //
 // Used by the class prepare routine to enable the placement of special objects that
-// are application specific. This is turned on with -gc object_placement 
+// are application specific. This is turned on with -gc object_placement
 //
 
 #ifdef GC_VERIFY_VM
@@ -278,12 +278,12 @@ void turn_test_vm_on(unsigned int skip);
 #endif
 
 //
-// API for the ORP to hand to the GC any arguments starting with -gc. 
+// API for the ORP to hand to the GC any arguments starting with -gc.
 // It is up to the GC to parse these arguments.
 //
-// Input: name - a string holding the name of the parameter 
+// Input: name - a string holding the name of the parameter
 //               assumed to begin with "-gc"
-//        arg  - a string holding the argument following name on 
+//        arg  - a string holding the argument following name on
 //               the command line.
 //
 extern bool fullheapcompact_at_forcegc;
@@ -309,7 +309,7 @@ extern unsigned ADAPTIVE_SEARCHING_SAMPLE_SIZE;
 extern unsigned ADAPTIVE_PHASE_SAMPLE_SIZE;
 extern unsigned ADAPTIVE_HIGH_LOW_SAMPLE_SIZE;
 extern float    ADAPTIVE_HIGH_LOW_FACTOR;
-extern float    ADAPTIVE_PHASE_THRESHOLD; 
+extern float    ADAPTIVE_PHASE_THRESHOLD;
 unsigned ARENA_SIZE = 1024;
 bool use_pillar_watermarks = true;
 bool pre_tenure = false;
@@ -399,7 +399,7 @@ GCEXPORT(void, gc_next_command_line_argument) (const char *name, const char *arg
     int unit_k = 'k';
     int unit_m = 'm';
     int unit_g = 'g';
-    
+
     const char *nofullheapcompact_str = "nofullcompactforcegc";
     const char *incrementalcompact_str = "incrementalcompact";
     const char *verify_str = "verify";
@@ -478,7 +478,7 @@ GCEXPORT(void, gc_next_command_line_argument) (const char *name, const char *arg
         }
         return;
     }
-    
+
     if (strncmp(name, Xms_str,4) == 0) {
         const char * newarg = arg + 4;
         /*int*/ size_t len = strlen(newarg);
@@ -492,9 +492,9 @@ GCEXPORT(void, gc_next_command_line_argument) (const char *name, const char *arg
         }
         initial_heap_size_bytes = atoi(newarg);
         initial_heap_size_bytes *= unit;
-        
+
         initial_heap_size_bytes = (initial_heap_size_bytes & GC_BLOCK_HIGH_MASK); // Round down a block.
-        
+
         if (verbose_gc) {
             orp_cout << "initial heap size is " << (void *)initial_heap_size_bytes << std::endl;
         }
@@ -589,7 +589,7 @@ GCEXPORT(void, gc_next_command_line_argument) (const char *name, const char *arg
                 orp_cout << "Chunks will be swept during GC\n";
             }
 ////////////////////////////////////////////////////////////////////////////////////////////
-            
+
 #ifdef _IA64_
         } else if (strcmp(arg, use_large_pages_str) == 0) {
             use_large_pages = true;
@@ -628,7 +628,7 @@ GCEXPORT(void, gc_next_command_line_argument) (const char *name, const char *arg
             use_finalization = false;
 		} else if (strncmp(arg, micro_nursery_str, strlen(micro_nursery_str)) == 0) {
     		const char *nursery_size = arg + strlen(micro_nursery_str);
-	    	local_nursery_size = atoi(nursery_size); 
+	    	local_nursery_size = atoi(nursery_size);
 			char *next = (char*)nursery_size + numdigits(local_nursery_size);
 			char unit = *next;
 			next++;
@@ -797,7 +797,7 @@ GCEXPORT(void, gc_next_command_line_argument) (const char *name, const char *arg
     		const char *heap_base_value = arg + strlen(heap_base_str);
 #ifdef POINTER64
 			g_cmd_line_heap_base = strtoull(heap_base_value,NULL,16);
-#else    
+#else
 			g_cmd_line_heap_base = strtoul(heap_base_value,NULL,16);
 #endif
 #ifdef CONCURRENT
@@ -809,7 +809,7 @@ GCEXPORT(void, gc_next_command_line_argument) (const char *name, const char *arg
 			g_concurrent_transition_wait_time = atoi(transition_wait_ms_value);
 #endif // CONCURRENT
         } else {
-            orp_cout << "-gc ignoring argument it does not understand." << name << " " << arg << std::endl;   
+            orp_cout << "-gc ignoring argument it does not understand." << name << " " << arg << std::endl;
         }
         return;
     }
@@ -817,7 +817,7 @@ GCEXPORT(void, gc_next_command_line_argument) (const char *name, const char *arg
     orp_cout << "gc next_command_line_argument passed argument it does not understand." << name << " " << arg << std::endl;
 } //gc::next_command_line_argument
 
- 
+
 
 //
 // gc_init initialized the GC internal data structures.
@@ -825,7 +825,7 @@ GCEXPORT(void, gc_next_command_line_argument) (const char *name, const char *arg
 // The ORP should call this *before* any other calls to this interface except
 // calls to gc_next_command_line_argument.
 //
-// 
+//
 // gc_init needs a couple of routines to build empty classes so it can
 // generated filler objects when it needs to align an object.
 //
@@ -838,9 +838,9 @@ GCEXPORT(void, gc_next_command_line_argument) (const char *name, const char *arg
 //
 
 //
-// A function that is not part of the interface but can be used to make sure 
+// A function that is not part of the interface but can be used to make sure
 // our compile flags make sense.
-// 
+//
 
 //
 // The class loader is notifying us that another class has
@@ -863,7 +863,7 @@ void _initialize_plan_and_hooks(char *p_plan_file_name) {
     // user has a .plan file in the right place. If so, the
     // contents of that file override the default settings
     // in the plan.
-    //  
+    //
     if (p_plan_file_name) {
         _p_gc_plan = new Gc_Plan(p_plan_file_name);
     } else {
@@ -879,18 +879,18 @@ void init_blocks_mrl_gc_v4(char *p_plan_file_name) {
     // the debug level specified by the build.
     //
     _initialize_plan_and_hooks(p_plan_file_name);
-    
+
     // Initialization (perhaps later the ORP should set defaults):
     if (initial_heap_size_bytes == 0) {
         initial_heap_size_bytes = _p_gc_plan->default_initial_heap_size_bytes();
     }
-    
+
     if (final_heap_size_bytes == 0) {
         final_heap_size_bytes = _p_gc_plan->default_final_heap_size_bytes();
     }
-    
+
     unsigned int sub_block_size_bytes = _p_gc_plan->sub_block_size_bytes();
-    
+
     p_global_gc = new Garbage_Collector(initial_heap_size_bytes, final_heap_size_bytes, sub_block_size_bytes);
 }
 
@@ -900,7 +900,7 @@ void local_nursery_collection(GC_Thread_Info *tls_for_gc,struct PrtStackIterator
 POINTER_SIZE_INT Partial_Reveal_Object::vtable_base;
 POINTER_SIZE_INT Partial_Reveal_Object::heap_base = 0;
 
-#ifdef __X86_64__
+#ifdef __x86_64__
 
 static char *wbGetStringForFrame(PrtStackIterator *si, char *buffer, size_t bufferSize, PrtCimSpecificDataType opaqueData) {
     assert(si);
@@ -924,7 +924,7 @@ static char *wbGetStringForFrame_prt(PrtStackIterator *si, char *buffer, size_t 
     return buffer;
 } //wbGetStringForFrame
 
-#else  // __X86_64__
+#else  // __x86_64__
 
 static char *wbGetStringForFrame(PrtStackIterator *si, char *buffer, size_t bufferSize, PrtCimSpecificDataType opaqueData) {
     assert(si);
@@ -948,10 +948,10 @@ static char *wbGetStringForFrame_prt(PrtStackIterator *si, char *buffer, size_t 
     return buffer;
 } //wbGetStringForFrame
 
-#endif // __X86_64__
+#endif // __x86_64__
 
 
-#ifdef __X86_64__
+#ifdef __x86_64__
 
 static char *cas_wbGetStringForFrame(PrtStackIterator *si, char *buffer, size_t bufferSize, PrtCimSpecificDataType opaqueData) {
     assert(si);
@@ -975,7 +975,7 @@ static char *cas_wbGetStringForFrame_prt(PrtStackIterator *si, char *buffer, siz
     return buffer;
 } //wbGetStringForFrame
 
-#else  // __X86_64__
+#else  // __x86_64__
 
 static char *cas_wbGetStringForFrame(PrtStackIterator *si, char *buffer, size_t bufferSize, PrtCimSpecificDataType opaqueData) {
     assert(si);
@@ -999,7 +999,7 @@ static char *cas_wbGetStringForFrame_prt(PrtStackIterator *si, char *buffer, siz
     return buffer;
 } //wbGetStringForFrame
 
-#endif // __X86_64__
+#endif // __x86_64__
 
 
 // =============== REGULAR WRITE-BARRIERS =========================================
@@ -1025,7 +1025,7 @@ extern "C" void PRT_STDCALL gc_heap_slot_write_ref_p_prt(
                          Managed_Object_Handle *p_slot,
                          Managed_Object_Handle value,
 #ifndef NO_P2C_TH
-                         PrtTaskHandle taskHandle, 
+                         PrtTaskHandle taskHandle,
 #endif  // NO_P2C_TH
                          void *prev_frame);
 extern "C" void PRT_STDCALL gc_heap_slot_write_interior_ref_p_prt(
@@ -1033,7 +1033,7 @@ extern "C" void PRT_STDCALL gc_heap_slot_write_interior_ref_p_prt(
                          Managed_Object_Handle value,
 						 unsigned offset,
 #ifndef NO_P2C_TH
-                         PrtTaskHandle taskHandle, 
+                         PrtTaskHandle taskHandle,
 #endif  // NO_P2C_TH
                          void *prev_frame);
 extern "C" void PRT_STDCALL gc_heap_slot_write_ref_p_prt_null(
@@ -1041,7 +1041,7 @@ extern "C" void PRT_STDCALL gc_heap_slot_write_ref_p_prt_null(
                          Managed_Object_Handle *p_slot,
                          Managed_Object_Handle value,
 #ifndef NO_P2C_TH
-                         PrtTaskHandle taskHandle, 
+                         PrtTaskHandle taskHandle,
 #endif  // NO_P2C_TH
                          void *prev_frame);
 extern "C" void PRT_STDCALL gc_heap_slot_write_interior_ref_p_prt_null(
@@ -1049,7 +1049,7 @@ extern "C" void PRT_STDCALL gc_heap_slot_write_interior_ref_p_prt_null(
                          Managed_Object_Handle value,
 						 unsigned offset,
 #ifndef NO_P2C_TH
-                         PrtTaskHandle taskHandle, 
+                         PrtTaskHandle taskHandle,
 #endif  // NO_P2C_TH
                          void *prev_frame);
 
@@ -1084,7 +1084,7 @@ extern "C" Managed_Object_Handle PRT_STDCALL gc_cas_write_ref_p_prt(
                          Managed_Object_Handle value,
                          Managed_Object_Handle cmp,
 #ifndef NO_P2C_TH
-                         PrtTaskHandle taskHandle, 
+                         PrtTaskHandle taskHandle,
 #endif  // NO_P2C_TH
                          void *prev_frame);
 extern "C" Managed_Object_Handle PRT_STDCALL gc_cas_write_interior_ref_p_prt(
@@ -1093,7 +1093,7 @@ extern "C" Managed_Object_Handle PRT_STDCALL gc_cas_write_interior_ref_p_prt(
 						 unsigned offset,
                          Managed_Object_Handle cmp,
 #ifndef NO_P2C_TH
-                         PrtTaskHandle taskHandle, 
+                         PrtTaskHandle taskHandle,
 #endif  // NO_P2C_TH
                          void *prev_frame);
 extern "C" Managed_Object_Handle PRT_STDCALL gc_cas_write_ref_p_prt_null(
@@ -1102,7 +1102,7 @@ extern "C" Managed_Object_Handle PRT_STDCALL gc_cas_write_ref_p_prt_null(
                          Managed_Object_Handle value,
                          Managed_Object_Handle cmp,
 #ifndef NO_P2C_TH
-                         PrtTaskHandle taskHandle, 
+                         PrtTaskHandle taskHandle,
 #endif  // NO_P2C_TH
                          void *prev_frame);
 extern "C" Managed_Object_Handle PRT_STDCALL gc_cas_write_interior_ref_p_prt_null(
@@ -1111,7 +1111,7 @@ extern "C" Managed_Object_Handle PRT_STDCALL gc_cas_write_interior_ref_p_prt_nul
 						 unsigned offset,
                          Managed_Object_Handle cmp,
 #ifndef NO_P2C_TH
-                         PrtTaskHandle taskHandle, 
+                         PrtTaskHandle taskHandle,
 #endif  // NO_P2C_TH
                          void *prev_frame);
 
@@ -1394,36 +1394,36 @@ struct cas_unmanaged_mark_phase_interior_prt_callsite_stack {
 
 
 
-#ifdef __X86_64__
+#ifdef __x86_64__
 
 static void wbGetPreviousFrame(PrtStackIterator *si, PrtCimSpecificDataType opaqueData) {
 	POINTER_SIZE_INT cur_rsp = (POINTER_SIZE_INT)si->rsp;
 
 #ifdef CONCURRENT
 	if(*(si->ripPtr) < (PrtCodeAddress)&gc_heap_slot_write_ref_p_nonconcurrent_section) {
-		prtSetStackIteratorFields(si, 
-					   /*eipPtr*/ (PrtCodeAddress*)(cur_esp + sizeof(unmanaged_mark_phase_callsite_stack_args)), 
-					   /*esp*/    (PrtRegister)    (cur_esp + sizeof(unmanaged_mark_phase_callsite_stack)), 
-					   /*ebxPtr*/ si->ebxPtr, 
-					   /*ebpPtr*/ si->ebpPtr, 
-					   /*esiPtr*/ si->esiPtr, 
-					   /*ediPtr*/ si->ediPtr, 
-					   /*vsh*/    si->vsh, 
+		prtSetStackIteratorFields(si,
+					   /*eipPtr*/ (PrtCodeAddress*)(cur_esp + sizeof(unmanaged_mark_phase_callsite_stack_args)),
+					   /*esp*/    (PrtRegister)    (cur_esp + sizeof(unmanaged_mark_phase_callsite_stack)),
+					   /*ebxPtr*/ si->ebxPtr,
+					   /*ebpPtr*/ si->ebpPtr,
+					   /*esiPtr*/ si->esiPtr,
+					   /*ediPtr*/ si->ediPtr,
+					   /*vsh*/    si->vsh,
 					   /*virtualFrameNumber*/ 0);
         return;
 	}
 #endif // CONCURRENT
 
-    prtSetStackIteratorFields(si, 
-                   /*ripPtr*/ (PrtCodeAddress*)(cur_rsp + sizeof(unmanaged_add_entry_callsite_stack_args)), 
-                   /*rsp*/    (PrtRegister    )(cur_rsp + sizeof(unmanaged_add_entry_callsite_stack)), 
-                   /*rbxPtr*/ si->rbxPtr, 
-                   /*rbpPtr*/ si->rbpPtr, 
-                   /*r12Ptr*/ si->r12Ptr, 
-                   /*r13Ptr*/ si->r13Ptr, 
-                   /*r14Ptr*/ si->r14Ptr, 
-                   /*r15Ptr*/ si->r15Ptr, 
-                   /*vsh*/    si->vsh, 
+    prtSetStackIteratorFields(si,
+                   /*ripPtr*/ (PrtCodeAddress*)(cur_rsp + sizeof(unmanaged_add_entry_callsite_stack_args)),
+                   /*rsp*/    (PrtRegister    )(cur_rsp + sizeof(unmanaged_add_entry_callsite_stack)),
+                   /*rbxPtr*/ si->rbxPtr,
+                   /*rbpPtr*/ si->rbpPtr,
+                   /*r12Ptr*/ si->r12Ptr,
+                   /*r13Ptr*/ si->r13Ptr,
+                   /*r14Ptr*/ si->r14Ptr,
+                   /*r15Ptr*/ si->r15Ptr,
+                   /*vsh*/    si->vsh,
                    /*virtualFrameNumber*/ 0);
 } //wbGetPreviousFrame
 
@@ -1433,35 +1433,35 @@ static void wbGetPreviousFrame_prt(PrtStackIterator *si, PrtCimSpecificDataType 
 #ifdef CONCURRENT
 	if(*(si->eipPtr) < (PrtCodeAddress)&gc_heap_slot_write_ref_p_prt_nonconcurrent_section) {
         unmanaged_mark_phase_prt_callsite_stack *umppcs = (unmanaged_mark_phase_prt_callsite_stack *)cur_esp;
-		prtSetStackIteratorFields(si, 
-					   /*eipPtr*/ (PrtCodeAddress*)&(umppcs->return_eip), 
-					   /*esp*/    (PrtRegister)      umppcs->prevFrame, 
-					   /*ebxPtr*/ si->ebxPtr, 
-					   /*ebpPtr*/ si->ebpPtr, 
-					   /*esiPtr*/ si->esiPtr, 
-					   /*ediPtr*/ si->ediPtr, 
-					   /*vsh*/    si->vsh, 
+		prtSetStackIteratorFields(si,
+					   /*eipPtr*/ (PrtCodeAddress*)&(umppcs->return_eip),
+					   /*esp*/    (PrtRegister)      umppcs->prevFrame,
+					   /*ebxPtr*/ si->ebxPtr,
+					   /*ebpPtr*/ si->ebpPtr,
+					   /*esiPtr*/ si->esiPtr,
+					   /*ediPtr*/ si->ediPtr,
+					   /*vsh*/    si->vsh,
 					   /*virtualFrameNumber*/ 0);
         return;
 	}
 #endif // CONCURRENT
 
     unmanaged_add_entry_prt_callsite_stack *uaepcs = (unmanaged_add_entry_prt_callsite_stack *)cur_rsp;
-    prtSetStackIteratorFields(si, 
-				   /*eipPtr*/ (PrtCodeAddress*)&(uaepcs->return_eip), 
-				   /*esp*/    (PrtRegister)      uaepcs->prevFrame, 
-                   /*rbxPtr*/ si->rbxPtr, 
-                   /*rbpPtr*/ si->rbpPtr, 
-                   /*r12Ptr*/ si->r12Ptr, 
-                   /*r13Ptr*/ si->r13Ptr, 
-                   /*r14Ptr*/ si->r14Ptr, 
-                   /*r15Ptr*/ si->r15Ptr, 
-                   /*vsh*/    si->vsh, 
+    prtSetStackIteratorFields(si,
+				   /*eipPtr*/ (PrtCodeAddress*)&(uaepcs->return_eip),
+				   /*esp*/    (PrtRegister)      uaepcs->prevFrame,
+                   /*rbxPtr*/ si->rbxPtr,
+                   /*rbpPtr*/ si->rbpPtr,
+                   /*r12Ptr*/ si->r12Ptr,
+                   /*r13Ptr*/ si->r13Ptr,
+                   /*r14Ptr*/ si->r14Ptr,
+                   /*r15Ptr*/ si->r15Ptr,
+                   /*vsh*/    si->vsh,
                    /*virtualFrameNumber*/ 0);
 } //wbGetPreviousFrame_prt
 
-static void wbEnumerateRoots(struct PrtStackIterator *si, 
-                             struct PrtRseInfo *rootSetInfo, 
+static void wbEnumerateRoots(struct PrtStackIterator *si,
+                             struct PrtRseInfo *rootSetInfo,
                              PrtCimSpecificDataType opaqueData) {
 	POINTER_SIZE_INT cur_esp = (POINTER_SIZE_INT)si->rsp;
 
@@ -1507,8 +1507,8 @@ static void wbEnumerateRoots(struct PrtStackIterator *si,
     }
 } // wbEnumerateRoots
 
-static void wbEnumerateRoots_prt(struct PrtStackIterator *si, 
-                             struct PrtRseInfo *rootSetInfo, 
+static void wbEnumerateRoots_prt(struct PrtStackIterator *si,
+                             struct PrtRseInfo *rootSetInfo,
                              PrtCimSpecificDataType opaqueData) {
 	POINTER_SIZE_INT cur_esp = (POINTER_SIZE_INT)si->rsp;
 
@@ -1562,29 +1562,29 @@ static void wbInteriorGetPreviousFrame(PrtStackIterator *si, PrtCimSpecificDataT
 
 #ifdef CONCURRENT
 	if(*(si->eipPtr) < (PrtCodeAddress)&gc_heap_slot_write_interior_ref_p_nonconcurrent_section) {
-		prtSetStackIteratorFields(si, 
+		prtSetStackIteratorFields(si,
 					   /*eipPtr*/ (PrtCodeAddress*)(cur_esp + sizeof(unmanaged_mark_phase_callsite_stack_args)),
 					   /*esp*/    (PrtRegister)    (cur_esp + sizeof(unmanaged_mark_phase_interior_callsite_stack)),
-					   /*ebxPtr*/ si->ebxPtr, 
-					   /*ebpPtr*/ si->ebpPtr, 
-					   /*esiPtr*/ si->esiPtr, 
-					   /*ediPtr*/ si->ediPtr, 
-					   /*vsh*/    si->vsh, 
+					   /*ebxPtr*/ si->ebxPtr,
+					   /*ebpPtr*/ si->ebpPtr,
+					   /*esiPtr*/ si->esiPtr,
+					   /*ediPtr*/ si->ediPtr,
+					   /*vsh*/    si->vsh,
 					   /*virtualFrameNumber*/ 0);
         return;
 	}
 #endif // CONCURRENT
 
-    prtSetStackIteratorFields(si, 
+    prtSetStackIteratorFields(si,
                    /*eipPtr*/ (PrtCodeAddress*)(cur_esp + sizeof(unmanaged_add_entry_callsite_stack_args)),
                    /*esp*/    (PrtRegister)    (cur_esp + sizeof(unmanaged_add_entry_interior_callsite_stack)),
-                   /*rbxPtr*/ si->rbxPtr, 
-                   /*rbpPtr*/ si->rbpPtr, 
-                   /*r12Ptr*/ si->r12Ptr, 
-                   /*r13Ptr*/ si->r13Ptr, 
-                   /*r14Ptr*/ si->r14Ptr, 
-                   /*r15Ptr*/ si->r15Ptr, 
-                   /*vsh*/    si->vsh, 
+                   /*rbxPtr*/ si->rbxPtr,
+                   /*rbpPtr*/ si->rbpPtr,
+                   /*r12Ptr*/ si->r12Ptr,
+                   /*r13Ptr*/ si->r13Ptr,
+                   /*r14Ptr*/ si->r14Ptr,
+                   /*r15Ptr*/ si->r15Ptr,
+                   /*vsh*/    si->vsh,
                    /*virtualFrameNumber*/ 0);
 } //wbInteriorGetPreviousFrame
 
@@ -1594,35 +1594,35 @@ static void wbInteriorGetPreviousFrame_prt(PrtStackIterator *si, PrtCimSpecificD
 #ifdef CONCURRENT
 	if(*(si->eipPtr) < (PrtCodeAddress)&gc_heap_slot_write_interior_ref_p_prt_nonconcurrent_section) {
         unmanaged_mark_phase_interior_prt_callsite_stack *umppcs = (unmanaged_mark_phase_interior_prt_callsite_stack *)cur_esp;
-		prtSetStackIteratorFields(si, 
-					   /*eipPtr*/ (PrtCodeAddress*)&(umppcs->return_eip), 
-					   /*esp*/    (PrtRegister)umppcs->prevFrame, 
-					   /*ebxPtr*/ si->ebxPtr, 
-					   /*ebpPtr*/ si->ebpPtr, 
-					   /*esiPtr*/ si->esiPtr, 
-					   /*ediPtr*/ si->ediPtr, 
-					   /*vsh*/    si->vsh, 
+		prtSetStackIteratorFields(si,
+					   /*eipPtr*/ (PrtCodeAddress*)&(umppcs->return_eip),
+					   /*esp*/    (PrtRegister)umppcs->prevFrame,
+					   /*ebxPtr*/ si->ebxPtr,
+					   /*ebpPtr*/ si->ebpPtr,
+					   /*esiPtr*/ si->esiPtr,
+					   /*ediPtr*/ si->ediPtr,
+					   /*vsh*/    si->vsh,
 					   /*virtualFrameNumber*/ 0);
         return;
 	}
 #endif // CONCURRENT
 
     unmanaged_add_entry_interior_prt_callsite_stack *uaepcs = (unmanaged_add_entry_interior_prt_callsite_stack *)cur_esp;
-    prtSetStackIteratorFields(si, 
-				   /*eipPtr*/ (PrtCodeAddress*)&(uaepcs->return_eip), 
-				   /*esp*/    (PrtRegister)uaepcs->prevFrame, 
-                   /*rbxPtr*/ si->rbxPtr, 
-                   /*rbpPtr*/ si->rbpPtr, 
-                   /*r12Ptr*/ si->r12Ptr, 
-                   /*r13Ptr*/ si->r13Ptr, 
-                   /*r14Ptr*/ si->r14Ptr, 
-                   /*r15Ptr*/ si->r15Ptr, 
-                   /*vsh*/    si->vsh, 
+    prtSetStackIteratorFields(si,
+				   /*eipPtr*/ (PrtCodeAddress*)&(uaepcs->return_eip),
+				   /*esp*/    (PrtRegister)uaepcs->prevFrame,
+                   /*rbxPtr*/ si->rbxPtr,
+                   /*rbpPtr*/ si->rbpPtr,
+                   /*r12Ptr*/ si->r12Ptr,
+                   /*r13Ptr*/ si->r13Ptr,
+                   /*r14Ptr*/ si->r14Ptr,
+                   /*r15Ptr*/ si->r15Ptr,
+                   /*vsh*/    si->vsh,
                    /*virtualFrameNumber*/ 0);
 } //wbInteriorGetPreviousFrame_prt
 
-static void wbInteriorEnumerateRoots(struct PrtStackIterator *si, 
-                                     struct PrtRseInfo *rootSetInfo, 
+static void wbInteriorEnumerateRoots(struct PrtStackIterator *si,
+                                     struct PrtRseInfo *rootSetInfo,
                                      PrtCimSpecificDataType opaqueData) {
 	POINTER_SIZE_INT cur_esp = (POINTER_SIZE_INT)si->rsp;
 
@@ -1644,8 +1644,8 @@ static void wbInteriorEnumerateRoots(struct PrtStackIterator *si,
 		(void*)*(POINTER_SIZE_INT *)(&(uaeics->offset)));
 } // wbInteriorEnumerateRoots
 
-static void wbInteriorEnumerateRoots_prt(struct PrtStackIterator *si, 
-                                     struct PrtRseInfo *rootSetInfo, 
+static void wbInteriorEnumerateRoots_prt(struct PrtStackIterator *si,
+                                     struct PrtRseInfo *rootSetInfo,
                                      PrtCimSpecificDataType opaqueData) {
 	POINTER_SIZE_INT cur_esp = (POINTER_SIZE_INT)si->rsp;
 
@@ -1682,29 +1682,29 @@ static void cas_wbGetPreviousFrame(PrtStackIterator *si, PrtCimSpecificDataType 
 
 #ifdef CONCURRENT
 	if(*(si->ripPtr) < (PrtCodeAddress)&gc_cas_write_ref_p_nonconcurrent_section) {
-		prtSetStackIteratorFields(si, 
-					   /*eipPtr*/ (PrtCodeAddress*)(cur_esp + sizeof(cas_unmanaged_mark_phase_callsite_stack_args)), 
-					   /*esp*/    (PrtRegister)    (cur_esp + sizeof(cas_unmanaged_mark_phase_callsite_stack)), 
-					   /*ebxPtr*/ si->ebxPtr, 
-					   /*ebpPtr*/ si->ebpPtr, 
-					   /*esiPtr*/ si->esiPtr, 
-					   /*ediPtr*/ si->ediPtr, 
-					   /*vsh*/    si->vsh, 
+		prtSetStackIteratorFields(si,
+					   /*eipPtr*/ (PrtCodeAddress*)(cur_esp + sizeof(cas_unmanaged_mark_phase_callsite_stack_args)),
+					   /*esp*/    (PrtRegister)    (cur_esp + sizeof(cas_unmanaged_mark_phase_callsite_stack)),
+					   /*ebxPtr*/ si->ebxPtr,
+					   /*ebpPtr*/ si->ebpPtr,
+					   /*esiPtr*/ si->esiPtr,
+					   /*ediPtr*/ si->ediPtr,
+					   /*vsh*/    si->vsh,
 					   /*virtualFrameNumber*/ 0);
         return;
 	}
 #endif // CONCURRENT
 
-    prtSetStackIteratorFields(si, 
-                   /*ripPtr*/ (PrtCodeAddress*)(cur_rsp + sizeof(    unmanaged_add_entry_callsite_stack_args)), 
-                   /*rsp*/    (PrtRegister    )(cur_rsp + sizeof(cas_unmanaged_add_entry_callsite_stack)), 
-                   /*rbxPtr*/ si->rbxPtr, 
-                   /*rbpPtr*/ si->rbpPtr, 
-                   /*r12Ptr*/ si->r12Ptr, 
-                   /*r13Ptr*/ si->r13Ptr, 
-                   /*r14Ptr*/ si->r14Ptr, 
-                   /*r15Ptr*/ si->r15Ptr, 
-                   /*vsh*/    si->vsh, 
+    prtSetStackIteratorFields(si,
+                   /*ripPtr*/ (PrtCodeAddress*)(cur_rsp + sizeof(    unmanaged_add_entry_callsite_stack_args)),
+                   /*rsp*/    (PrtRegister    )(cur_rsp + sizeof(cas_unmanaged_add_entry_callsite_stack)),
+                   /*rbxPtr*/ si->rbxPtr,
+                   /*rbpPtr*/ si->rbpPtr,
+                   /*r12Ptr*/ si->r12Ptr,
+                   /*r13Ptr*/ si->r13Ptr,
+                   /*r14Ptr*/ si->r14Ptr,
+                   /*r15Ptr*/ si->r15Ptr,
+                   /*vsh*/    si->vsh,
                    /*virtualFrameNumber*/ 0);
 } //wbGetPreviousFrame
 
@@ -1714,35 +1714,35 @@ static void cas_wbGetPreviousFrame_prt(PrtStackIterator *si, PrtCimSpecificDataT
 #ifdef CONCURRENT
 	if(*(si->eipPtr) < (PrtCodeAddress)&gc_cas_write_ref_p_prt_nonconcurrent_section) {
         cas_unmanaged_mark_phase_prt_callsite_stack *umppcs = (cas_unmanaged_mark_phase_prt_callsite_stack *)cur_esp;
-		prtSetStackIteratorFields(si, 
-					   /*eipPtr*/ (PrtCodeAddress*)&(umppcs->return_eip), 
-					   /*esp*/    (PrtRegister)      umppcs->prevFrame, 
-					   /*ebxPtr*/ si->ebxPtr, 
-					   /*ebpPtr*/ si->ebpPtr, 
-					   /*esiPtr*/ si->esiPtr, 
-					   /*ediPtr*/ si->ediPtr, 
-					   /*vsh*/    si->vsh, 
+		prtSetStackIteratorFields(si,
+					   /*eipPtr*/ (PrtCodeAddress*)&(umppcs->return_eip),
+					   /*esp*/    (PrtRegister)      umppcs->prevFrame,
+					   /*ebxPtr*/ si->ebxPtr,
+					   /*ebpPtr*/ si->ebpPtr,
+					   /*esiPtr*/ si->esiPtr,
+					   /*ediPtr*/ si->ediPtr,
+					   /*vsh*/    si->vsh,
 					   /*virtualFrameNumber*/ 0);
         return;
 	}
 #endif // CONCURRENT
 
     cas_unmanaged_add_entry_prt_callsite_stack *uaepcs = (cas_unmanaged_add_entry_prt_callsite_stack *)cur_rsp;
-    prtSetStackIteratorFields(si, 
-				   /*eipPtr*/ (PrtCodeAddress*)&(uaepcs->return_eip), 
-				   /*esp*/    (PrtRegister)      uaepcs->prevFrame, 
-                   /*rbxPtr*/ si->rbxPtr, 
-                   /*rbpPtr*/ si->rbpPtr, 
-                   /*r12Ptr*/ si->r12Ptr, 
-                   /*r13Ptr*/ si->r13Ptr, 
-                   /*r14Ptr*/ si->r14Ptr, 
-                   /*r15Ptr*/ si->r15Ptr, 
-                   /*vsh*/    si->vsh, 
+    prtSetStackIteratorFields(si,
+				   /*eipPtr*/ (PrtCodeAddress*)&(uaepcs->return_eip),
+				   /*esp*/    (PrtRegister)      uaepcs->prevFrame,
+                   /*rbxPtr*/ si->rbxPtr,
+                   /*rbpPtr*/ si->rbpPtr,
+                   /*r12Ptr*/ si->r12Ptr,
+                   /*r13Ptr*/ si->r13Ptr,
+                   /*r14Ptr*/ si->r14Ptr,
+                   /*r15Ptr*/ si->r15Ptr,
+                   /*vsh*/    si->vsh,
                    /*virtualFrameNumber*/ 0);
 } //wbGetPreviousFrame_prt
 
-static void cas_wbEnumerateRoots(struct PrtStackIterator *si, 
-                             struct PrtRseInfo *rootSetInfo, 
+static void cas_wbEnumerateRoots(struct PrtStackIterator *si,
+                             struct PrtRseInfo *rootSetInfo,
                              PrtCimSpecificDataType opaqueData) {
 	POINTER_SIZE_INT cur_esp = (POINTER_SIZE_INT)si->rsp;
 
@@ -1794,8 +1794,8 @@ static void cas_wbEnumerateRoots(struct PrtStackIterator *si,
 		PrtGcTagDefault,0);
 } // wbEnumerateRoots
 
-static void cas_wbEnumerateRoots_prt(struct PrtStackIterator *si, 
-                             struct PrtRseInfo *rootSetInfo, 
+static void cas_wbEnumerateRoots_prt(struct PrtStackIterator *si,
+                             struct PrtRseInfo *rootSetInfo,
                              PrtCimSpecificDataType opaqueData) {
 	POINTER_SIZE_INT cur_esp = (POINTER_SIZE_INT)si->rsp;
 
@@ -1855,29 +1855,29 @@ static void cas_wbInteriorGetPreviousFrame(PrtStackIterator *si, PrtCimSpecificD
 
 #ifdef CONCURRENT
 	if(*(si->eipPtr) < (PrtCodeAddress)&gc_cas_write_interior_ref_p_nonconcurrent_section) {
-		prtSetStackIteratorFields(si, 
+		prtSetStackIteratorFields(si,
 					   /*eipPtr*/ (PrtCodeAddress*)(cur_esp + sizeof(cas_unmanaged_mark_phase_callsite_stack_args)),
 					   /*esp*/    (PrtRegister)    (cur_esp + sizeof(cas_unmanaged_mark_phase_interior_callsite_stack)),
-					   /*ebxPtr*/ si->ebxPtr, 
-					   /*ebpPtr*/ si->ebpPtr, 
-					   /*esiPtr*/ si->esiPtr, 
-					   /*ediPtr*/ si->ediPtr, 
-					   /*vsh*/    si->vsh, 
+					   /*ebxPtr*/ si->ebxPtr,
+					   /*ebpPtr*/ si->ebpPtr,
+					   /*esiPtr*/ si->esiPtr,
+					   /*ediPtr*/ si->ediPtr,
+					   /*vsh*/    si->vsh,
 					   /*virtualFrameNumber*/ 0);
         return;
 	}
 #endif // CONCURRENT
 
-    prtSetStackIteratorFields(si, 
+    prtSetStackIteratorFields(si,
                    /*eipPtr*/ (PrtCodeAddress*)(cur_esp + sizeof(    unmanaged_add_entry_callsite_stack_args)),
                    /*esp*/    (PrtRegister)    (cur_esp + sizeof(cas_unmanaged_add_entry_interior_callsite_stack)),
-                   /*rbxPtr*/ si->rbxPtr, 
-                   /*rbpPtr*/ si->rbpPtr, 
-                   /*r12Ptr*/ si->r12Ptr, 
-                   /*r13Ptr*/ si->r13Ptr, 
-                   /*r14Ptr*/ si->r14Ptr, 
-                   /*r15Ptr*/ si->r15Ptr, 
-                   /*vsh*/    si->vsh, 
+                   /*rbxPtr*/ si->rbxPtr,
+                   /*rbpPtr*/ si->rbpPtr,
+                   /*r12Ptr*/ si->r12Ptr,
+                   /*r13Ptr*/ si->r13Ptr,
+                   /*r14Ptr*/ si->r14Ptr,
+                   /*r15Ptr*/ si->r15Ptr,
+                   /*vsh*/    si->vsh,
                    /*virtualFrameNumber*/ 0);
 } //wbInteriorGetPreviousFrame
 
@@ -1887,35 +1887,35 @@ static void cas_wbInteriorGetPreviousFrame_prt(PrtStackIterator *si, PrtCimSpeci
 #ifdef CONCURRENT
 	if(*(si->eipPtr) < (PrtCodeAddress)&gc_cas_write_interior_ref_p_prt_nonconcurrent_section) {
         cas_unmanaged_mark_phase_interior_prt_callsite_stack *umppcs = (cas_unmanaged_mark_phase_interior_prt_callsite_stack *)cur_esp;
-		prtSetStackIteratorFields(si, 
-					   /*eipPtr*/ (PrtCodeAddress*)&(umppcs->return_eip), 
-					   /*esp*/    (PrtRegister)umppcs->prevFrame, 
-					   /*ebxPtr*/ si->ebxPtr, 
-					   /*ebpPtr*/ si->ebpPtr, 
-					   /*esiPtr*/ si->esiPtr, 
-					   /*ediPtr*/ si->ediPtr, 
-					   /*vsh*/    si->vsh, 
+		prtSetStackIteratorFields(si,
+					   /*eipPtr*/ (PrtCodeAddress*)&(umppcs->return_eip),
+					   /*esp*/    (PrtRegister)umppcs->prevFrame,
+					   /*ebxPtr*/ si->ebxPtr,
+					   /*ebpPtr*/ si->ebpPtr,
+					   /*esiPtr*/ si->esiPtr,
+					   /*ediPtr*/ si->ediPtr,
+					   /*vsh*/    si->vsh,
 					   /*virtualFrameNumber*/ 0);
         return;
 	}
 #endif // CONCURRENT
 
     cas_unmanaged_add_entry_interior_prt_callsite_stack *uaepcs = (cas_unmanaged_add_entry_interior_prt_callsite_stack *)cur_esp;
-    prtSetStackIteratorFields(si, 
-				   /*eipPtr*/ (PrtCodeAddress*)&(uaepcs->return_eip), 
-				   /*esp*/    (PrtRegister)uaepcs->prevFrame, 
-                   /*rbxPtr*/ si->rbxPtr, 
-                   /*rbpPtr*/ si->rbpPtr, 
-                   /*r12Ptr*/ si->r12Ptr, 
-                   /*r13Ptr*/ si->r13Ptr, 
-                   /*r14Ptr*/ si->r14Ptr, 
-                   /*r15Ptr*/ si->r15Ptr, 
-                   /*vsh*/    si->vsh, 
+    prtSetStackIteratorFields(si,
+				   /*eipPtr*/ (PrtCodeAddress*)&(uaepcs->return_eip),
+				   /*esp*/    (PrtRegister)uaepcs->prevFrame,
+                   /*rbxPtr*/ si->rbxPtr,
+                   /*rbpPtr*/ si->rbpPtr,
+                   /*r12Ptr*/ si->r12Ptr,
+                   /*r13Ptr*/ si->r13Ptr,
+                   /*r14Ptr*/ si->r14Ptr,
+                   /*r15Ptr*/ si->r15Ptr,
+                   /*vsh*/    si->vsh,
                    /*virtualFrameNumber*/ 0);
 } //wbInteriorGetPreviousFrame_prt
 
-static void cas_wbInteriorEnumerateRoots(struct PrtStackIterator *si, 
-                                     struct PrtRseInfo *rootSetInfo, 
+static void cas_wbInteriorEnumerateRoots(struct PrtStackIterator *si,
+                                     struct PrtRseInfo *rootSetInfo,
                                      PrtCimSpecificDataType opaqueData) {
 	POINTER_SIZE_INT cur_esp = (POINTER_SIZE_INT)si->rsp;
 
@@ -1937,8 +1937,8 @@ static void cas_wbInteriorEnumerateRoots(struct PrtStackIterator *si,
 		(void*)*(POINTER_SIZE_INT *)(&(uaeics->offset)));
 } // wbInteriorEnumerateRoots
 
-static void cas_wbInteriorEnumerateRoots_prt(struct PrtStackIterator *si, 
-                                     struct PrtRseInfo *rootSetInfo, 
+static void cas_wbInteriorEnumerateRoots_prt(struct PrtStackIterator *si,
+                                     struct PrtRseInfo *rootSetInfo,
                                      PrtCimSpecificDataType opaqueData) {
 	POINTER_SIZE_INT cur_esp = (POINTER_SIZE_INT)si->rsp;
 
@@ -1968,72 +1968,72 @@ static void cas_wbInteriorEnumerateRoots_prt(struct PrtStackIterator *si,
 
 
 
-#else  // __X86_64__
+#else  // __x86_64__
 
 static void wbGetPreviousFrame(PrtStackIterator *si, PrtCimSpecificDataType opaqueData) {
-	POINTER_SIZE_INT cur_esp = (POINTER_SIZE_INT)si->esp;
+	POINTER_SIZE_INT cur_esp = (uintptr_t)si->esp;
 
 #ifdef CONCURRENT
 	if(*(si->eipPtr) < (PrtCodeAddress)&gc_heap_slot_write_ref_p_nonconcurrent_section) {
-		prtSetStackIteratorFields(si, 
-					   /*eipPtr*/ (PrtCodeAddress*)(cur_esp + sizeof(unmanaged_mark_phase_callsite_stack_args)), 
-					   /*esp*/    (PrtRegister)    (cur_esp + sizeof(unmanaged_mark_phase_callsite_stack)), 
-					   /*ebxPtr*/ si->ebxPtr, 
-					   /*ebpPtr*/ si->ebpPtr, 
-					   /*esiPtr*/ si->esiPtr, 
-					   /*ediPtr*/ si->ediPtr, 
-					   /*vsh*/    si->vsh, 
+		prtSetStackIteratorFields(si,
+					   /*eipPtr*/ (PrtCodeAddress*)(cur_esp + sizeof(unmanaged_mark_phase_callsite_stack_args)),
+					   /*esp*/    (PrtRegister)    (cur_esp + sizeof(unmanaged_mark_phase_callsite_stack)),
+					   /*ebxPtr*/ si->ebxPtr,
+					   /*ebpPtr*/ si->ebpPtr,
+					   /*esiPtr*/ si->esiPtr,
+					   /*ediPtr*/ si->ediPtr,
+					   /*vsh*/    si->vsh,
 					   /*virtualFrameNumber*/ 0);
         return;
 	}
 #endif // CONCURRENT
 
-    prtSetStackIteratorFields(si, 
-                   /*eipPtr*/ (PrtCodeAddress*)(cur_esp + sizeof(unmanaged_add_entry_callsite_stack_args)), 
-                   /*esp*/    (PrtRegister)    (cur_esp + sizeof(unmanaged_add_entry_callsite_stack)), 
-                   /*ebxPtr*/ si->ebxPtr, 
-                   /*ebpPtr*/ si->ebpPtr, 
-                   /*esiPtr*/ si->esiPtr, 
-                   /*ediPtr*/ si->ediPtr, 
-                   /*vsh*/    si->vsh, 
+    prtSetStackIteratorFields(si,
+                   /*eipPtr*/ (PrtCodeAddress*)(cur_esp + sizeof(unmanaged_add_entry_callsite_stack_args)),
+                   /*esp*/    (PrtRegister)    (cur_esp + sizeof(unmanaged_add_entry_callsite_stack)),
+                   /*ebxPtr*/ si->ebxPtr,
+                   /*ebpPtr*/ si->ebpPtr,
+                   /*esiPtr*/ si->esiPtr,
+                   /*ediPtr*/ si->ediPtr,
+                   /*vsh*/    si->vsh,
                    /*virtualFrameNumber*/ 0);
 } //wbGetPreviousFrame
 
 static void wbGetPreviousFrame_prt(PrtStackIterator *si, PrtCimSpecificDataType opaqueData) {
-	POINTER_SIZE_INT cur_esp = (POINTER_SIZE_INT)si->esp;
+	POINTER_SIZE_INT cur_esp = (uintptr_t)si->esp;
 
 #ifdef CONCURRENT
 	if(*(si->eipPtr) < (PrtCodeAddress)&gc_heap_slot_write_ref_p_prt_nonconcurrent_section) {
         unmanaged_mark_phase_prt_callsite_stack *umppcs = (unmanaged_mark_phase_prt_callsite_stack *)cur_esp;
-		prtSetStackIteratorFields(si, 
-					   /*eipPtr*/ (PrtCodeAddress*)&(umppcs->return_eip), 
-					   /*esp*/    (PrtRegister)      umppcs->prevFrame, 
-					   /*ebxPtr*/ si->ebxPtr, 
-					   /*ebpPtr*/ si->ebpPtr, 
-					   /*esiPtr*/ si->esiPtr, 
-					   /*ediPtr*/ si->ediPtr, 
-					   /*vsh*/    si->vsh, 
+		prtSetStackIteratorFields(si,
+					   /*eipPtr*/ (PrtCodeAddress*)&(umppcs->return_eip),
+					   /*esp*/    (PrtRegister)      umppcs->prevFrame,
+					   /*ebxPtr*/ si->ebxPtr,
+					   /*ebpPtr*/ si->ebpPtr,
+					   /*esiPtr*/ si->esiPtr,
+					   /*ediPtr*/ si->ediPtr,
+					   /*vsh*/    si->vsh,
 					   /*virtualFrameNumber*/ 0);
         return;
 	}
 #endif // CONCURRENT
 
     unmanaged_add_entry_prt_callsite_stack *uaepcs = (unmanaged_add_entry_prt_callsite_stack *)cur_esp;
-    prtSetStackIteratorFields(si, 
-				   /*eipPtr*/ (PrtCodeAddress*)&(uaepcs->return_eip), 
-				   /*esp*/    (PrtRegister)      uaepcs->prevFrame, 
-                   /*ebxPtr*/ si->ebxPtr, 
-                   /*ebpPtr*/ si->ebpPtr, 
-                   /*esiPtr*/ si->esiPtr, 
-                   /*ediPtr*/ si->ediPtr, 
-                   /*vsh*/    si->vsh, 
+    prtSetStackIteratorFields(si,
+				   /*eipPtr*/ (PrtCodeAddress*)&(uaepcs->return_eip),
+				   /*esp*/    (PrtRegister)      uaepcs->prevFrame,
+                   /*ebxPtr*/ si->ebxPtr,
+                   /*ebpPtr*/ si->ebpPtr,
+                   /*esiPtr*/ si->esiPtr,
+                   /*ediPtr*/ si->ediPtr,
+                   /*vsh*/    si->vsh,
                    /*virtualFrameNumber*/ 0);
 } //wbGetPreviousFrame_prt
 
-static void wbEnumerateRoots(struct PrtStackIterator *si, 
-                             struct PrtRseInfo *rootSetInfo, 
+static void wbEnumerateRoots(struct PrtStackIterator *si,
+                             struct PrtRseInfo *rootSetInfo,
                              PrtCimSpecificDataType opaqueData) {
-	POINTER_SIZE_INT cur_esp = (POINTER_SIZE_INT)si->esp;
+	POINTER_SIZE_INT cur_esp = (uintptr_t)si->esp;
 
 #ifdef CONCURRENT
 	if(*(si->eipPtr) < (PrtCodeAddress)&gc_heap_slot_write_ref_p_nonconcurrent_section) {
@@ -2080,10 +2080,10 @@ static void wbEnumerateRoots(struct PrtStackIterator *si,
     }
 } // wbEnumerateRoots
 
-static void wbEnumerateRoots_prt(struct PrtStackIterator *si, 
-                             struct PrtRseInfo *rootSetInfo, 
+static void wbEnumerateRoots_prt(struct PrtStackIterator *si,
+                             struct PrtRseInfo *rootSetInfo,
                              PrtCimSpecificDataType opaqueData) {
-	POINTER_SIZE_INT cur_esp = (POINTER_SIZE_INT)si->esp;
+	POINTER_SIZE_INT cur_esp = (uintptr_t)si->esp;
 
 #ifdef CONCURRENT
 	if(*(si->eipPtr) < (PrtCodeAddress)&gc_heap_slot_write_ref_p_prt_nonconcurrent_section) {
@@ -2132,69 +2132,69 @@ static void wbEnumerateRoots_prt(struct PrtStackIterator *si,
 } // wbEnumerateRoots_prt
 
 static void wbInteriorGetPreviousFrame(PrtStackIterator *si, PrtCimSpecificDataType opaqueData) {
-	POINTER_SIZE_INT cur_esp = (POINTER_SIZE_INT)si->esp;
+	POINTER_SIZE_INT cur_esp = (uintptr_t)si->esp;
 
 #ifdef CONCURRENT
 	if(*(si->eipPtr) < (PrtCodeAddress)&gc_heap_slot_write_interior_ref_p_nonconcurrent_section) {
-		prtSetStackIteratorFields(si, 
+		prtSetStackIteratorFields(si,
 					   /*eipPtr*/ (PrtCodeAddress*)(cur_esp + sizeof(unmanaged_mark_phase_interior_callsite_stack_args)),
 					   /*esp*/    (PrtRegister)    (cur_esp + sizeof(unmanaged_mark_phase_interior_callsite_stack)),
-					   /*ebxPtr*/ si->ebxPtr, 
-					   /*ebpPtr*/ si->ebpPtr, 
-					   /*esiPtr*/ si->esiPtr, 
-					   /*ediPtr*/ si->ediPtr, 
-					   /*vsh*/    si->vsh, 
+					   /*ebxPtr*/ si->ebxPtr,
+					   /*ebpPtr*/ si->ebpPtr,
+					   /*esiPtr*/ si->esiPtr,
+					   /*ediPtr*/ si->ediPtr,
+					   /*vsh*/    si->vsh,
 					   /*virtualFrameNumber*/ 0);
         return;
 	}
 #endif // CONCURRENT
 
-    prtSetStackIteratorFields(si, 
+    prtSetStackIteratorFields(si,
                    /*eipPtr*/ (PrtCodeAddress*)(cur_esp + sizeof(unmanaged_add_entry_interior_callsite_stack_args)),
                    /*esp*/    (PrtRegister)    (cur_esp + sizeof(unmanaged_add_entry_interior_callsite_stack)),
-                   /*ebxPtr*/ si->ebxPtr, 
-                   /*ebpPtr*/ si->ebpPtr, 
-                   /*esiPtr*/ si->esiPtr, 
-                   /*ediPtr*/ si->ediPtr, 
-                   /*vsh*/    si->vsh, 
+                   /*ebxPtr*/ si->ebxPtr,
+                   /*ebpPtr*/ si->ebpPtr,
+                   /*esiPtr*/ si->esiPtr,
+                   /*ediPtr*/ si->ediPtr,
+                   /*vsh*/    si->vsh,
                    /*virtualFrameNumber*/ 0);
 } //wbInteriorGetPreviousFrame
 
 static void wbInteriorGetPreviousFrame_prt(PrtStackIterator *si, PrtCimSpecificDataType opaqueData) {
-	POINTER_SIZE_INT cur_esp = (POINTER_SIZE_INT)si->esp;
+	POINTER_SIZE_INT cur_esp = (uintptr_t)si->esp;
 
 #ifdef CONCURRENT
 	if(*(si->eipPtr) < (PrtCodeAddress)&gc_heap_slot_write_interior_ref_p_prt_nonconcurrent_section) {
         unmanaged_mark_phase_interior_prt_callsite_stack *umppcs = (unmanaged_mark_phase_interior_prt_callsite_stack *)cur_esp;
-		prtSetStackIteratorFields(si, 
-					   /*eipPtr*/ (PrtCodeAddress*)&(umppcs->return_eip), 
-					   /*esp*/    (PrtRegister)umppcs->prevFrame, 
-					   /*ebxPtr*/ si->ebxPtr, 
-					   /*ebpPtr*/ si->ebpPtr, 
-					   /*esiPtr*/ si->esiPtr, 
-					   /*ediPtr*/ si->ediPtr, 
-					   /*vsh*/    si->vsh, 
+		prtSetStackIteratorFields(si,
+					   /*eipPtr*/ (PrtCodeAddress*)&(umppcs->return_eip),
+					   /*esp*/    (PrtRegister)umppcs->prevFrame,
+					   /*ebxPtr*/ si->ebxPtr,
+					   /*ebpPtr*/ si->ebpPtr,
+					   /*esiPtr*/ si->esiPtr,
+					   /*ediPtr*/ si->ediPtr,
+					   /*vsh*/    si->vsh,
 					   /*virtualFrameNumber*/ 0);
         return;
 	}
 #endif // CONCURRENT
 
     unmanaged_add_entry_interior_prt_callsite_stack *uaepcs = (unmanaged_add_entry_interior_prt_callsite_stack *)cur_esp;
-    prtSetStackIteratorFields(si, 
-				   /*eipPtr*/ (PrtCodeAddress*)&(uaepcs->return_eip), 
-				   /*esp*/    (PrtRegister)uaepcs->prevFrame, 
-                   /*ebxPtr*/ si->ebxPtr, 
-                   /*ebpPtr*/ si->ebpPtr, 
-                   /*esiPtr*/ si->esiPtr, 
-                   /*ediPtr*/ si->ediPtr, 
-                   /*vsh*/    si->vsh, 
+    prtSetStackIteratorFields(si,
+				   /*eipPtr*/ (PrtCodeAddress*)&(uaepcs->return_eip),
+				   /*esp*/    (PrtRegister)uaepcs->prevFrame,
+                   /*ebxPtr*/ si->ebxPtr,
+                   /*ebpPtr*/ si->ebpPtr,
+                   /*esiPtr*/ si->esiPtr,
+                   /*ediPtr*/ si->ediPtr,
+                   /*vsh*/    si->vsh,
                    /*virtualFrameNumber*/ 0);
 } //wbInteriorGetPreviousFrame_prt
 
-static void wbInteriorEnumerateRoots(struct PrtStackIterator *si, 
-                                     struct PrtRseInfo *rootSetInfo, 
+static void wbInteriorEnumerateRoots(struct PrtStackIterator *si,
+                                     struct PrtRseInfo *rootSetInfo,
                                      PrtCimSpecificDataType opaqueData) {
-	POINTER_SIZE_INT cur_esp = (POINTER_SIZE_INT)si->esp;
+	POINTER_SIZE_INT cur_esp = (uintptr_t)si->esp;
 
 #ifdef CONCURRENT
 	if(*(si->eipPtr) < (PrtCodeAddress)&gc_heap_slot_write_interior_ref_p_nonconcurrent_section) {
@@ -2214,10 +2214,10 @@ static void wbInteriorEnumerateRoots(struct PrtStackIterator *si,
 		(void*)*(POINTER_SIZE_INT *)(&(uaeics->offset)));
 } // wbInteriorEnumerateRoots
 
-static void wbInteriorEnumerateRoots_prt(struct PrtStackIterator *si, 
-                                     struct PrtRseInfo *rootSetInfo, 
+static void wbInteriorEnumerateRoots_prt(struct PrtStackIterator *si,
+                                     struct PrtRseInfo *rootSetInfo,
                                      PrtCimSpecificDataType opaqueData) {
-	POINTER_SIZE_INT cur_esp = (POINTER_SIZE_INT)si->esp;
+	POINTER_SIZE_INT cur_esp = (uintptr_t)si->esp;
 
 #ifdef CONCURRENT
 	if(*(si->eipPtr) < (PrtCodeAddress)&gc_heap_slot_write_interior_ref_p_prt_nonconcurrent_section) {
@@ -2246,69 +2246,69 @@ static void wbInteriorEnumerateRoots_prt(struct PrtStackIterator *si,
 
 
 static void cas_wbGetPreviousFrame(PrtStackIterator *si, PrtCimSpecificDataType opaqueData) {
-	POINTER_SIZE_INT cur_esp = (POINTER_SIZE_INT)si->esp;
+	POINTER_SIZE_INT cur_esp = (uintptr_t)si->esp;
 
 #ifdef CONCURRENT
 	if(*(si->eipPtr) < (PrtCodeAddress)&gc_cas_write_ref_p_nonconcurrent_section) {
-		prtSetStackIteratorFields(si, 
-					   /*eipPtr*/ (PrtCodeAddress*)(cur_esp + sizeof(unmanaged_mark_phase_callsite_stack_args)), 
-					   /*esp*/    (PrtRegister)    (cur_esp + sizeof(cas_unmanaged_mark_phase_callsite_stack)), 
-					   /*ebxPtr*/ si->ebxPtr, 
-					   /*ebpPtr*/ si->ebpPtr, 
-					   /*esiPtr*/ si->esiPtr, 
-					   /*ediPtr*/ si->ediPtr, 
-					   /*vsh*/    si->vsh, 
+		prtSetStackIteratorFields(si,
+					   /*eipPtr*/ (PrtCodeAddress*)(cur_esp + sizeof(unmanaged_mark_phase_callsite_stack_args)),
+					   /*esp*/    (PrtRegister)    (cur_esp + sizeof(cas_unmanaged_mark_phase_callsite_stack)),
+					   /*ebxPtr*/ si->ebxPtr,
+					   /*ebpPtr*/ si->ebpPtr,
+					   /*esiPtr*/ si->esiPtr,
+					   /*ediPtr*/ si->ediPtr,
+					   /*vsh*/    si->vsh,
 					   /*virtualFrameNumber*/ 0);
         return;
 	}
 #endif // CONCURRENT
 
-    prtSetStackIteratorFields(si, 
-                   /*eipPtr*/ (PrtCodeAddress*)(cur_esp + sizeof(unmanaged_add_entry_callsite_stack_args)), 
-                   /*esp*/    (PrtRegister)    (cur_esp + sizeof(cas_unmanaged_add_entry_callsite_stack)), 
-                   /*ebxPtr*/ si->ebxPtr, 
-                   /*ebpPtr*/ si->ebpPtr, 
-                   /*esiPtr*/ si->esiPtr, 
-                   /*ediPtr*/ si->ediPtr, 
-                   /*vsh*/    si->vsh, 
+    prtSetStackIteratorFields(si,
+                   /*eipPtr*/ (PrtCodeAddress*)(cur_esp + sizeof(unmanaged_add_entry_callsite_stack_args)),
+                   /*esp*/    (PrtRegister)    (cur_esp + sizeof(cas_unmanaged_add_entry_callsite_stack)),
+                   /*ebxPtr*/ si->ebxPtr,
+                   /*ebpPtr*/ si->ebpPtr,
+                   /*esiPtr*/ si->esiPtr,
+                   /*ediPtr*/ si->ediPtr,
+                   /*vsh*/    si->vsh,
                    /*virtualFrameNumber*/ 0);
 } //wbGetPreviousFrame
 
 static void cas_wbGetPreviousFrame_prt(PrtStackIterator *si, PrtCimSpecificDataType opaqueData) {
-	POINTER_SIZE_INT cur_esp = (POINTER_SIZE_INT)si->esp;
+	POINTER_SIZE_INT cur_esp = (uintptr_t)si->esp;
 
 #ifdef CONCURRENT
 	if(*(si->eipPtr) < (PrtCodeAddress)&gc_cas_write_ref_p_prt_nonconcurrent_section) {
         cas_unmanaged_mark_phase_prt_callsite_stack *umppcs = (cas_unmanaged_mark_phase_prt_callsite_stack *)cur_esp;
-		prtSetStackIteratorFields(si, 
-					   /*eipPtr*/ (PrtCodeAddress*)&(umppcs->return_eip), 
-					   /*esp*/    (PrtRegister)      umppcs->prevFrame, 
-					   /*ebxPtr*/ si->ebxPtr, 
-					   /*ebpPtr*/ si->ebpPtr, 
-					   /*esiPtr*/ si->esiPtr, 
-					   /*ediPtr*/ si->ediPtr, 
-					   /*vsh*/    si->vsh, 
+		prtSetStackIteratorFields(si,
+					   /*eipPtr*/ (PrtCodeAddress*)&(umppcs->return_eip),
+					   /*esp*/    (PrtRegister)      umppcs->prevFrame,
+					   /*ebxPtr*/ si->ebxPtr,
+					   /*ebpPtr*/ si->ebpPtr,
+					   /*esiPtr*/ si->esiPtr,
+					   /*ediPtr*/ si->ediPtr,
+					   /*vsh*/    si->vsh,
 					   /*virtualFrameNumber*/ 0);
         return;
 	}
 #endif // CONCURRENT
 
     cas_unmanaged_add_entry_prt_callsite_stack *uaepcs = (cas_unmanaged_add_entry_prt_callsite_stack *)cur_esp;
-    prtSetStackIteratorFields(si, 
-				   /*eipPtr*/ (PrtCodeAddress*)&(uaepcs->return_eip), 
-				   /*esp*/    (PrtRegister)      uaepcs->prevFrame, 
-                   /*ebxPtr*/ si->ebxPtr, 
-                   /*ebpPtr*/ si->ebpPtr, 
-                   /*esiPtr*/ si->esiPtr, 
-                   /*ediPtr*/ si->ediPtr, 
-                   /*vsh*/    si->vsh, 
+    prtSetStackIteratorFields(si,
+				   /*eipPtr*/ (PrtCodeAddress*)&(uaepcs->return_eip),
+				   /*esp*/    (PrtRegister)      uaepcs->prevFrame,
+                   /*ebxPtr*/ si->ebxPtr,
+                   /*ebpPtr*/ si->ebpPtr,
+                   /*esiPtr*/ si->esiPtr,
+                   /*ediPtr*/ si->ediPtr,
+                   /*vsh*/    si->vsh,
                    /*virtualFrameNumber*/ 0);
 } //wbGetPreviousFrame_prt
 
-static void cas_wbEnumerateRoots(struct PrtStackIterator *si, 
-                             struct PrtRseInfo *rootSetInfo, 
+static void cas_wbEnumerateRoots(struct PrtStackIterator *si,
+                             struct PrtRseInfo *rootSetInfo,
                              PrtCimSpecificDataType opaqueData) {
-	POINTER_SIZE_INT cur_esp = (POINTER_SIZE_INT)si->esp;
+	POINTER_SIZE_INT cur_esp = (uintptr_t)si->esp;
 
 #ifdef CONCURRENT
 	if(*(si->eipPtr) < (PrtCodeAddress)&gc_cas_write_ref_p_nonconcurrent_section) {
@@ -2360,10 +2360,10 @@ static void cas_wbEnumerateRoots(struct PrtStackIterator *si,
 		PrtGcTagDefault,0);
 } // cas_wbEnumerateRoots
 
-static void cas_wbEnumerateRoots_prt(struct PrtStackIterator *si, 
-                             struct PrtRseInfo *rootSetInfo, 
+static void cas_wbEnumerateRoots_prt(struct PrtStackIterator *si,
+                             struct PrtRseInfo *rootSetInfo,
                              PrtCimSpecificDataType opaqueData) {
-	POINTER_SIZE_INT cur_esp = (POINTER_SIZE_INT)si->esp;
+	POINTER_SIZE_INT cur_esp = (uintptr_t)si->esp;
 
 #ifdef CONCURRENT
 	if(*(si->eipPtr) < (PrtCodeAddress)&gc_cas_write_ref_p_prt_nonconcurrent_section) {
@@ -2417,69 +2417,69 @@ static void cas_wbEnumerateRoots_prt(struct PrtStackIterator *si,
 } // cas_wbEnumerateRoots_prt
 
 static void cas_wbInteriorGetPreviousFrame(PrtStackIterator *si, PrtCimSpecificDataType opaqueData) {
-	POINTER_SIZE_INT cur_esp = (POINTER_SIZE_INT)si->esp;
+	POINTER_SIZE_INT cur_esp = (uintptr_t)si->esp;
 
 #ifdef CONCURRENT
 	if(*(si->eipPtr) < (PrtCodeAddress)&gc_cas_write_interior_ref_p_nonconcurrent_section) {
-		prtSetStackIteratorFields(si, 
+		prtSetStackIteratorFields(si,
 					   /*eipPtr*/ (PrtCodeAddress*)(cur_esp + sizeof(unmanaged_mark_phase_interior_callsite_stack_args)),
 					   /*esp*/    (PrtRegister)    (cur_esp + sizeof(cas_unmanaged_mark_phase_interior_callsite_stack)),
-					   /*ebxPtr*/ si->ebxPtr, 
-					   /*ebpPtr*/ si->ebpPtr, 
-					   /*esiPtr*/ si->esiPtr, 
-					   /*ediPtr*/ si->ediPtr, 
-					   /*vsh*/    si->vsh, 
+					   /*ebxPtr*/ si->ebxPtr,
+					   /*ebpPtr*/ si->ebpPtr,
+					   /*esiPtr*/ si->esiPtr,
+					   /*ediPtr*/ si->ediPtr,
+					   /*vsh*/    si->vsh,
 					   /*virtualFrameNumber*/ 0);
         return;
 	}
 #endif // CONCURRENT
 
-    prtSetStackIteratorFields(si, 
+    prtSetStackIteratorFields(si,
                    /*eipPtr*/ (PrtCodeAddress*)(cur_esp + sizeof(unmanaged_add_entry_interior_callsite_stack_args)),
                    /*esp*/    (PrtRegister)    (cur_esp + sizeof(cas_unmanaged_add_entry_interior_callsite_stack)),
-                   /*ebxPtr*/ si->ebxPtr, 
-                   /*ebpPtr*/ si->ebpPtr, 
-                   /*esiPtr*/ si->esiPtr, 
-                   /*ediPtr*/ si->ediPtr, 
-                   /*vsh*/    si->vsh, 
+                   /*ebxPtr*/ si->ebxPtr,
+                   /*ebpPtr*/ si->ebpPtr,
+                   /*esiPtr*/ si->esiPtr,
+                   /*ediPtr*/ si->ediPtr,
+                   /*vsh*/    si->vsh,
                    /*virtualFrameNumber*/ 0);
 } //wbInteriorGetPreviousFrame
 
 static void cas_wbInteriorGetPreviousFrame_prt(PrtStackIterator *si, PrtCimSpecificDataType opaqueData) {
-	POINTER_SIZE_INT cur_esp = (POINTER_SIZE_INT)si->esp;
+	POINTER_SIZE_INT cur_esp = (uintptr_t)si->esp;
 
 #ifdef CONCURRENT
 	if(*(si->eipPtr) < (PrtCodeAddress)&gc_cas_write_interior_ref_p_prt_nonconcurrent_section) {
         cas_unmanaged_mark_phase_interior_prt_callsite_stack *umppcs = (cas_unmanaged_mark_phase_interior_prt_callsite_stack *)cur_esp;
-		prtSetStackIteratorFields(si, 
-					   /*eipPtr*/ (PrtCodeAddress*)&(umppcs->return_eip), 
-					   /*esp*/    (PrtRegister)umppcs->prevFrame, 
-					   /*ebxPtr*/ si->ebxPtr, 
-					   /*ebpPtr*/ si->ebpPtr, 
-					   /*esiPtr*/ si->esiPtr, 
-					   /*ediPtr*/ si->ediPtr, 
-					   /*vsh*/    si->vsh, 
+		prtSetStackIteratorFields(si,
+					   /*eipPtr*/ (PrtCodeAddress*)&(umppcs->return_eip),
+					   /*esp*/    (PrtRegister)umppcs->prevFrame,
+					   /*ebxPtr*/ si->ebxPtr,
+					   /*ebpPtr*/ si->ebpPtr,
+					   /*esiPtr*/ si->esiPtr,
+					   /*ediPtr*/ si->ediPtr,
+					   /*vsh*/    si->vsh,
 					   /*virtualFrameNumber*/ 0);
         return;
 	}
 #endif // CONCURRENT
 
     cas_unmanaged_add_entry_interior_prt_callsite_stack *uaepcs = (cas_unmanaged_add_entry_interior_prt_callsite_stack *)cur_esp;
-    prtSetStackIteratorFields(si, 
-				   /*eipPtr*/ (PrtCodeAddress*)&(uaepcs->return_eip), 
-				   /*esp*/    (PrtRegister)uaepcs->prevFrame, 
-                   /*ebxPtr*/ si->ebxPtr, 
-                   /*ebpPtr*/ si->ebpPtr, 
-                   /*esiPtr*/ si->esiPtr, 
-                   /*ediPtr*/ si->ediPtr, 
-                   /*vsh*/    si->vsh, 
+    prtSetStackIteratorFields(si,
+				   /*eipPtr*/ (PrtCodeAddress*)&(uaepcs->return_eip),
+				   /*esp*/    (PrtRegister)uaepcs->prevFrame,
+                   /*ebxPtr*/ si->ebxPtr,
+                   /*ebpPtr*/ si->ebpPtr,
+                   /*esiPtr*/ si->esiPtr,
+                   /*ediPtr*/ si->ediPtr,
+                   /*vsh*/    si->vsh,
                    /*virtualFrameNumber*/ 0);
 } //wbInteriorGetPreviousFrame_prt
 
-static void cas_wbInteriorEnumerateRoots(struct PrtStackIterator *si, 
-                                     struct PrtRseInfo *rootSetInfo, 
+static void cas_wbInteriorEnumerateRoots(struct PrtStackIterator *si,
+                                     struct PrtRseInfo *rootSetInfo,
                                      PrtCimSpecificDataType opaqueData) {
-	POINTER_SIZE_INT cur_esp = (POINTER_SIZE_INT)si->esp;
+	POINTER_SIZE_INT cur_esp = (uintptr_t)si->esp;
 
 #ifdef CONCURRENT
 	if(*(si->eipPtr) < (PrtCodeAddress)&gc_cas_write_interior_ref_p_nonconcurrent_section) {
@@ -2499,10 +2499,10 @@ static void cas_wbInteriorEnumerateRoots(struct PrtStackIterator *si,
 		(void*)*(POINTER_SIZE_INT *)(&(uaeics->offset)));
 } // wbInteriorEnumerateRoots
 
-static void cas_wbInteriorEnumerateRoots_prt(struct PrtStackIterator *si, 
-                                     struct PrtRseInfo *rootSetInfo, 
+static void cas_wbInteriorEnumerateRoots_prt(struct PrtStackIterator *si,
+                                     struct PrtRseInfo *rootSetInfo,
                                      PrtCimSpecificDataType opaqueData) {
-	POINTER_SIZE_INT cur_esp = (POINTER_SIZE_INT)si->esp;
+	POINTER_SIZE_INT cur_esp = (uintptr_t)si->esp;
 
 #ifdef CONCURRENT
 	if(*(si->eipPtr) < (PrtCodeAddress)&gc_cas_write_interior_ref_p_prt_nonconcurrent_section) {
@@ -2536,7 +2536,7 @@ static void cas_wbInteriorEnumerateRoots_prt(struct PrtStackIterator *si,
 
 
 
-#endif // __X86_64__
+#endif // __x86_64__
 
 // =====================================================================================
 
@@ -2707,17 +2707,17 @@ GCEXPORT(void, gc_init)() {
 #endif // !DISALLOW_RUNTIME_SELECTION_OF_COMPRESSED_REFERENCES
 #endif
 
-    // The following flag will be set to true 
+    // The following flag will be set to true
     // (by the ORP calling gc_orp_initialized) when the ORP is fully initialized
     // Till then we can't do a stop-the-world.
     //
     orp_initialized = 0;
-    
+
     interior_pointer_table   = new ExpandInPlaceArray<slot_offset_entry>(DEFAULT_OBJECT_SIZE_IN_ENTRIES);
     compressed_pointer_table = new ExpandInPlaceArray<slot_offset_entry>(DEFAULT_OBJECT_SIZE_IN_ENTRIES);
-    
+
     assert(p_global_gc == NULL);
-    
+
     // Creates the garbage Collector
     init_blocks_mrl_gc_v4(p_plan_file_name);
 
@@ -2741,7 +2741,7 @@ GCEXPORT(void, gc_init)() {
     p_global_gc->gc_v4_init();
 
     unsigned int block_info_size = sizeof(block_info);
-    assert (block_info_size < 4096); 
+    assert (block_info_size < 4096);
 
     // If we hit this we should take a close look at our defines. While it is possible
     // to use more than one page that seems real expensive.
@@ -2881,17 +2881,17 @@ extern "C" GC_Thread_Info * orp_local_to_gc_local(void *tp) {
 
 //
 // This API is used by the ORP to notify the GC that the
-// ORP has completed bootstrapping and initialization, and 
-// is henceforth ready to field requests for enumerating 
+// ORP has completed bootstrapping and initialization, and
+// is henceforth ready to field requests for enumerating
 // live references.
 //
 // Prior to this function being called the GC might see some
 // strange sights such as NULL or incomplete vtables. The GC will
-// need to consider these as normal and work with the ORP to ensure 
+// need to consider these as normal and work with the ORP to ensure
 // that bootstrapping works. This means that the GC will make few
 // demands on the ORP prior to this routine being called.
 //
-// However, once called the GC will feel free to do 
+// However, once called the GC will feel free to do
 // stop-the-world collections and will assume that the entire
 // orp_for_gc interface is available and fully functioning.
 //
@@ -2909,9 +2909,9 @@ GCEXPORT(void, gc_orp_initialized)() {
 
 
 //
-// This is called once the ORP has no use for the heap or the 
-// garbage collector data structures. The assumption is that the 
-// ORP is exiting but needs to give the GC time to run destructors 
+// This is called once the ORP has no use for the heap or the
+// garbage collector data structures. The assumption is that the
+// ORP is exiting but needs to give the GC time to run destructors
 // and free up memory it has gotten from the OS.
 // After this routine has been called the ORP can not relie on any
 // data structures created by the GC.
@@ -2979,7 +2979,7 @@ void thread_stats_print(GC_Small_Nursery_Info *private_nursery) {
 		d -= c;
 		c -= b;
 		b -= a;
-        
+
 		printf("RootsMark: %d, Allocate: %d, UpdateRoots: %d, Move: %d, Clear: %d, Memset: %d\n",a,b,c,d,e,f);
 
 		a =	local_collector->mark_prepare_time.QuadPart / local_collector->num_micro_collections;
@@ -3012,7 +3012,7 @@ void thread_stats_print(GC_Small_Nursery_Info *private_nursery) {
 		d -= c;
 		c -= b;
 		b -= a;
-        
+
 		printf("Clear=> root: %d, ipt_priv: %d, ipt_pub: %d, pi: %d, intra: %d, inter: %d, live: %d\n",a,b,c,d,e,f,g);
 #endif
 
@@ -3167,7 +3167,7 @@ GCEXPORT(void, gc_wrapup)() {
 
 			active_thread_gc_info_list = active_thread_gc_info_list->p_active_gc_thread_info; // Do it for all the threads.
 		}
-	    
+
 		release_active_thread_gc_info_list_lock(); // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 	}
 
@@ -3275,9 +3275,9 @@ GCEXPORT(void, gc_wrapup)() {
 /****
 *
 *  Routines to support barriers such as read and write barriers.
-* 
+*
 *****/
- 
+
 volatile gc_phase current_gc_phase;
 
 GCEXPORT(void, gc_heap_write_global_slot)(volatile uint32 *txnRec, Managed_Object_Handle *p_slot, Managed_Object_Handle value) {
@@ -3286,12 +3286,12 @@ GCEXPORT(void, gc_heap_write_global_slot)(volatile uint32 *txnRec, Managed_Objec
 
 
 //
-// The following routines are the only way to alter any value in the gc heap.  
+// The following routines are the only way to alter any value in the gc heap.
 //
 
 // In a place with gc disabled an entire object was written, for example inside
 // clone. This means that the entire object must be scanned and treated as if
-// all the fields had been altered. 
+// all the fields had been altered.
 
 GCEXPORT(void, gc_heap_wrote_object) (Managed_Object_Handle p_base_of_object) {
     INTERNAL(gc_write_barrier)(p_base_of_object);
@@ -3307,8 +3307,8 @@ void add_entry_proxy(ExpandInPlaceArray<Managed_Object_Handle*> *array,Managed_O
 }
 
 
-Partial_Reveal_Object * move_immutable_recursive(Partial_Reveal_Object *obj, 
-												 GC_Small_Nursery_Info *private_nursery, 
+Partial_Reveal_Object * move_immutable_recursive(Partial_Reveal_Object *obj,
+												 GC_Small_Nursery_Info *private_nursery,
 												 Partial_Reveal_VTable *vt,
 												 GC_Thread_Info *thread);
 
@@ -3327,8 +3327,8 @@ Partial_Reveal_Object * move_immutable_slot (Slot p_slot, GC_Small_Nursery_Info 
 	}
 }
 
-void move_immutable_array_entries(Partial_Reveal_Object *p_object, 
-						          GC_Small_Nursery_Info *private_nursery, 
+void move_immutable_array_entries(Partial_Reveal_Object *p_object,
+						          GC_Small_Nursery_Info *private_nursery,
 							      Partial_Reveal_VTable *vt,
 								  GC_Thread_Info *thread) {
     Type_Info_Handle tih = class_get_element_type_info(vt->get_gcvt()->gc_clss);
@@ -3337,7 +3337,7 @@ void move_immutable_array_entries(Partial_Reveal_Object *p_object,
        type_info_is_general_array(tih)) {
         // Initialize the array scanner which will scan the array from the
         // top to the bottom. IE from the last element to the first element.
-    
+
         int32 array_length = vector_get_length_with_vt((Vector_Handle)p_object,vt);
         for (int32 i=array_length-1; i>=0; i--) {
             Slot p_element(vector_get_element_address_ref_with_vt((Vector_Handle)p_object, i, vt));
@@ -3345,7 +3345,7 @@ void move_immutable_array_entries(Partial_Reveal_Object *p_object,
 				p_element.unchecked_update(move_immutable_slot (p_element, private_nursery, thread));
 			}
         }
-    } else if(type_info_is_primitive(tih)) { 
+    } else if(type_info_is_primitive(tih)) {
         // intentionally do nothing
     } else if(type_info_is_unboxed(tih)) {
         Class_Handle ech = type_info_get_class(tih);
@@ -3386,8 +3386,8 @@ void move_immutable_array_entries(Partial_Reveal_Object *p_object,
     } else assert(!"Tried to scan an array of unknown internal type.");
 }
 
-Partial_Reveal_Object * move_immutable_recursive(Partial_Reveal_Object *obj, 
-												 GC_Small_Nursery_Info *private_nursery, 
+Partial_Reveal_Object * move_immutable_recursive(Partial_Reveal_Object *obj,
+												 GC_Small_Nursery_Info *private_nursery,
 												 Partial_Reveal_VTable *vt,
 												 GC_Thread_Info *thread) {
 #ifdef RECORD_IMMUTABLE_COPIES
@@ -3398,7 +3398,7 @@ Partial_Reveal_Object * move_immutable_recursive(Partial_Reveal_Object *obj,
     unsigned obj_size = get_object_size_bytes_with_vt(obj,vt);
 	Partial_Reveal_Object *new_loc = (Partial_Reveal_Object*)gc_malloc_slow_no_constraints_with_nursery(
 		obj_size,
-		(Allocation_Handle)vt,
+		(uintptr_t)vt,
 		thread,
 		separate_immutable ? thread->get_public_immutable_nursery() : thread->get_public_nursery()
 #ifdef PUB_PRIV
@@ -3412,13 +3412,13 @@ Partial_Reveal_Object * move_immutable_recursive(Partial_Reveal_Object *obj,
 		if (vt->get_gcvt()->gc_object_has_slots) {
 			if (is_array(obj)) {
 				move_immutable_array_entries(obj, private_nursery, vt, thread);
-			} 
+			}
 			unsigned int *offset_scanner = init_object_scanner (obj);
 			Slot pp_target_object(NULL);
 			while ((pp_target_object.set(p_get_ref(offset_scanner, obj))) != NULL) {
 				// Each live object in the heap gets scanned exactly once...so each live EDGE in the heap gets looked at exactly once...
-				// So, the logic here is independent of whether the object pointed to by this slot has already been reached and 
-				// marked by the collector...we still need to collect edge counts since this edge is being visited for the first 
+				// So, the logic here is independent of whether the object pointed to by this slot has already been reached and
+				// marked by the collector...we still need to collect edge counts since this edge is being visited for the first
 				// and last time...
 				// If parent is not a delinquent type we are not interested in this edge at all....
 				if (!pp_target_object.is_null()) {
@@ -3431,8 +3431,8 @@ Partial_Reveal_Object * move_immutable_recursive(Partial_Reveal_Object *obj,
 			offset_scanner = init_object_scanner_weak (obj);
 			while ((pp_target_object.set(p_get_ref(offset_scanner, obj))) != NULL) {
 				// Each live object in the heap gets scanned exactly once...so each live EDGE in the heap gets looked at exactly once...
-				// So, the logic here is independent of whether the object pointed to by this slot has already been reached and 
-				// marked by the collector...we still need to collect edge counts since this edge is being visited for the first 
+				// So, the logic here is independent of whether the object pointed to by this slot has already been reached and
+				// marked by the collector...we still need to collect edge counts since this edge is being visited for the first
 				// and last time...
 				// If parent is not a delinquent type we are not interested in this edge at all....
 				if (!pp_target_object.is_null()) {
@@ -3454,14 +3454,14 @@ Partial_Reveal_Object * move_immutable_recursive(Partial_Reveal_Object *obj,
 	return obj;
 }
 
-Partial_Reveal_Object * move_immutable(Partial_Reveal_Object *obj, 
-									   GC_Small_Nursery_Info *private_nursery, 
+Partial_Reveal_Object * move_immutable(Partial_Reveal_Object *obj,
+									   GC_Small_Nursery_Info *private_nursery,
 									   Partial_Reveal_VTable *vt,
 									   GC_Thread_Info *thread) {
     unsigned obj_size = get_object_size_bytes_with_vt(obj,vt);
 	Partial_Reveal_Object *new_loc = (Partial_Reveal_Object*)gc_malloc_slow_no_constraints_with_nursery(
 		obj_size,
-		(Allocation_Handle)vt,
+		(uintptr_t)vt,
 		thread,
 		separate_immutable ? thread->get_public_immutable_nursery() : thread->get_public_nursery()
 #ifdef PUB_PRIV
@@ -3475,7 +3475,7 @@ Partial_Reveal_Object * move_immutable(Partial_Reveal_Object *obj,
 	return obj;
 }
 
-extern "C" void record_escaping_vtables(Managed_Object_Handle value, 
+extern "C" void record_escaping_vtables(Managed_Object_Handle value,
 										unsigned num_micro_collections,
 										Partial_Reveal_Object *base) {
 	std::pair<std::map<void*,unsigned>::iterator, bool> res;
@@ -3495,7 +3495,7 @@ extern "C" void record_escaping_vtables(Managed_Object_Handle value,
 	}
 
 	std::pair<std::map<unsigned,unsigned>::iterator, bool> uures;
-	
+
 	uures = g_barrier_base_sizes.insert(std::pair<unsigned,unsigned>(get_object_size_bytes_with_vt(base,base_vt),1));
 	if(uures.second == false) {
 		(uures.first)->second++;
@@ -3515,8 +3515,8 @@ extern "C" void record_escaping_vtables(Managed_Object_Handle value,
 	}
 }
 
-bool can_copy(Partial_Reveal_Object *obj, 
-			  GC_Small_Nursery_Info *private_nursery, 
+bool can_copy(Partial_Reveal_Object *obj,
+			  GC_Small_Nursery_Info *private_nursery,
 			  GC_Thread_Info *thread) {
 	Partial_Reveal_VTable *vt = obj->vt();
 	if(!pgc_is_vtable_immutable((struct VTable*)vt)) return false;
@@ -3529,7 +3529,7 @@ bool can_copy(Partial_Reveal_Object *obj,
 		   type_info_is_general_array(tih)) {
 			// Initialize the array scanner which will scan the array from the
 			// top to the bottom. IE from the last element to the first element.
-    
+
 			int32 array_length = vector_get_length_with_vt((Vector_Handle)obj,vt);
 			for (int32 i=array_length-1; i>=0; i--) {
 				Slot p_element(vector_get_element_address_ref_with_vt((Vector_Handle)obj, i, vt));
@@ -3537,7 +3537,7 @@ bool can_copy(Partial_Reveal_Object *obj,
                     return false;
                 }
 			}
-		} else if(type_info_is_primitive(tih)) { 
+		} else if(type_info_is_primitive(tih)) {
 			// intentionally do nothing
 		} else if(type_info_is_unboxed(tih)) {
 			Class_Handle ech = type_info_get_class(tih);
@@ -3575,7 +3575,7 @@ bool can_copy(Partial_Reveal_Object *obj,
 				cur_value_type_entry_as_object = (Byte*)cur_value_type_entry_as_object + elem_size;
 			}
 		} else assert(!"Tried to scan an array of unknown internal type.");
-	} 
+	}
 
 	unsigned int *offset_scanner = init_object_scanner (obj);
 	Slot pp_target_object(NULL);
@@ -3590,12 +3590,12 @@ bool can_copy(Partial_Reveal_Object *obj,
 }
 
 #if 0
-bool check_immutable_recursive(Partial_Reveal_Object *obj, 
-							   GC_Small_Nursery_Info *private_nursery, 
+bool check_immutable_recursive(Partial_Reveal_Object *obj,
+							   GC_Small_Nursery_Info *private_nursery,
 							   GC_Thread_Info *thread);
 
-bool check_immutable_slot (Slot p_slot, 
-	                       GC_Small_Nursery_Info *private_nursery, 
+bool check_immutable_slot (Slot p_slot,
+	                       GC_Small_Nursery_Info *private_nursery,
 	                       GC_Thread_Info *thread)
 {
 	assert(p_slot.get_value());
@@ -3611,8 +3611,8 @@ bool check_immutable_slot (Slot p_slot,
 	}
 }
 
-bool check_immutable_recursive(Partial_Reveal_Object *obj, 
-							   GC_Small_Nursery_Info *private_nursery, 
+bool check_immutable_recursive(Partial_Reveal_Object *obj,
+							   GC_Small_Nursery_Info *private_nursery,
 							   GC_Thread_Info *thread) {
 	Partial_Reveal_VTable *vt = obj->vt();
 	if(!pgc_is_vtable_immutable((struct VTable*)vt)) return false;
@@ -3625,7 +3625,7 @@ bool check_immutable_recursive(Partial_Reveal_Object *obj,
 		   type_info_is_general_array(tih)) {
 			// Initialize the array scanner which will scan the array from the
 			// top to the bottom. IE from the last element to the first element.
-    
+
 			int32 array_length = vector_get_length_with_vt((Vector_Handle)obj,vt);
 			for (int32 i=array_length-1; i>=0; i--) {
 				Slot p_element(vector_get_element_address_ref_with_vt((Vector_Handle)obj, i, vt));
@@ -3633,7 +3633,7 @@ bool check_immutable_recursive(Partial_Reveal_Object *obj,
 					return false;
 				}
 			}
-		} else if(type_info_is_primitive(tih)) { 
+		} else if(type_info_is_primitive(tih)) {
 			// intentionally do nothing
 		} else if(type_info_is_unboxed(tih)) {
 			Loader_Exception exc;
@@ -3672,7 +3672,7 @@ bool check_immutable_recursive(Partial_Reveal_Object *obj,
 				cur_value_type_entry_as_object = (Byte*)cur_value_type_entry_as_object + elem_size;
 			}
 		} else assert(!"Tried to scan an array of unknown internal type.");
-	} 
+	}
 
 	unsigned int *offset_scanner = init_object_scanner (obj);
 	Slot pp_target_object(NULL);
@@ -3709,8 +3709,8 @@ extern "C" void add_gen_rs(GC_Thread_Info *thread,
     thread->elder_roots_to_younger->add_entry((Managed_Object_Handle*)p_pslot);
 }
 
-extern "C" void unmanaged_add_entry(GC_Thread_Info *thread, 
-									Partial_Reveal_Object **p_value, 
+extern "C" void unmanaged_add_entry(GC_Thread_Info *thread,
+									Partial_Reveal_Object **p_value,
 									Partial_Reveal_Object *base,
                                     Partial_Reveal_Object **p_slot) {
 	if(!is_object_pointer(*p_value)) return;
@@ -3845,7 +3845,7 @@ extern "C" void unmanaged_add_entry(GC_Thread_Info *thread,
 } // unmanaged_add_entry
 
 #ifdef CONCURRENT
-extern "C" void unmanaged_mark_phase(GC_Thread_Info *thread, 
+extern "C" void unmanaged_mark_phase(GC_Thread_Info *thread,
                                      Partial_Reveal_Object **p_value,
 									 unsigned offset,
                                      Partial_Reveal_Object **p_slot) {
@@ -3981,7 +3981,7 @@ extern "C" void unmanaged_mark_phase(GC_Thread_Info *thread,
 } // unmanaged_mark_phase
 #endif // CONCURRENT
 
-extern "C" void unmanaged_add_entry_interior(GC_Thread_Info *thread, 
+extern "C" void unmanaged_add_entry_interior(GC_Thread_Info *thread,
 											 Partial_Reveal_Object **p_value,
 											 unsigned offset) {
 #ifdef PUB_PRIV
@@ -4031,7 +4031,7 @@ extern "C" void PRT_STDCALL gc_heap_slot_write_ref_p_prt_null(
                          Managed_Object_Handle *p_slot,
                          Managed_Object_Handle value,
 #ifndef NO_P2C_TH
-                         PrtTaskHandle taskHandle, 
+                         PrtTaskHandle taskHandle,
 #endif  // NO_P2C_TH
                          void *prevFrame) {
 	*p_slot = value;
@@ -4042,7 +4042,7 @@ extern "C" void PRT_STDCALL gc_heap_slot_write_interior_ref_p_prt_null(
                          Managed_Object_Handle value,
 						 unsigned offset,
 #ifndef NO_P2C_TH
-                         PrtTaskHandle taskHandle, 
+                         PrtTaskHandle taskHandle,
 #endif  // NO_P2C_TH
                          void *prevFrame) {
 	*p_slot = value;
@@ -4056,7 +4056,7 @@ extern "C" Managed_Object_Handle PRT_STDCALL gc_cas_write_ref_p_null(
                          Managed_Object_Handle *p_slot,
                          Managed_Object_Handle value,
                          Managed_Object_Handle cmp) {
-    return (Managed_Object_Handle)LockedCompareExchangePOINTER_SIZE_INT((POINTER_SIZE_INT*)p_slot,(POINTER_SIZE_INT)value,(POINTER_SIZE_INT)cmp);
+    return (Managed_Object_Handle)LockedCompareExchangePOINTER_SIZE_INT((POINTER_SIZE_INT*)p_slot,(uintptr_t)value,(uintptr_t)cmp);
 }
 
 extern "C" Managed_Object_Handle PRT_STDCALL gc_cas_write_interior_ref_p_null(
@@ -4064,7 +4064,7 @@ extern "C" Managed_Object_Handle PRT_STDCALL gc_cas_write_interior_ref_p_null(
                          Managed_Object_Handle value,
 						 unsigned offset,
                          Managed_Object_Handle cmp) {
-    return (Managed_Object_Handle)LockedCompareExchangePOINTER_SIZE_INT((POINTER_SIZE_INT*)p_slot,(POINTER_SIZE_INT)value,(POINTER_SIZE_INT)cmp);
+    return (Managed_Object_Handle)LockedCompareExchangePOINTER_SIZE_INT((POINTER_SIZE_INT*)p_slot,(uintptr_t)value,(uintptr_t)cmp);
 }
 
 extern "C" Managed_Object_Handle PRT_STDCALL gc_cas_write_ref_p_prt_null(
@@ -4073,10 +4073,10 @@ extern "C" Managed_Object_Handle PRT_STDCALL gc_cas_write_ref_p_prt_null(
                          Managed_Object_Handle value,
                          Managed_Object_Handle cmp,
 #ifndef NO_P2C_TH
-                         PrtTaskHandle taskHandle, 
+                         PrtTaskHandle taskHandle,
 #endif  // NO_P2C_TH
                          void *prevFrame) {
-    return (Managed_Object_Handle)LockedCompareExchangePOINTER_SIZE_INT((POINTER_SIZE_INT*)p_slot,(POINTER_SIZE_INT)value,(POINTER_SIZE_INT)cmp);
+    return (Managed_Object_Handle)LockedCompareExchangePOINTER_SIZE_INT((POINTER_SIZE_INT*)p_slot,(uintptr_t)value,(uintptr_t)cmp);
 }
 
 extern "C" Managed_Object_Handle PRT_STDCALL gc_cas_write_interior_ref_p_prt_null(
@@ -4085,10 +4085,10 @@ extern "C" Managed_Object_Handle PRT_STDCALL gc_cas_write_interior_ref_p_prt_nul
 						 unsigned offset,
                          Managed_Object_Handle cmp,
 #ifndef NO_P2C_TH
-                         PrtTaskHandle taskHandle, 
+                         PrtTaskHandle taskHandle,
 #endif  // NO_P2C_TH
                          void *prevFrame) {
-    return (Managed_Object_Handle)LockedCompareExchangePOINTER_SIZE_INT((POINTER_SIZE_INT*)p_slot,(POINTER_SIZE_INT)value,(POINTER_SIZE_INT)cmp);
+    return (Managed_Object_Handle)LockedCompareExchangePOINTER_SIZE_INT((POINTER_SIZE_INT*)p_slot,(uintptr_t)value,(uintptr_t)cmp);
 }
 
 
@@ -4126,14 +4126,14 @@ GCEXPORT(void, gc_heap_slot_write_ref_compressed)(Managed_Object_Handle p_base_o
 // write barriers and the JIT does not support write barriers the results
 // are undefined.
 //
-// Output: 
+// Output:
 //         1 if the garbage collector expects to be notified whenever
 //              a slot holding a pointer to an object is modified in the heap.
 //         0 otherwise.
 //
-// Comments: Future version might extend possible return values 
-//           so that the system can support other barriers such as a 
-//           read barrier or a write barrier on all heap writes, not 
+// Comments: Future version might extend possible return values
+//           so that the system can support other barriers such as a
+//           read barrier or a write barrier on all heap writes, not
 //           just pointer writes.
 //
 //
@@ -4144,15 +4144,15 @@ GCEXPORT(Boolean, gc_requires_barriers)() {
 }
 
 //
-// If gc_requires_write_barriers() returns 1, the Jit-ted code 
+// If gc_requires_write_barriers() returns 1, the Jit-ted code
 // should call this after doing the putfield or an array store or
 // a reference.
 //
 // Sapphire -
 // If gc_requires_write_barrier() returns 2 (Sapphire) then this
-// is called whenever anything is stored into the heap, not only 
+// is called whenever anything is stored into the heap, not only
 // references.
-// 
+//
 //
 // Likewise the ORP needs to call it whenever it stores a pointer into the
 // heap.
@@ -4194,26 +4194,26 @@ GCEXPORT(void, gc_heap_write_global_slot_compressed)(uint32 *p_slot,
     // and these are explicitly enumerated as GC roots.
     //
     // RLH 20030502
-    // While this is true for STW collectors, concurrent collectors need to be aware of 
-    // all pointers that can be passed from one thread to another. For example 
-    // this is needed to ensure the no black to white invariant or whatever tri color 
+    // While this is true for STW collectors, concurrent collectors need to be aware of
+    // all pointers that can be passed from one thread to another. For example
+    // this is needed to ensure the no black to white invariant or whatever tri color
     // invariant you are using.
 };
 #endif
 
 // The following should generate a st.rel followed by a mf to get sequential consistency
-// for volatiles. As of June 12, 2000  this is my (RLH) assumption of what the ORP spec 
+// for volatiles. As of June 12, 2000  this is my (RLH) assumption of what the ORP spec
 // will/should be.
 
 void gc_volatile_heap_write_ref (Partial_Reveal_Object *p_base_of_object_with_slot,
                          unsigned offset,
-                         Partial_Reveal_Object *value) { 
+                         Partial_Reveal_Object *value) {
     assert (p_base_of_object_with_slot != NULL);
 
-    Partial_Reveal_Object **p_slot = 
+    Partial_Reveal_Object **p_slot =
         (Partial_Reveal_Object **)(((char *)p_base_of_object_with_slot) + offset);
-    
-#if (defined(GC_COPY_V2) || defined(DISABLE_GC_WRITE_BARRIERS)) 
+
+#if (defined(GC_COPY_V2) || defined(DISABLE_GC_WRITE_BARRIERS))
     *p_slot = value;
 #else
     *p_slot = value;
@@ -4233,9 +4233,9 @@ void gc_volatile_heap_slot_write_ref (Partial_Reveal_Object *p_base_of_object_wi
 
 void gc_volatile_heap_write_int8 (Partial_Reveal_Object *p_base_of_object_with_slot,
                          unsigned offset,
-                         int8 value) { 
+                         int8 value) {
     assert (p_base_of_object_with_slot != NULL);
-    int8 *p_slot = 
+    int8 *p_slot =
         (int8 *)(((char *)p_base_of_object_with_slot) + offset);
     *p_slot = value;
 }
@@ -4250,9 +4250,9 @@ void gc_volatile_heap_slot_write_int8 (Partial_Reveal_Object *p_base_of_object_w
 
 void gc_volatile_heap_write_int16 (Partial_Reveal_Object *p_base_of_object_with_slot,
                          unsigned offset,
-                         int16 value) { 
+                         int16 value) {
     assert (p_base_of_object_with_slot != NULL);
-    int16 *p_slot = 
+    int16 *p_slot =
         (int16 *)(((char *)p_base_of_object_with_slot) + offset);
     *p_slot = value;
 }
@@ -4267,9 +4267,9 @@ void gc_volatile_heap_slot_write_int16 (Partial_Reveal_Object *p_base_of_object_
 
 void gc_volatile_heap_write_uint16 (Partial_Reveal_Object *p_base_of_object_with_slot,
                          unsigned offset,
-                         uint16 value) { 
+                         uint16 value) {
     assert (p_base_of_object_with_slot != NULL);
-    uint16 *p_slot = 
+    uint16 *p_slot =
         (uint16 *)(((char *)p_base_of_object_with_slot) + offset);
     *p_slot = value;
 }
@@ -4284,9 +4284,9 @@ void gc_volatile_heap_slot_write_uint16 (Partial_Reveal_Object *p_base_of_object
 
 void gc_volatile_heap_write_int32 (Partial_Reveal_Object *p_base_of_object_with_slot,
                          unsigned offset,
-                         int32 value) { 
+                         int32 value) {
     assert (p_base_of_object_with_slot != NULL);
-    int32 *p_slot = 
+    int32 *p_slot =
         (int32 *)(((char *)p_base_of_object_with_slot) + offset);
     *p_slot = value;
 }
@@ -4301,18 +4301,18 @@ void gc_volatile_heap_slot_write_int32 (Partial_Reveal_Object *p_base_of_object_
 
 void gc_volatile_heap_write_int64 (Partial_Reveal_Object *p_base_of_object_with_slot,
                          unsigned offset,
-                         int64 value) { 
+                         int64 value) {
     assert (p_base_of_object_with_slot != NULL);
-    int64 *p_slot = 
+    int64 *p_slot =
         (int64 *)(((char *)p_base_of_object_with_slot) + offset);
     *p_slot = value;
 }
 
 void gc_volatile_heap_write_float (Partial_Reveal_Object *p_base_of_object_with_slot,
                          unsigned offset,
-                         float value) { 
+                         float value) {
     assert (p_base_of_object_with_slot != NULL);
-    float *p_slot = 
+    float *p_slot =
         (float *)(((char *)p_base_of_object_with_slot) + offset);
     *p_slot = value;
 }
@@ -4327,9 +4327,9 @@ void gc_volatile_heap_slot_write_float (Partial_Reveal_Object *p_base_of_object_
 
 void gc_volatile_heap_write_double (Partial_Reveal_Object *p_base_of_object_with_slot,
                          unsigned offset,
-                         double value) { 
+                         double value) {
     assert (p_base_of_object_with_slot != NULL);
-    double *p_slot = 
+    double *p_slot =
         (double *)(((char *)p_base_of_object_with_slot) + offset);
     *p_slot = value;
 }
@@ -4344,7 +4344,7 @@ void gc_volatile_heap_slot_write_double (Partial_Reveal_Object *p_base_of_object
 
 void gc_volatile_heap_write_pointer_size_int (Partial_Reveal_Object *p_base_of_object_with_slot,
                          unsigned offset,
-                         POINTER_SIZE_INT value) { 
+                         POINTER_SIZE_INT value) {
     assert (p_base_of_object_with_slot != NULL);
 #ifdef _IA64_
     gc_volatile_heap_write_int64 (p_base_of_object_with_slot,
@@ -4377,13 +4377,13 @@ void gc_volatile_heap_slot_write_int64 (Partial_Reveal_Object *p_base_of_object_
 /****
 *
 *  Routines to support building the root set during a collection.
-* 
+*
 *****/
 
 // *slot is guaranteed not to the beginning of an object unless it has fallen off the
 // end of an array.  We'll subtract 1 in places to make sure the pointer is in the
 // interior of the object to which it points.
-// 
+//
 // Managed pointers are like interior pointers except we don't know what the offset is.
 GCEXPORT(void, gc_add_root_set_entry_managed_pointer)(void **slot, Boolean is_pinned) {
     // By subtracting one byte we guarantee the pointer is in the memory for the object.
@@ -4395,7 +4395,7 @@ GCEXPORT(void, gc_add_root_set_entry_managed_pointer)(void **slot, Boolean is_pi
         // We subtract 1 to guarantee that the pointer is into the object and not
         // one past the end of an array.
         block_info *pBlockInfo = p_global_gc->find_start_of_multiblock(true_slot);
-        
+
         Partial_Reveal_Object *p_obj = NULL;
 
         // check for single object block
@@ -4409,7 +4409,7 @@ GCEXPORT(void, gc_add_root_set_entry_managed_pointer)(void **slot, Boolean is_pi
             current_area_being_scanned.area_base    = GC_BLOCK_ALLOC_START(pBlockInfo);
             current_area_being_scanned.area_ceiling = 0;
             unsigned int i=0;
-            
+
             // Handle the case where there are no free areas in the block.
             if (pBlockInfo->block_free_areas[0].area_base == 0) {
                 // Will bypass the following for loop.
@@ -4417,18 +4417,18 @@ GCEXPORT(void, gc_add_root_set_entry_managed_pointer)(void **slot, Boolean is_pi
                 // Compute the ending address of this block's allocation area.
                 current_area_being_scanned.area_ceiling = GC_BLOCK_CEILING(current_area_being_scanned.area_base);
             }
-            
+
             // loop through the free areas...free areas are the inverse of used areas and demarcate them.
             for (; i < pBlockInfo->size_block_free_areas; ++i) {
                 // Make sure that the array of free areas is ordered.
-                // This invariant is supposed to be maintained by Garbage_Collector::sweep_one_block(...) 
+                // This invariant is supposed to be maintained by Garbage_Collector::sweep_one_block(...)
                 // in GCv4_sweep.cpp.
                 // This check will also make sure we haven't failed to find the used block before
                 // going into the unused portion of the free areas array.
                 assert(current_area_being_scanned.area_base <= pBlockInfo->block_free_areas[i].area_base);
                 // Algorithm
                 // ---------
-                // 1. We already know that *slot must be >= current_area_being_scanned.area_base because we initialized 
+                // 1. We already know that *slot must be >= current_area_being_scanned.area_base because we initialized
                 // current_area_being_scanned.area_base to be the start of the allocation block and the list of free areas
                 // is monotonically increasing.
                 // 2. Any of the "free" areas could be the current allocation area.  The most up-to-date
@@ -4450,8 +4450,8 @@ GCEXPORT(void, gc_add_root_set_entry_managed_pointer)(void **slot, Boolean is_pi
                 // and the ceiling is that free area's ceiling.  Otherwise, the base is [used0].base
                 // and the ceiling is [free0].base-1.
                 //
-                // The object can reside in a used area that falls between the last free area and the end 
-                // of the block. 
+                // The object can reside in a used area that falls between the last free area and the end
+                // of the block.
                 // Here, if true we've found the combined area where the interior pointer falls.
                 if (true_slot <= pBlockInfo->block_free_areas[i].area_ceiling) {
                     // Check if the interior pointer appears to be in a used or free area.
@@ -4471,15 +4471,15 @@ GCEXPORT(void, gc_add_root_set_entry_managed_pointer)(void **slot, Boolean is_pi
                         current_area_being_scanned.area_ceiling = GC_BLOCK_CEILING(current_area_being_scanned.area_base);
                         // The object is in the area between the last free area and the end of the block.
                         assert (pBlockInfo->block_free_areas[i+1].area_base == 0x0);
-                        break;   
+                        break;
                     }
                 }
             }
             assert(current_area_being_scanned.area_ceiling);
-            
+
             // Get the first live object in this used area
             Partial_Reveal_Object *p_next_obj = (Partial_Reveal_Object*)current_area_being_scanned.area_base;
-            
+
             do {
                 p_obj = p_next_obj;
                 // Keep getting the next live object until the interior pointer is less than the next object we just found
@@ -4489,7 +4489,7 @@ GCEXPORT(void, gc_add_root_set_entry_managed_pointer)(void **slot, Boolean is_pi
         }
 
         // We can reuse the normal code below by now computing the correct offset
-        int offset = ((POINTER_SIZE_INT)*slot) - ((POINTER_SIZE_INT)p_obj);
+        int offset = ((uintptr_t)*slot) - ((uintptr_t)p_obj);
 
         assert (p_obj->vt());
         interior_pointer_table->add_entry (slot_offset_entry(slot, p_obj, offset));
@@ -4510,7 +4510,7 @@ unsigned num_roots_ignored = 0;
 unsigned roots_to_ignore   = 20000;
 #endif // IGNORE_SOME_ROOTS
 
-// 
+//
 // Call from the ORP to the gc to enumerate an interior pointer. **ref is a slot holding a pointer
 // into the interior of an object. The base of the object is located at *ref - offset. The strategy
 // employed is to place the slot, the object base and the offset into a slot_base_offset table. We then
@@ -4668,9 +4668,9 @@ GCEXPORT(void, gc_add_compressed_root_set_entry)(uint32 *ref, Boolean is_pinned)
     //assert(0);
     if (*ref == 0)
         return;
-    Partial_Reveal_Object *p_obj = (Partial_Reveal_Object *) (*ref + (POINTER_SIZE_INT)INTERNAL(gc_heap_base_address)());
+    Partial_Reveal_Object *p_obj = (Partial_Reveal_Object *) (*ref + (uintptr_t)INTERNAL(gc_heap_base_address)());
     assert(p_obj->vt());
-    compressed_pointer_table->add_entry(slot_offset_entry((void **)ref, p_obj, (POINTER_SIZE_INT)INTERNAL(gc_heap_base_address)()));
+    compressed_pointer_table->add_entry(slot_offset_entry((void **)ref, p_obj, (uintptr_t)INTERNAL(gc_heap_base_address)()));
 	slot_offset_entry *addr = compressed_pointer_table->get_last_addr();
     p_global_gc->gc_internal_add_root_set_entry(&(addr->base));
 
@@ -4697,47 +4697,47 @@ GCEXPORT(void, gc_add_root_set_entry_nonheap)(Managed_Object_Handle *ref1) {
 /****
 *
 *  Routines to support the allocation and initialization of objects.
-* 
+*
 *****/
 
 //
 // Allocation of objects.
 //
-// There is a tension between fast allocation of objects and 
-// honoring various constraints the ORP might place on the object. 
-// These constraints include registering the objects for 
-// finalization, aligning the objects on multiple word boundaries, 
-// pinning objects for performance reasons, registering objects 
+// There is a tension between fast allocation of objects and
+// honoring various constraints the ORP might place on the object.
+// These constraints include registering the objects for
+// finalization, aligning the objects on multiple word boundaries,
+// pinning objects for performance reasons, registering objects
 // related to weak pointers and so forth.
 //
-// We have tried to resolve this tension by overloading the 
-// size argument that is passed to the allocation routine. If 
-// the size of the argument has a high bit of 0, then the 
-// allocation routine will assume that no constraints exist 
-// on the allocation of this object and allocation can potentially 
-// be made very fast. If on the other hand the size is large then 
-// the routine will query the class data structure to determine 
+// We have tried to resolve this tension by overloading the
+// size argument that is passed to the allocation routine. If
+// the size of the argument has a high bit of 0, then the
+// allocation routine will assume that no constraints exist
+// on the allocation of this object and allocation can potentially
+// be made very fast. If on the other hand the size is large then
+// the routine will query the class data structure to determine
 // what constraints are being made on the allocation of this object.
 //
 //
-// See orp_for_gc interface for masks that allow the gc to quickly 
+// See orp_for_gc interface for masks that allow the gc to quickly
 // determine the constraints.
 
 //
-// This routine is the primary routine used to allocate objects. 
-// It assumes nothing about the state of the ORP internal data 
-// structures or the runtime stack. If gc_malloc_or_null is able 
+// This routine is the primary routine used to allocate objects.
+// It assumes nothing about the state of the ORP internal data
+// structures or the runtime stack. If gc_malloc_or_null is able
 // to allocate the object without invoking a GC or calling the ORP
-// then it does so. It places p_vtable into the object, ensures 
-// that the object is zeroed and then returns a Partial_Reveal_Object 
-// pointer to the object. If it is not able to allocate the object 
+// then it does so. It places p_vtable into the object, ensures
+// that the object is zeroed and then returns a Partial_Reveal_Object
+// pointer to the object. If it is not able to allocate the object
 // without invoking a GC then it returns NULL.
 //
 // Input: size - the size of the object to allocate. If the high bit
 //               set then various constraints as described above are
 //               placed on the allocation of this object.
-//        p_vtable - a pointer to the vtable of the class being 
-//                   allocated. This routine will place this value 
+//        p_vtable - a pointer to the vtable of the class being
+//                   allocated. This routine will place this value
 //                   in the appropriate slot of the new object.
 //
 
@@ -4746,16 +4746,16 @@ GCEXPORT(void, gc_add_root_set_entry_nonheap)(Managed_Object_Handle *ref1) {
 #endif
 
 //
-// This routine is used to allocate an object. See the above 
+// This routine is used to allocate an object. See the above
 // discussion on the overloading of size.
-// The GC assumes that the ORP is ready to support a GC if it 
+// The GC assumes that the ORP is ready to support a GC if it
 // calls this function.
 //
 // Input: size - the size of the object to allocate. If the high bit
 //               set then various constraints as described above are
 //               placed on the allocation of this object.
 //        p_vtable - a pointer to the vtable of the class being allocated.
-//                   This routine will place this value in the 
+//                   This routine will place this value in the
 //                   appropriate slot of the new object.
 //
 
@@ -4764,7 +4764,7 @@ Managed_Object_Handle gc_malloc_slow(unsigned size, Allocation_Handle ah, void *
 GCEXPORT(Managed_Object_Handle, gc_malloc)(unsigned size, Allocation_Handle ah) {
     // All chunks of data requested need to be multiples of GC_OBJECT_ALIGNMENT
     assert((size % GC_OBJECT_ALIGNMENT) == 0);
-    
+
     assert (ah);
 
     unsigned int real_size = get_instance_data_size (size);
@@ -4777,14 +4777,14 @@ GCEXPORT(Managed_Object_Handle, gc_malloc)(unsigned size, Allocation_Handle ah) 
     // if MANGLEPOINTERS is defined this is used for debugging.
     result = (Partial_Reveal_Object *)mangleBits((HeapObject *)result);
 
-    return result; 
+    return result;
 }
 
 
 GCEXPORT(Managed_Object_Handle, gc_malloc_with_thread_pointer)(unsigned size, Allocation_Handle ah, void *tp) {
     // All chunks of data requested need to be multiples of GC_OBJECT_ALIGNMENT
     assert((size % GC_OBJECT_ALIGNMENT) == 0);
-    
+
     assert (ah);
 
     unsigned int real_size = get_instance_data_size (size);
@@ -4793,11 +4793,11 @@ GCEXPORT(Managed_Object_Handle, gc_malloc_with_thread_pointer)(unsigned size, Al
 
     assert (result->vt());
     gc_trace ((void *)result, "object is allocated");
-    
+
     // if MANGLEPOINTERS is defined this is used for debugging.
     result = (Partial_Reveal_Object *)mangleBits((HeapObject *)result);
 
-    return result; 
+    return result;
 } // gc_malloc_with_thread_pointer
 
 
@@ -4805,7 +4805,7 @@ GCEXPORT(Managed_Object_Handle, gc_malloc_with_thread_pointer)(unsigned size, Al
 GCEXPORT(Managed_Object_Handle, gc_malloc_with_thread_pointer_escaping)(unsigned size, Allocation_Handle ah, void *tp) {
     // All chunks of data requested need to be multiples of GC_OBJECT_ALIGNMENT
     assert((size % GC_OBJECT_ALIGNMENT) == 0);
-    
+
     assert (ah);
 
 //	++alloc_escaping;
@@ -4816,11 +4816,11 @@ GCEXPORT(Managed_Object_Handle, gc_malloc_with_thread_pointer_escaping)(unsigned
 
     assert (result->vt());
     gc_trace ((void *)result, "object is allocated");
-    
+
     // if MANGLEPOINTERS is defined this is used for debugging.
     result = (Partial_Reveal_Object *)mangleBits((HeapObject *)result);
 
-    return  result; 
+    return  result;
 }
 #endif // 0
 
@@ -4830,10 +4830,10 @@ GCEXPORT(Managed_Object_Handle, gc_malloc_with_thread_pointer_escaping)(unsigned
 // routine.
 //
 Managed_Object_Handle gc_malloc_slow(
-	unsigned size, 
-	Allocation_Handle ah, 
+	unsigned size,
+	Allocation_Handle ah,
 	void *tp,
-	Boolean do_not_relocate, 
+	Boolean do_not_relocate,
 	Boolean escaping) {
 
     GC_Thread_Info *gc_tls = orp_local_to_gc_local(tp);
@@ -4848,10 +4848,10 @@ Managed_Object_Handle gc_malloc_slow(
 
     if (class_constraints == 0) {
 #ifdef _DEBUGxxx
-        p_TLS_orpthread->number_of_objects_allocated++;  
-        p_TLS_orpthread->number_of_bytes_of_objects_allocated += size;  
+        p_TLS_orpthread->number_of_objects_allocated++;
+        p_TLS_orpthread->number_of_bytes_of_objects_allocated += size;
 #endif
-        
+
         p_return_object = gc_malloc_slow_no_constraints (size, ah, gc_tls
 #ifdef PUB_PRIV
 			, g_use_pub_priv
@@ -4865,13 +4865,13 @@ Managed_Object_Handle gc_malloc_slow(
         // There is no special alignment hack needed for IA64
         assert(0);
 #endif
-        
-        // We hava a special object that needs 
+
+        // We hava a special object that needs
         //
         // In phase 1 of alignment, re-direct all objects
         // with special alignment needs to the LOS.
         // CLEANUP -- remove this cast....
-        
+
         p_return_object = (Partial_Reveal_Object *)gc_pinned_malloc (size,
                                                   ah,
                                                   false, // returnNullOnFail is false
@@ -4904,10 +4904,10 @@ Managed_Object_Handle gc_malloc_slow(
 
 
 #ifdef _DEBUGxxx
-    p_TLS_orpthread->number_of_objects_allocated++;  
-    p_TLS_orpthread->number_of_bytes_of_objects_allocated += size;  
+    p_TLS_orpthread->number_of_objects_allocated++;
+    p_TLS_orpthread->number_of_bytes_of_objects_allocated += size;
 #endif
-    
+
     gc_trace ((void *)p_return_object, "Allocated in gc_malloc_slow.");
     return p_return_object;
 }
@@ -4928,25 +4928,25 @@ Partial_Reveal_Object *gc_los_malloc_noclass (unsigned size, bool in_a_gc) {
     // vtable for java.lang.Class hasn't been constructed yet.
     // Currently only three classes should be allocated through this call:
     // java.lang.Object, java.io.Serializable and java.lang.Class.
-    
+
     assert ((size % GC_OBJECT_ALIGNMENT) == 0);
     unsigned int real_size_bytes = size;
     Partial_Reveal_Object *result_start = NULL;
 
     result_start = gc_pinned_malloc(size, 0, false, false, NULL /* will need to fix to re-enable this function */);
-    memset (result_start, 0x0, size); 
+    memset (result_start, 0x0, size);
     return result_start;
 } // gc_los_malloc_noclass
 
 
 //
 // For bootstrapping situations, when we still don't have
-// a class for the object. This routine is only available prior to 
+// a class for the object. This routine is only available prior to
 // a call to the call gc_orp_initialized. If it is called after
-// the call to gc_orp_initialized then the results are undefined. 
+// the call to gc_orp_initialized then the results are undefined.
 // The GC places NULL in the vtable slot of the newly allocated
 // object.
-// 
+//
 // The object allocated will be pinned, not finalizable and not an array.
 //
 // Input: size - the size of the object to allocate. The high bit
@@ -4956,7 +4956,7 @@ Partial_Reveal_Object *gc_los_malloc_noclass (unsigned size, bool in_a_gc) {
 GCEXPORT(Managed_Object_Handle, gc_pinned_malloc_noclass)(unsigned size) {
     // CLEANUP -- remove this cast.
     Partial_Reveal_Object *p_return = gc_los_malloc_noclass (size, false);
-    gc_trace((void *)p_return, "Allocated as a pinned object."); 
+    gc_trace((void *)p_return, "Allocated as a pinned object.");
     // we can't characterize an object without a vtable.
     return p_return;
 } // gc_pinned_malloc_noclass
@@ -4965,7 +4965,7 @@ GCEXPORT(Managed_Object_Handle, gc_pinned_malloc_noclass)(unsigned size) {
 /****
 *
 *  Routines to support threads.
-* 
+*
 *****/
 //
 // This routine is called during thread startup to set
@@ -4988,12 +4988,12 @@ void virtual_free(void *start) {
 void * virtual_malloc(unsigned size) {
     void *gc_free;
 #ifdef ORP_POSIX
-    
+
     gc_free = malloc(size + 0xFFFF);
     // alignment happens later
-    
+
     if(gc_free == NULL) {
-#ifdef _WINDOWS        
+#ifdef _WINDOWS
         DWORD error_code = GetLastError();
         orp_cout << "Error: Garbage Collector failed to reserve ";
         orp_cout << final_heap_size_bytes;
@@ -5010,7 +5010,7 @@ void * virtual_malloc(unsigned size) {
     }
     return gc_free;
 #else // !ORP_POSIX
-    
+
     // JMS 2003-05-23.  Getting virtual memory from Windows.  If large_pages is
     // specified, we either acquire the entire heap with large pages or we exit.
     // If compressed_references is specified, we ask for an additional 4GB and
@@ -5022,7 +5022,7 @@ void * virtual_malloc(unsigned size) {
     //
     // Since VirtualAlloc with large pages seems to require committing up front,
     // we actually waste 4GB.
-    
+
 #ifdef _IA64_
     if (use_large_pages) {
         // Using large pages on Win64 seems to require MEM_COMMIT and PAGE_READWRITE.
@@ -5032,7 +5032,7 @@ void * virtual_malloc(unsigned size) {
         action_large = MEM_LARGE_PAGES;
         protection = PAGE_READWRITE;
         final_heap_size = (final_heap_size+minimum_page_size-1)&
-            ~(minimum_page_size-1); 
+            ~(minimum_page_size-1);
     }
 #endif // _IA64_
     gc_free = VirtualAlloc(NULL, size, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
@@ -5183,7 +5183,7 @@ static void gc_thread_init_base (GC_Thread_Info *info) {
     release_active_thread_gc_info_list_lock(); // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 }
 
-GCEXPORT(void, gc_thread_init)(void *gc_information, void *thread_handle) { 
+GCEXPORT(void, gc_thread_init)(void *gc_information, void *thread_handle) {
     GC_Thread_Info *info = orp_local_to_gc_local(gc_information);
     info->thread_handle = thread_handle;
     gc_thread_init_base(info);
@@ -5200,7 +5200,7 @@ GCEXPORT(void, gc_thread_init)(void *gc_information, void *thread_handle) {
  * storage.  Second, such nursery allocation is impossible when the cause of the
  * GC is already a lack of allocatable nurseries.
  */
-GCEXPORT(void, gc_thread_init_no_nursery)(void *gc_information, void *thread_handle) { 
+GCEXPORT(void, gc_thread_init_no_nursery)(void *gc_information, void *thread_handle) {
     GC_Thread_Info *info = orp_local_to_gc_local(gc_information);
     info->thread_handle = thread_handle;
 //    info->gray_set = new Gray_Ssb();
@@ -5246,7 +5246,7 @@ void gc_release_nursery (void *a_nursery) {
     // Store away that thread's nursery for subsequent
     // scavenging (during the next stop-the-world collection).
     //
-    
+
     if (the_nursery != NULL) {
         // orphan the nursery.
         assert (the_nursery->get_nursery_status() == active_nursery);
@@ -5264,20 +5264,20 @@ GCEXPORT(void, gc_thread_kill)(void *gc_information) {
 
     // Return the chunk used for allocation by this thread to the store.
     block_info *spent_block = (block_info *)nursery_info->chunk;
-    
+
     while (spent_block) {
         assert(spent_block);
         assert (spent_block->get_nursery_status() == active_nursery);
         spent_block->set_nursery_status(active_nursery,spent_nursery);
-        
+
         spent_block = spent_block->next_free_block;
     }
 
 	bool found = false;
-    
+
     get_active_thread_gc_info_list_lock();     // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 
-    volatile GC_Thread_Info *temp_active_thread_gc_info_list = active_thread_gc_info_list;   
+    volatile GC_Thread_Info *temp_active_thread_gc_info_list = active_thread_gc_info_list;
 
     if ((void *)temp_active_thread_gc_info_list == gc_info) {
         // it is at the head of the list.
@@ -5324,11 +5324,11 @@ GCEXPORT(void, gc_thread_kill)(void *gc_information) {
 /****
 *
 *  Routines to support the functionality required by the Java language specification.
-* 
+*
 *****/
 
 //
-// API for the ORP to force a GC, typically in response to a call to 
+// API for the ORP to force a GC, typically in response to a call to
 // java.lang.Runtime.gc
 //
 GCEXPORT(void, gc_force_gc)() {
@@ -5342,9 +5342,9 @@ GCEXPORT(void, gc_force_gc)() {
             fflush(stdout);
         }
     }
-    
+
     orp_gc_lock_enum();
-    
+
 #ifdef GC_VERIFY_VM
     assert(!running_gc); // If we are testing the gc we had better have the GC lock.
 #endif // GC_VERIFY_VM
@@ -5408,7 +5408,7 @@ GCEXPORT(int64, gc_total_memory)() {
 }
 
 //
-// API for the ORP to get an approximate view of the free space, 
+// API for the ORP to get an approximate view of the free space,
 // typically in response to a call to java.lang.Runtime.freeMemory
 //
 GCEXPORT(int64, gc_free_memory)() {
@@ -5437,9 +5437,9 @@ GCEXPORT(int64, gc_max_memory)() {
 GCEXPORT(void *, gc_heap_base_address)() {
     return p_global_gc->get_gc_heap_base_address();
 }
- 
- 
- 
+
+
+
 GCEXPORT(void *, gc_heap_ceiling_address)() {
 #ifndef DISALLOW_RUNTIME_SELECTION_OF_COMPRESSED_REFERENCES
 #ifdef _IA64_
@@ -5450,7 +5450,7 @@ GCEXPORT(void *, gc_heap_ceiling_address)() {
 #endif // !DISALLOW_RUNTIME_SELECTION_OF_COMPRESSED_REFERENCES
     return p_global_gc->get_gc_heap_ceiling_address();
 }
- 
+
 extern void capture_pmu_data(void **);
 
 GCEXPORT(void, gc_register_delinquent_regions)(void **regions, int) {}
@@ -5460,36 +5460,36 @@ GCEXPORT(void *, gc_get_latest_path_information)() {
 }
 
 // has this a valid object or not?
-GCEXPORT(Boolean, gc_is_heap_object)(void *p_obj) {    
+GCEXPORT(Boolean, gc_is_heap_object)(void *p_obj) {
     Partial_Reveal_Object *the_obj = (Partial_Reveal_Object *)p_obj;
     if ( !p_global_gc->is_in_heap(the_obj) ) {
         return false;
     }
     POINTER_SIZE_INT mask;
 
-#ifdef _IA64_ 
-    mask = 7; 
+#ifdef _IA64_
+    mask = 7;
 #else
     mask = 3;
 #endif
     // It had better be aligned properly
-    if ((mask & (POINTER_SIZE_INT)p_obj) != 0) {
+    if ((mask & (uintptr_t)p_obj) != 0) {
         return false;
     }
 
     block_info *info = GC_BLOCK_INFO(the_obj);
-    if ((POINTER_SIZE_INT)the_obj < (POINTER_SIZE_INT)GC_BLOCK_ALLOC_START(info)) {
+    if ((uintptr_t)the_obj < (uintptr_t)GC_BLOCK_ALLOC_START(info)) {
         return false; // We have a bogus object so return false.
     }// We have a bogus object
     if (p_global_gc->obj_belongs_in_single_object_blocks(the_obj)) {
-        if ((POINTER_SIZE_INT) the_obj == (POINTER_SIZE_INT)GC_BLOCK_ALLOC_START(info)) {
+        if ((uintptr_t) the_obj == (uintptr_t)GC_BLOCK_ALLOC_START(info)) {
         // Actually we don't know but we will return true here for now.
             return true;
         } else {
             return false;
         }
     }
-  
+
     // It passed all the reasonable tests.
     return true;
 }
@@ -5497,16 +5497,16 @@ GCEXPORT(Boolean, gc_is_heap_object)(void *p_obj) {
 
 // has this object survived a GC cycle or not? If we can't tell we return false, ie it is short lived.
 
-GCEXPORT(Boolean, gc_is_object_long_lived)(void *p_obj) {    
+GCEXPORT(Boolean, gc_is_object_long_lived)(void *p_obj) {
     Partial_Reveal_Object *the_obj = (Partial_Reveal_Object *)p_obj;
     if (p_global_gc->obj_belongs_in_single_object_blocks(the_obj)) {
         // Actually we don't know but we will return true here for now.
         return true;
-        
+
     }
     block_info *info = GC_BLOCK_INFO(the_obj);
 
-    if ((POINTER_SIZE_INT)the_obj < (POINTER_SIZE_INT)GC_BLOCK_ALLOC_START(info)) {
+    if ((uintptr_t)the_obj < (uintptr_t)GC_BLOCK_ALLOC_START(info)) {
         return false; // We have a bogus object so return false.
     } // We have a bogus object that can be ignored.
 
@@ -5516,14 +5516,14 @@ GCEXPORT(Boolean, gc_is_object_long_lived)(void *p_obj) {
     if (info->block_has_been_swept) {
         if (info->in_nursery_p) {
             if (info->num_free_areas_in_block == 0) {
-                // There were no free areas to allocate in. 
+                // There were no free areas to allocate in.
                 return true;
             }
             unsigned int i = 0;
             free_area *area = &(info->block_free_areas[i]);
             while (area->area_base) {
-                if ( ((POINTER_SIZE_INT)the_obj >= (POINTER_SIZE_INT)area->area_base) && 
-                     ((POINTER_SIZE_INT)the_obj < (POINTER_SIZE_INT)area->area_ceiling) ) {
+                if ( ((uintptr_t)the_obj >= (uintptr_t)area->area_base) &&
+                     ((uintptr_t)the_obj < (uintptr_t)area->area_ceiling) ) {
                     return false;
                 }
                 i++;
@@ -5541,7 +5541,7 @@ GCEXPORT(Boolean, gc_is_object_long_lived)(void *p_obj) {
 // Time in milliseconds since last GC. TBD.
 // ************************************************************************************
 //
- 
+
 GCEXPORT(unsigned int, gc_time_since_last_gc)() {
     return 3737;
 }
@@ -5550,7 +5550,7 @@ GCEXPORT(unsigned int, gc_time_since_last_gc)() {
 /****
 *
 *  Routines to support the functionality required by Jini to see if an object is pinned.
-* 
+*
 *****/
 
 
@@ -5559,7 +5559,7 @@ GCEXPORT(Boolean, gc_is_object_pinned) (Managed_Object_Handle obj) {
     // NOTE --->>>>>>>>> THIS API IS NOT FOR INTERIOR POINTERS...
     //
     Partial_Reveal_Object *p_obj = (Partial_Reveal_Object *) obj;
-    
+
     if (fullheapcompact_at_forcegc || incremental_compaction) {
         // Moving GC
         if (GC_BLOCK_INFO(p_obj)->in_los_p || GC_BLOCK_INFO(p_obj)->is_single_object_block) {
@@ -5568,18 +5568,18 @@ GCEXPORT(Boolean, gc_is_object_pinned) (Managed_Object_Handle obj) {
             assert(GC_BLOCK_INFO(p_obj)->in_nursery_p);
             // No guarantee can be offered that it will not be moved...
             return FALSE;
-        } 
+        }
     } else {
         // FIXED GC -- no object moves
         return TRUE;
-    } 
+    }
 }
 
 /****
 *
-*  Routines to support the the class loader and to allow the GC to seperate out and 
+*  Routines to support the the class loader and to allow the GC to seperate out and
 *  control the format of the data structures that it uses.
-* 
+*
 *****/
 
 // Allocate GC-specific vtable data from a contiguous section of memory.
@@ -5689,7 +5689,7 @@ static unsigned int *build_slot_offset_array(Class_Handle ch, Partial_Reveal_VTa
     // memory order, so we sort the slot offset array.  The sorting
     // is required by the verify_live_heap code.
     qsort(result, num_ref_fields, sizeof(*result), intcompare);
-    
+
     return result;
 }
 
@@ -5741,7 +5741,7 @@ static unsigned int *build_weak_slot_offset_array(Class_Handle ch, Partial_Revea
     // memory order, so we sort the slot offset array.  The sorting
     // is required by the verify_live_heap code.
     qsort(result, num_weak_ref_fields, sizeof(*result), intcompare);
-    
+
     return result;
 }
 
@@ -5796,7 +5796,7 @@ GCEXPORT(void, gc_class_prepared) (Class_Handle ch, VTable_Handle vth) {
         gc_set_prop_array(vt);
         // Get the size of an element.
         vt->get_gcvt()->gc_array_element_size = class_element_size(ch);
-        
+
         // Place the byte offset to the first element of the array in the gc private part of the vtable.
         //unsigned int the_offset = array_first_element_offset_unboxed(array_element_class);
         unsigned int the_offset = vector_first_element_offset_unboxed(array_element_class);
@@ -5808,24 +5808,24 @@ GCEXPORT(void, gc_class_prepared) (Class_Handle ch, VTable_Handle vth) {
 #else
         the_offset = 12;
 #endif
-        // REVIEW vsm 03-Aug-2002 -- The following assertion fails on IPF. 
+        // REVIEW vsm 03-Aug-2002 -- The following assertion fails on IPF.
         // Reviewed by RLH 14-Aug-02 I am waiting for MC to provide interface to size information
         // so that this assert no longer is needed. But for now removing it is OK.
         //
         //assert(the_offset == sizeof(ORP_Vector));
 #endif //NUM_EXTRA_OBJ_HEADER_WORDS
-        
+
 #ifdef ORP_POSIX
         // If Linux does not align 2 word items then this is the offset.
         //the_offset = 12; BUGBUG
 #endif
-        
+
 #ifndef POINTER64
         // I shouldn't actually depend on this fact but I would like to know if it happens.
         // assert ((vt->gc_array_element_size == 8)? (the_offset == 16) : (the_offset == 12)); BUGBUG
 #endif
         vt->get_gcvt()->gc_array_first_element_offset = the_offset;
-        
+
         if (!class_is_non_ref_array (ch)) {
             vt->get_gcvt()->gc_object_has_slots = true;
         }
@@ -5842,12 +5842,12 @@ GCEXPORT(void, gc_class_prepared) (Class_Handle ch, VTable_Handle vth) {
     }
     //**
     // Mark for deletion.
-    // Check that they are correct.    
+    // Check that they are correct.
     //assert (vt->gc_class_properties == vt->class_properties);
     //**
     unsigned int size = class_get_boxed_data_size(ch);
     vt->get_gcvt()->gc_allocated_size = size;
-   
+
     // Build the offset array.
     vt->get_gcvt()->gc_number_of_slots = 0;
     vt->get_gcvt()->gc_ref_offset_array = build_slot_offset_array(ch, vt);
@@ -5858,22 +5858,22 @@ GCEXPORT(void, gc_class_prepared) (Class_Handle ch, VTable_Handle vth) {
     // FIX FIX FIX....class_get_name() return a pointer to a static and will change on next invocation
     vt->get_gcvt()->gc_class_name = class_get_name(ch);
     assert (vt->get_gcvt()->gc_class_name);
-    
+
     // We always fuse strings... If this aborts at some point it is most likely because
     // the string type has been changed not to include a "value"field. So look at the
     // string type and figure out if this optimization is needs to be eliminated.
-    
+
     vt->get_gcvt()->gc_fuse_info = NULL;
 
 } //gc_class_prepared
 
-// If we are mangling pointers then no inlining, 
+// If we are mangling pointers then no inlining,
 // instead force all allocation through the gc allocation routines.
 GCEXPORT(Boolean, gc_supports_frontier_allocation) (unsigned *offset_of_current, unsigned *offset_of_limit) {
 #ifdef MANGLEPOINTERS
     // Code to check ensure inlining is really off.
     *offset_of_current = NULL;
-    *offset_of_limit = NULL;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           
+    *offset_of_limit = NULL;
     return FALSE;
 #else
     GC_Nursery_Info *dummy = NULL;
@@ -5901,7 +5901,7 @@ unsigned int get_object_size_with_vtable(Partial_Reveal_VTable *vtable,Partial_R
     if (arrayp) {
         unsigned int sz;
         sz = orp_vector_size(vtable->get_gcvt()->gc_clss, vector_get_length_with_vt((Vector_Handle)p_obj,vtable));
-        return sz; 
+        return sz;
     } else {
         return vtable->get_gcvt()->gc_allocated_size;
     }
@@ -5932,10 +5932,10 @@ GCEXPORT(Boolean, gc_update_vtable)(Managed_Object_Handle object, Allocation_Han
 }
 
 GCEXPORT(unsigned, gc_get_tenure_offset)(void) {
-	return (unsigned)(((GC_Thread_Info*)0)->get_nursery());
+	return (uintptr_t)(((GC_Thread_Info*)0)->get_nursery());
 }
 
-#ifdef __X86_64__
+#ifdef __x86_64__
 
 typedef struct {
     char prt_reserved[PILLAR_VSE_SIZE];
@@ -5972,8 +5972,8 @@ void tgc_m2u_unwinder(struct PrtStackIterator *si, void *lvse) {
     prev_pseudo = (tgc_pillar2c_pseudo*)prv->latest_pseudo_frame;
 
     // The problem is that we need the rip of the current call site, not the one from the pseudo-frame.
-    prtSetStackIteratorFields(si, 
-                              prv->rip_estimate,
+    prtSetStackIteratorFields(si,
+                              (PrtCodeAddress*)prv->rip_estimate,
                               /*esp*/    (PrtRegister)prv->latest_pseudo_frame,
                               /*rbxPtr*/ si->rbxPtr,
                               /*rbpPtr*/ si->rbpPtr,
@@ -5986,17 +5986,15 @@ void tgc_m2u_unwinder(struct PrtStackIterator *si, void *lvse) {
 }
 
 extern "C" void tgc_enter_unmanaged(_tgc_m2u_vse *vse, void *pseudo, void *task) {
-    vse->realM2uUnwinder = tgc_m2u_unwinder;
+    vse->realM2uUnwinder = (void (*)(void*, void*))tgc_m2u_unwinder;
     vse->latest_pseudo_frame = pseudo;
     vse->rip_estimate = ((void**)vse)-1;
-    enterUnmanagedCode(task,(PrtVseHandle)vse);
+    enterUnmanagedCode((PrtTaskStruct*)task,(PrtVseHandle)vse);
 }
 
 extern "C" void tgc_reenter_managed(void *task) {
-    reenterManagedCode(task);
+    reenterManagedCode((PrtTaskStruct*)task);
 }
 
 
-#endif // __X86_64__
-
-
+#endif // __x86_64__

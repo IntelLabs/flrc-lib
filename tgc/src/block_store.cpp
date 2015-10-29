@@ -47,7 +47,7 @@ extern POINTER_SIZE_INT g_cmd_line_heap_base;
 
 typedef UINT (WINAPI *PGetLargePageMinimum) ();
 
-static BOOL 
+static BOOL
 SetPrivilege (
               HANDLE hToken,          // access token handle
               LPCTSTR lpszPrivilege,  // name of privilege to enable/disable
@@ -55,39 +55,39 @@ SetPrivilege (
 {
     TOKEN_PRIVILEGES tp;
     LUID luid;
-    
-    if ( !LookupPrivilegeValue( 
+
+    if ( !LookupPrivilegeValue(
         NULL,            // lookup privilege on local system
-        lpszPrivilege,   // privilege to lookup 
+        lpszPrivilege,   // privilege to lookup
         &luid ) ) {      // receives LUID of privilege
-        printf("LookupPrivilegeValue error: %u\n", GetLastError() ); 
-        return FALSE; 
+        printf("LookupPrivilegeValue error: %u\n", GetLastError() );
+        return FALSE;
     }
-    
+
     tp.PrivilegeCount = 1;
     tp.Privileges[0].Luid = luid;
     if (bEnablePrivilege)
         tp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
     else
         tp.Privileges[0].Attributes = 0;
-    
+
     // Enable the privilege or disable all privileges.
-    
+
     AdjustTokenPrivileges(
-        hToken, 
-        FALSE, 
-        &tp, 
-        sizeof(TOKEN_PRIVILEGES), 
-        (PTOKEN_PRIVILEGES) NULL, 
-        (PDWORD) NULL); 
-    
+        hToken,
+        FALSE,
+        &tp,
+        sizeof(TOKEN_PRIVILEGES),
+        (PTOKEN_PRIVILEGES) NULL,
+        (PDWORD) NULL);
+
     // Call GetLastError to determine whether the function succeeded.
-    
-    if (GetLastError() != ERROR_SUCCESS) { 
-        printf("AdjustTokenPrivileges failed: %u\n", GetLastError() ); 
-        return FALSE; 
+
+    if (GetLastError() != ERROR_SUCCESS) {
+        printf("AdjustTokenPrivileges failed: %u\n", GetLastError() );
+        return FALSE;
     }
-    
+
     return TRUE;
 } // SetPrivilege
 
@@ -96,30 +96,30 @@ SetPrivilege (
 // large pages, otherwise 0
 
 static int adjustprivileges() {
-    
+
     HMODULE h;
     HANDLE accessToken;
     //UINT_PTR uipMemSize, uipMinPageSize, uipPerAllocSize, uipAllocCalls, uipCount, uipTotalAlloc;
     //PVOID pAllocArray;
     PGetLargePageMinimum m_GetLargePageMinimum;
-    
-    if (!(OpenProcessToken (GetCurrentProcess (), 
-        TOKEN_ALL_ACCESS, &accessToken) 
+
+    if (!(OpenProcessToken (GetCurrentProcess (),
+        TOKEN_ALL_ACCESS, &accessToken)
         && SetPrivilege (accessToken, "SeLockMemoryPrivilege", TRUE))) {
         orp_cout << "Lock Page Privilege not set.\n" << std::endl;
         return 0;
         //exit(EXIT_FAILURE);
     }
-    
+
     h = GetModuleHandleA("kernel32.dll");
-    
+
     m_GetLargePageMinimum = (PGetLargePageMinimum) GetProcAddress(h, "GetLargePageMinimum");
     if (!m_GetLargePageMinimum) {
         orp_cout << "Cannot locate GetLargePageMinimum.\n" << std::endl;
         return 0;
         //exit(EXIT_FAILURE);
     }
-    
+
     return m_GetLargePageMinimum();
 }
 #endif // _IA64_
@@ -141,9 +141,9 @@ bool force_unaligned_heap = false;
 Block_Store::Block_Store(POINTER_SIZE_INT initial_heap_size, POINTER_SIZE_INT final_heap_size, unsigned int block_size_bytes) {
     assert(initial_heap_size == final_heap_size);
     assert(block_size_bytes == GC_BLOCK_SIZE_BYTES);
-    
+
     POINTER_SIZE_INT final_heap_size_extra = (POINTER_SIZE_INT) Slot::additional_padding_for_heap_alignment();
-    
+
     // If compressed vtable pointers are used, and moving GC is used,
     // then the heap size must be within 4GB.  This is because the
     // obj_info field in the object header needs to be used as a
@@ -167,22 +167,22 @@ Block_Store::Block_Store(POINTER_SIZE_INT initial_heap_size, POINTER_SIZE_INT fi
         orp_exit(17002);
     }
 #endif
-    
-    
+
+
     _block_size_bytes = block_size_bytes;
-    
+
     //
     // Get information about the current system. (Page size, num processors, etc.)
     //
     int64 page_size = _machine_page_size_bytes;
-    
+
     void *gc_free = NULL;
 #ifdef CONCORD
     gc_free = malloc_shared(final_heap_size + 0xFFFF);
     // alignment happens later
-    
+
     if(gc_free == NULL) {
-#ifdef _WINDOWS        
+#ifdef _WINDOWS
         DWORD error_code = GetLastError();
         orp_cout << "Error: Garbage Collector failed to reserve ";
         orp_cout << final_heap_size_bytes;
@@ -199,12 +199,12 @@ Block_Store::Block_Store(POINTER_SIZE_INT initial_heap_size, POINTER_SIZE_INT fi
     }
 #else
 #ifdef ORP_POSIX
-    
+
     gc_free = malloc(final_heap_size + 0xFFFF);
     // alignment happens later
-    
+
     if(gc_free == NULL) {
-#ifdef _WINDOWS        
+#ifdef _WINDOWS
         DWORD error_code = GetLastError();
         orp_cout << "Error: Garbage Collector failed to reserve ";
         orp_cout << final_heap_size_bytes;
@@ -220,7 +220,7 @@ Block_Store::Block_Store(POINTER_SIZE_INT initial_heap_size, POINTER_SIZE_INT fi
 #endif
     }
 #else // !ORP_POSIX
-    
+
     // JMS 2003-05-23.  Getting virtual memory from Windows.  If large_pages is
     // specified, we either acquire the entire heap with large pages or we exit.
     // If compressed_references is specified, we ask for an additional 4GB and
@@ -232,7 +232,7 @@ Block_Store::Block_Store(POINTER_SIZE_INT initial_heap_size, POINTER_SIZE_INT fi
     //
     // Since VirtualAlloc with large pages seems to require committing up front,
     // we actually waste 4GB.
-    
+
     DWORD action = MEM_RESERVE;
     DWORD action_large = 0;
     DWORD protection = PAGE_NOACCESS;
@@ -245,7 +245,7 @@ Block_Store::Block_Store(POINTER_SIZE_INT initial_heap_size, POINTER_SIZE_INT fi
         action_large = MEM_LARGE_PAGES;
         protection = PAGE_READWRITE;
         final_heap_size = (final_heap_size+minimum_page_size-1)&
-            ~(minimum_page_size-1); 
+            ~(minimum_page_size-1);
     }
 #endif // _IA64_
     if ((gc_free = VirtualAlloc((LPVOID)g_cmd_line_heap_base,
@@ -272,7 +272,7 @@ Block_Store::Block_Store(POINTER_SIZE_INT initial_heap_size, POINTER_SIZE_INT fi
             orp_exit(error_code);
         }
     }
-    
+
     if (final_heap_size_extra > 0) {
         void *old_gc_free = gc_free;
         gc_free = (void *) (((POINTER_SIZE_INT)gc_free + final_heap_size_extra) &
@@ -289,7 +289,7 @@ Block_Store::Block_Store(POINTER_SIZE_INT initial_heap_size, POINTER_SIZE_INT fi
             }
         }
     }
-    
+
     // Commit of NT (and W2K)
     if (protection == PAGE_NOACCESS) {
         protection = PAGE_READWRITE;
@@ -306,43 +306,43 @@ Block_Store::Block_Store(POINTER_SIZE_INT initial_heap_size, POINTER_SIZE_INT fi
             orp_exit(error_code);
         }
     }
-    
+
 #endif // !ORP_POSIX
 #endif // CONCORD
-    
-    
-    void *gc_ceiling = (void *) ((POINTER_SIZE_INT) gc_free + final_heap_size);
-    
+
+
+    void *gc_ceiling = (void *) ((uintptr_t) gc_free + final_heap_size);
+
     // Align ceiling to block_size_bytes
-    gc_ceiling = (void *) (((POINTER_SIZE_INT) gc_ceiling) & GC_BLOCK_HIGH_MASK);
-    
+    gc_ceiling = (void *) (((uintptr_t) gc_ceiling) & GC_BLOCK_HIGH_MASK);
+
     // Align base to block_size_bytes
-    gc_free =   (void *) ( (((POINTER_SIZE_INT) gc_free + (GC_BLOCK_SIZE_BYTES - 1)) & (~(GC_BLOCK_SIZE_BYTES - 1))) );
-    
-    
+    gc_free =   (void *) ( (((uintptr_t) gc_free + (GC_BLOCK_SIZE_BYTES - 1)) & (~(GC_BLOCK_SIZE_BYTES - 1))) );
+
+
     _p_heap_base     = gc_free;
     _p_heap_ceiling  = gc_ceiling;
-    _heap_size_bytes = (POINTER_SIZE_INT) _p_heap_ceiling - (POINTER_SIZE_INT) _p_heap_base;
-    
+    _heap_size_bytes = (uintptr_t) _p_heap_ceiling - (uintptr_t) _p_heap_base;
+
     if (verbose_gc) {
         orp_cout << " Heap base    is " << gc_free    << std::endl;
         orp_cout << " Heap ceiling is " << gc_ceiling << std::endl;
     }
-    
+
     _initialize_block_tables(_p_heap_base, _heap_size_bytes);
-    
+
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     _heap_compaction_ratio = GC_FRACTION_OF_HEAP_INCREMENTAL_COMPACTED_DURING_EACH_GC;
     if(g_heap_compact_cmd_override) {
         _heap_compaction_ratio = g_heap_compact_cmd_override;
     }
-        
+
     _compaction_type_for_this_gc = gc_bogus_compaction;
     _compaction_blocks_low_index = 0;
     // Compact an eigth of the heap each GC cycle
     _compaction_blocks_high_index = _number_of_blocks_in_heap / _heap_compaction_ratio;
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    
+
     _per_gc_thread_compaction_blocks_low_index = (unsigned int *) malloc(g_num_cpus * sizeof(unsigned int));
     if (!(	_per_gc_thread_compaction_blocks_low_index)) {
         orp_cout << "malloc failed" << std::endl;
@@ -356,12 +356,12 @@ Block_Store::Block_Store(POINTER_SIZE_INT initial_heap_size, POINTER_SIZE_INT fi
     }
     memset(_per_gc_thread_compaction_blocks_high_index, 0, g_num_cpus * sizeof(unsigned int));
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    
+
     // Record the heap base for compressed 32-bit pointers.
     // This requires a single contiguous block of memory, so be sure that
     // this isn't done twice.
     assert(Partial_Reveal_Object::heap_base == 0);
-    Partial_Reveal_Object::heap_base = (POINTER_SIZE_INT) _p_heap_base;
+    Partial_Reveal_Object::heap_base = (uintptr_t) _p_heap_base;
     Slot::init(gc_free, gc_ceiling);
 }
 
@@ -378,10 +378,10 @@ Block_Store::~Block_Store() {
 static volatile void *block_store_lock = (void *)0;
 
 
-// Gets the lock 
+// Gets the lock
 static inline void get_block_store_lock() {
-    while (InterlockedCompareExchangePointer ((PVOID *)&block_store_lock, 
-        (PVOID)1, 
+    while (InterlockedCompareExchangePointer ((PVOID *)&block_store_lock,
+        (PVOID)1,
         (PVOID)0) == (PVOID)1) {
         while (block_store_lock == (void *)1) {
             orp_thread_sleep(1);
@@ -397,30 +397,30 @@ static inline void release_block_store_lock() {
 
 void Block_Store::_initialize_block_tables(void *p_heap_start_address, POINTER_SIZE_INT heap_size_in_bytes) {
     // Start off with small blocks each
-    
+
     _number_of_blocks_in_heap = (unsigned int)(heap_size_in_bytes / (POINTER_SIZE_INT)_block_size_bytes);
-    
+
     if (_number_of_blocks_in_heap  >= GC_MAX_BLOCKS) {
         orp_cout << "Internal error - attempt to allocate a heap larger than orp build permits, adjust GC_MAX_BLOCKS and rebuild orp or reduce heap size." << std::endl;
         orp_exit (1);
     }
-    
+
     memset(_blocks_in_block_store, 0, sizeof(block_store_info) * GC_MAX_BLOCKS);
-    
+
     void *block_address = p_heap_start_address;
 	int free_space = GC_BLOCK_INFO_SIZE_BYTES - sizeof(block_info);
 	if(free_space < 0) {
 		printf("Size of block_info exceeds GC_BLOCK_INFO_SIZE_BYTES.\n");
 		assert(0);
 	}
-    
+
     for (unsigned int i = 0; i < _number_of_blocks_in_heap; i++) {
         _blocks_in_block_store[i].block = (block_info *) block_address;
-        
-        // Clear out the block info...actually lets clear the entire block since this helps to page 
+
+        // Clear out the block info...actually lets clear the entire block since this helps to page
         // in the entire heap to physical memory. For large IPF heaps this makes a difference..
         //memset(_blocks_in_block_store[i].block, 0, GC_BLOCK_SIZE_BYTES);
-        
+
         _blocks_in_block_store[i].block_is_free = true;
         //_blocks_in_block_store[i].block->is_free_block = true;
         _blocks_in_block_store[i].number_of_blocks = 1;
@@ -428,7 +428,7 @@ void Block_Store::_initialize_block_tables(void *p_heap_start_address, POINTER_S
 		_blocks_in_block_store[i].block->age = 0;
 
 		memset( ((char *)block_address) + sizeof(block_info),0xAA, free_space );
-        
+
         // per thread remembered sets/live object lists etc.
         _blocks_in_block_store[i].per_thread_slots_into_compaction_block = (Remembered_Set **) malloc(g_num_cpus * sizeof(void *));
         if (!_blocks_in_block_store[i].per_thread_slots_into_compaction_block) {
@@ -436,14 +436,14 @@ void Block_Store::_initialize_block_tables(void *p_heap_start_address, POINTER_S
             orp_exit (411);
         }
         memset(_blocks_in_block_store[i].per_thread_slots_into_compaction_block, 0, g_num_cpus * sizeof(void *));
-        
+
         _blocks_in_block_store[i].total_live_objects_in_this_block = 0;
-        
+
         // move to next block
-        block_address = (void *) ((POINTER_SIZE_INT)block_address + _block_size_bytes);
+        block_address = (void *) ((uintptr_t)block_address + _block_size_bytes);
     }
-    
-    assert(block_address == (void *) ((POINTER_SIZE_INT) p_heap_start_address + heap_size_in_bytes));
+
+    assert(block_address == (void *) ((uintptr_t) p_heap_start_address + heap_size_in_bytes));
     _num_free_blocks = _number_of_blocks_in_heap;
     // Initlialize the hint to the start of block list
     _free_block_search_hint = 0;
@@ -454,12 +454,12 @@ void Block_Store::characterize_blocks_in_heap () {
     POINTER_SIZE_INT used_blocks = 0;
     POINTER_SIZE_INT single_blocks = 0;
     POINTER_SIZE_INT multi_blocks = 0;
-    
+
     POINTER_SIZE_INT info_nurseries = 0;
     POINTER_SIZE_INT info_free_bytes = 0;
     POINTER_SIZE_INT info_used_bytes = 0;
     POINTER_SIZE_INT info_multi_blocks = 0;
-    
+
     unsigned int i;
     for (i = 0; i < _number_of_blocks_in_heap; i++) {
         if (_blocks_in_block_store[i].block_is_free) {
@@ -467,26 +467,26 @@ void Block_Store::characterize_blocks_in_heap () {
         } else {
             used_blocks += _blocks_in_block_store[i].number_of_blocks;
         }
-        
+
         block_info *the_info = _blocks_in_block_store[i].block;
         //  xx      assert(the_info->is_free_block == _blocks_in_block_store[i].block_is_free);
         if (the_info->in_nursery_p) {
             info_nurseries++;
-            //  xx          assert(the_info->is_free_block == _blocks_in_block_store[i].block_is_free); 
+            //  xx          assert(the_info->is_free_block == _blocks_in_block_store[i].block_is_free);
         }
         info_free_bytes += the_info->block_free_bytes;
         info_used_bytes += the_info->block_used_bytes;
-        
+
         if (_blocks_in_block_store[i].number_of_blocks != 1) {
             multi_blocks += _blocks_in_block_store[i].number_of_blocks;
             i += _blocks_in_block_store[i].number_of_blocks - 1;
         } else {
             single_blocks++;
         }
-        
+
     }
-    
-    printf ("Total blocks = %d, single blocks = %d, blocks in multi blocks = %d, free blocks =  %d, used blocks = %d, nurseries = %d info_free_bytes = %d, info_used_bytes = %d, accounted for bytes = %d \n", 
+
+    printf ("Total blocks = %d, single blocks = %d, blocks in multi blocks = %d, free blocks =  %d, used blocks = %d, nurseries = %d info_free_bytes = %d, info_used_bytes = %d, accounted for bytes = %d \n",
         _number_of_blocks_in_heap, single_blocks, multi_blocks, free_blocks, used_blocks, info_nurseries, info_free_bytes, info_used_bytes, info_free_bytes + info_used_bytes);
 }
 
@@ -503,10 +503,10 @@ void Block_Store::set_free_status_for_all_sub_blocks_in_block(unsigned int block
 
 
 bool Block_Store::block_store_can_satisfy_request(unsigned int blocks_needed) {
-    
+
     get_block_store_lock();
     unsigned int index = 0;
-    
+
     while (index < _number_of_blocks_in_heap) {
         if (_blocks_in_block_store[index].block_is_free == true) {
             if (_blocks_in_block_store[index].number_of_blocks >= blocks_needed) {
@@ -521,15 +521,15 @@ bool Block_Store::block_store_can_satisfy_request(unsigned int blocks_needed) {
 }
 
 //
-// If size > GC_BLOCK_ALLOC_SIZE then on needs to use more than one block and the 
+// If size > GC_BLOCK_ALLOC_SIZE then on needs to use more than one block and the
 // single object block flag needs to be set in the block_store_info struct indexed in the
 // _blocks_in_block_store index.
 //
 
 block_info * Block_Store::p_get_multi_block(unsigned int size, bool for_chunks_pool, bool do_alloc) {
     // Control the number of blocks that go into block chunks pool if
-    // I run below the watermark and that is what the request is for 
-    // This way we can satisfy LOS and muti-block requests even if block 
+    // I run below the watermark and that is what the request is for
+    // This way we can satisfy LOS and muti-block requests even if block
     // store is dangerously low without doing a collection
 
 #if 0
@@ -541,37 +541,37 @@ block_info * Block_Store::p_get_multi_block(unsigned int size, bool for_chunks_p
     if (for_chunks_pool && (_num_free_blocks <= get_block_store_low_watermark_free_blocks())) {
         return NULL;
     }
-    
+
     unsigned int number_of_blocks_needed = 1;
-    
+
     if (size > GC_BLOCK_ALLOC_SIZE) {
         number_of_blocks_needed = ((size + GC_BLOCK_INFO_SIZE_BYTES) / _block_size_bytes) + 1;
         assert (number_of_blocks_needed > 1);
         assert ((GC_BLOCK_ALLOC_SIZE + GC_BLOCK_INFO_SIZE_BYTES) == GC_BLOCK_SIZE_BYTES);
     }
-    
+
     get_block_store_lock();
-    
+
     bool search_from_hint_failed = false;
 	bool reclaimed_free = false;
     unsigned int index = 0;
-    
+
 retry_p_get_multi_block_label:
     if (search_from_hint_failed) {
         index = 0;
     } else {
         index = _free_block_search_hint;
     }
-    
+
     while (index < _number_of_blocks_in_heap) {
-        
+
         if (_blocks_in_block_store[index].block_is_free == true) {
-            
+
             unsigned int number_of_blocks_found = _blocks_in_block_store[index].number_of_blocks;
             assert(number_of_blocks_found > 0);
             unsigned int j = index + _blocks_in_block_store[index].number_of_blocks;
             unsigned int k = index;
-            
+
             while (number_of_blocks_found < number_of_blocks_needed) {
                 if (_blocks_in_block_store[j].block_is_free == false) {
                     break;
@@ -579,22 +579,22 @@ retry_p_get_multi_block_label:
                 unsigned int num_blocks = _blocks_in_block_store[j].number_of_blocks;
                 assert(num_blocks > 0);
                 number_of_blocks_found += num_blocks;
-                k = j;	
+                k = j;
                 j += num_blocks;
             }
-            
+
             if (number_of_blocks_found >= number_of_blocks_needed) {
                 if(do_alloc) {
                     // Found the exact or greater number of blocks (than) needed
                     unsigned int check_debug = _blocks_in_block_store[index].number_of_blocks;
-                
+
                     assert(_blocks_in_block_store[index].block);
                     // clear out the block_info before returning the block
                     memset(_blocks_in_block_store[index].block, 0, sizeof(block_info));
     //                memset(_blocks_in_block_store[index].block, 0, GC_BLOCK_INFO_SIZE_BYTES);
-                
+
                     set_free_status_for_all_sub_blocks_in_block(index, false);
-                    // Set is_free_block to false    
+                    // Set is_free_block to false
                     //_blocks_in_block_store[index].block->is_free_block = false; // xx Added RLH 8/04
 
                     unsigned int z = index + _blocks_in_block_store[index].number_of_blocks;
@@ -602,34 +602,34 @@ retry_p_get_multi_block_label:
                         // This is a multi-block..... Zero out info for ancillary blocks (uptil index k)
                         assert(number_of_blocks_found > 1);
                         assert(_blocks_in_block_store[z].block_is_free == true);
-                    
+
                         // make the entire super-block not-free
                         set_free_status_for_all_sub_blocks_in_block(z, false);
                         // Only set the first block ->is_free_block since the other block headers will be overwritten
                         assert(_blocks_in_block_store[z].block);
                         // clear out the block info before collapsing this block into the bigger one
                         memset(_blocks_in_block_store[z].block, 0, GC_BLOCK_INFO_SIZE_BYTES);
-                    
+
                         _blocks_in_block_store[z].block = NULL;
-                    
+
                         check_debug += _blocks_in_block_store[z].number_of_blocks;
-                        
+
                         // Block at "index" will keep track of the count of this
                         unsigned int save_z = z;
                         z += _blocks_in_block_store[z].number_of_blocks;
                         _blocks_in_block_store[save_z].number_of_blocks = 0;
                     }
-                
+
                     // now block at "index" has either exactly equal or more blocks than needed
                     assert(check_debug == number_of_blocks_found);
-                
+
                     if (number_of_blocks_found > number_of_blocks_needed) {
                         // chop off remaining and return exactly what is needed.
                         POINTER_SIZE_INT chopped_free_index = index + number_of_blocks_needed;
                         assert(_blocks_in_block_store[chopped_free_index].block == NULL);
-                    
-                        void *block_address = (void *) ((POINTER_SIZE_INT)_p_heap_base + (chopped_free_index << GC_BLOCK_SHIFT_COUNT));
-                        POINTER_SIZE_INT check_index = (POINTER_SIZE_INT) (((POINTER_SIZE_INT) block_address - (POINTER_SIZE_INT) _p_heap_base) >> GC_BLOCK_SHIFT_COUNT);
+
+                        void *block_address = (void *) ((uintptr_t)_p_heap_base + (chopped_free_index << GC_BLOCK_SHIFT_COUNT));
+                        POINTER_SIZE_INT check_index = (POINTER_SIZE_INT) (((uintptr_t) block_address - (uintptr_t) _p_heap_base) >> GC_BLOCK_SHIFT_COUNT);
                         assert(check_index == chopped_free_index);
                         // Give the chopped portion a new address and set it FREE!!!
                         _blocks_in_block_store[chopped_free_index].block = (block_info *) block_address;
@@ -638,16 +638,16 @@ retry_p_get_multi_block_label:
                         //_blocks_in_block_store[chopped_free_index].block->is_free_block = true; // RLH Aug 04
                         _blocks_in_block_store[index].number_of_blocks = number_of_blocks_needed;
                         _blocks_in_block_store[index].block->number_of_blocks = _blocks_in_block_store[index].number_of_blocks;
-                    
+
                     } else {
                         assert(number_of_blocks_found == number_of_blocks_needed);
                         _blocks_in_block_store[index].number_of_blocks = number_of_blocks_needed;
                         _blocks_in_block_store[index].block->number_of_blocks = _blocks_in_block_store[index].number_of_blocks;
                     }
-                
-                    assert(_blocks_in_block_store[index].number_of_blocks == number_of_blocks_needed);		
-                    assert(_blocks_in_block_store[index].block->number_of_blocks == number_of_blocks_needed);		
-                
+
+                    assert(_blocks_in_block_store[index].number_of_blocks == number_of_blocks_needed);
+                    assert(_blocks_in_block_store[index].block->number_of_blocks == number_of_blocks_needed);
+
                     // points back to the block store info
                     _blocks_in_block_store[index].block->block_store_info_index = index;
                     _blocks_in_block_store[index].block->bsi = &_blocks_in_block_store[index];
@@ -655,35 +655,35 @@ retry_p_get_multi_block_label:
                     _num_free_blocks -= number_of_blocks_needed;
                     // Update hint for next search
                     _free_block_search_hint = index;
-                
-                    if (number_of_blocks_needed > 1) { 
+
+                    if (number_of_blocks_needed > 1) {
                         // ***SOB LOOKUP*** We need to set the is_single_object_block to true....
                         unsigned int sob_index;
                         for (sob_index = 0; sob_index < number_of_blocks_needed; sob_index++) {
                             assert (_blocks_in_block_store[sob_index + index].is_single_object_block == false);
                             _blocks_in_block_store[sob_index + index].is_single_object_block = true;
                         }
-                    }            
+                    }
                     gc_trace_block(_blocks_in_block_store[index].block, "p_get_multi_block returns this block");
                 }
                 release_block_store_lock();
-                
-                // Set is_free_block to false    
+
+                // Set is_free_block to false
                 //assert (_blocks_in_block_store[index].block->is_free_block == false); // xx Added RLH 8/04
                 return _blocks_in_block_store[index].block;
-            } 
+            }
         }
         // Jump ahead of this free chunk of small size or used chunk of any size
         index += _blocks_in_block_store[index].number_of_blocks;
-        
-    } // while 
-    
+
+    } // while
+
     if (search_from_hint_failed == false) {
         // Try again...exactly once more....this time from index 0;
         search_from_hint_failed = true;
         goto retry_p_get_multi_block_label;
     }
-    
+
 	if(!reclaimed_free && !for_chunks_pool) {
 		p_global_gc->return_free_blocks_to_block_store_prob(0.5, false, false, true);
 		reclaimed_free = true;
@@ -693,9 +693,9 @@ retry_p_get_multi_block_label:
     if (stats_gc) {
         orp_cout << "p_get_multi_block() returns NULL -- , _num_free_blocks is " << _num_free_blocks << " requested " << number_of_blocks_needed << std::endl;
     }
-    
+
     release_block_store_lock();
-    
+
     return NULL;
 }
 
@@ -708,30 +708,30 @@ block_info * Block_Store::p_get_new_block(bool for_chunks_pool) {
 
 void Block_Store::link_free_blocks (block_info *freed_block, unsigned int num_blocks, bool has_block_store_lock) {
     gc_trace_block(freed_block, " in link_free_block");
-    
+
     assert(freed_block <  _p_heap_ceiling);
     assert(freed_block >= _p_heap_base);
 
 	if(!has_block_store_lock) {
 		get_block_store_lock();
 	}
-    
-    unsigned int block_store_block_number = (unsigned int) (((POINTER_SIZE_INT) freed_block - (POINTER_SIZE_INT) _p_heap_base) >> GC_BLOCK_SHIFT_COUNT);
-    
+
+    unsigned int block_store_block_number = (unsigned int) (((uintptr_t) freed_block - (uintptr_t) _p_heap_base) >> GC_BLOCK_SHIFT_COUNT);
+
     // points back to the block store info
     assert(freed_block->block_store_info_index == block_store_block_number);
-    
+
     assert(_blocks_in_block_store[block_store_block_number].block == freed_block);
     assert(_blocks_in_block_store[block_store_block_number].number_of_blocks == num_blocks);
     assert(_blocks_in_block_store[block_store_block_number].block_is_free == false);
-    
+
     for (unsigned int i = block_store_block_number; i < (num_blocks + block_store_block_number) ; i++) {
         _blocks_in_block_store[i].total_live_objects_in_this_block = 0;
         _blocks_in_block_store[i].is_compaction_block = false; // Clear is compaction block field
 
-        _blocks_in_block_store[i].block_for_sliding_compaction_allocation_pointer_computation = NULL;		
-        _blocks_in_block_store[i].block_for_sliding_compaction_slot_updates = NULL;		
-        _blocks_in_block_store[i].block_for_sliding_compaction_object_slides = NULL;		
+        _blocks_in_block_store[i].block_for_sliding_compaction_allocation_pointer_computation = NULL;
+        _blocks_in_block_store[i].block_for_sliding_compaction_slot_updates = NULL;
+        _blocks_in_block_store[i].block_for_sliding_compaction_object_slides = NULL;
         assert(_blocks_in_block_store[i].per_thread_slots_into_compaction_block);
         for (unsigned int cpu = 0; cpu < g_num_cpus; cpu++) {
             assert(_blocks_in_block_store[i].per_thread_slots_into_compaction_block[cpu] == NULL);
@@ -744,11 +744,11 @@ void Block_Store::link_free_blocks (block_info *freed_block, unsigned int num_bl
             free(freed_block->block_free_areas);
         }
         freed_block->block_free_areas = NULL;
-        
+
         // ***SOB LOOKUP*** Clear the is_single_object_block field as we release the blocks.
         _blocks_in_block_store[i].is_single_object_block = false;
     }
-    
+
     // check integrity of sub-blocks if any
     if (num_blocks > 1) {
         for (unsigned int i = block_store_block_number + 1; i < (num_blocks + block_store_block_number) ; i++) {
@@ -757,19 +757,19 @@ void Block_Store::link_free_blocks (block_info *freed_block, unsigned int num_bl
             assert(_blocks_in_block_store[i].block_is_free == false);
         }
     }
-    
+
     // clear out the block info of the returned block
     memset(freed_block, 0, sizeof(block_info));
-    
+
     // Make the entire block free
     set_free_status_for_all_sub_blocks_in_block(block_store_block_number, true);
     //freed_block->is_free_block = true;
-    
+
     // Increment free count
     _num_free_blocks += num_blocks;
-    
+
     // block has been returned...nothing more to do.
-    
+
 	if(!has_block_store_lock) {
 	    release_block_store_lock();
 	}
@@ -778,24 +778,24 @@ void Block_Store::link_free_blocks (block_info *freed_block, unsigned int num_bl
 
 void Block_Store::coalesce_free_blocks() {
     get_block_store_lock();
-    
+
     unsigned int number_of_blocks_coalesced = 0;
-    
+
     // Dont expect any multiblocks for now....
     unsigned int index = 0;
-    
+
     while (index < _number_of_blocks_in_heap) {
-        
+
         if (_blocks_in_block_store[index].block_is_free == true) {
-            
+
             // Points to valid block
             assert(_blocks_in_block_store[index].block);
-            
+
             unsigned int j = index + _blocks_in_block_store[index].number_of_blocks;
-            
+
             while ((j < _number_of_blocks_in_heap) && (_blocks_in_block_store[j].block_is_free == true)) {
-                
-                assert(_blocks_in_block_store[j].block);					
+
+                assert(_blocks_in_block_store[j].block);
                 // clear out the block info
                 memset(_blocks_in_block_store[j].block, 0, GC_BLOCK_INFO_SIZE_BYTES);
                 // Coalesced and gone
@@ -814,11 +814,11 @@ void Block_Store::coalesce_free_blocks() {
         if ((_free_block_search_hint > index) && (_free_block_search_hint < (index + _blocks_in_block_store[index].number_of_blocks))) {
             _free_block_search_hint = index;	// Adjust to first block
         }
-        
+
         // Jump ahead of the coalesced region and start looking after that ends
         index += _blocks_in_block_store[index].number_of_blocks;
     }
-    if (stats_gc) {		
+    if (stats_gc) {
         orp_cout << "Block_Store::coalesce_free_blocks() coalesced " << number_of_blocks_coalesced << " blocks." << std::endl;
     }
     release_block_store_lock();
@@ -839,13 +839,13 @@ inline void Block_Store::get_compaction_limits_based_on_compaction_type_for_this
     if (_compaction_type_for_this_gc == gc_full_heap_sliding_compaction) {
         *low = 0;
         *high = _number_of_blocks_in_heap;
-        
+
         // Reset so that the next GC after a full sliding compaction starts at the beginning of the heap.
         _compaction_blocks_low_index  = 0;
         _compaction_blocks_high_index = _number_of_blocks_in_heap / _heap_compaction_ratio;
     } else if (_compaction_type_for_this_gc == gc_incremental_sliding_compaction) {
         *low  = _compaction_blocks_low_index;
-        *high = _compaction_blocks_high_index;		
+        *high = _compaction_blocks_high_index;
     } else {
         // Only these two types are supported for now
         assert(0);
@@ -872,21 +872,21 @@ void Block_Store::determine_compaction_areas_for_this_gc(std::set<block_info *> 
                  max_blocks_to_compact &&
                  (pinned_blocks.find(_blocks_in_block_store[i].block) == pinned_blocks.end()) // If the block is not in the list of pinned blocks
                 ) {
-            
+
                 assert(_blocks_in_block_store[i].block->in_nursery_p);
                 assert(_blocks_in_block_store[i].is_compaction_block == false);
-            
+
                 _blocks_in_block_store[i].is_compaction_block = true;
                 --max_blocks_to_compact;
-            
+
                 assert(_blocks_in_block_store[i].block);
                 _blocks_in_block_store[i].block->is_compaction_block = true;
                 gc_trace_block(_blocks_in_block_store[i].block, "This block in compaction area.");
-            
+
                 _blocks_in_block_store[i].total_live_objects_in_this_block = 0;
 
 			    _blocks_in_block_store[i].block->from_block_has_been_evacuated = false;
-			    _blocks_in_block_store[i].block->is_to_block = false; 
+			    _blocks_in_block_store[i].block->is_to_block = false;
 			    gc_trace_block (  _blocks_in_block_store[i].block, "from_block_has_been_evacuated and is_to_block set to false.");
 
                 _blocks_in_block_store[i].block_for_sliding_compaction_allocation_pointer_computation = _blocks_in_block_store[i].block;
@@ -894,7 +894,7 @@ void Block_Store::determine_compaction_areas_for_this_gc(std::set<block_info *> 
                 _blocks_in_block_store[i].block_for_sliding_compaction_object_slides = _blocks_in_block_store[i].block;
             }
         }
-    
+
         // Setup regions for each GC thread to operate on
         unsigned int min_compact_blocks_per_gc_thread = (high_index - low_index) / g_num_cpus;
         unsigned int extra_tail_for_last_gc_thread    = (high_index - low_index) % g_num_cpus;
@@ -902,7 +902,7 @@ void Block_Store::determine_compaction_areas_for_this_gc(std::set<block_info *> 
         unsigned int low_index_curr  = low_index;
         unsigned int high_index_curr = low_index + min_compact_blocks_per_gc_thread;
         while (gc_thread < g_num_cpus) {
-            _per_gc_thread_compaction_blocks_low_index[gc_thread]  = low_index_curr;	
+            _per_gc_thread_compaction_blocks_low_index[gc_thread]  = low_index_curr;
             _per_gc_thread_compaction_blocks_high_index[gc_thread] = high_index_curr;
             low_index_curr   = high_index_curr;
             high_index_curr += min_compact_blocks_per_gc_thread;
@@ -918,19 +918,19 @@ void Block_Store::determine_compaction_areas_for_this_gc(std::set<block_info *> 
         // nothing
         return;
     }
-  
+
     unsigned int low_index  = 0;
     unsigned int high_index = 0;
-    
+
     get_compaction_limits_based_on_compaction_type_for_this_gc(&low_index, &high_index);
 
     assert((low_index < high_index) && (high_index <= _number_of_blocks_in_heap));
     if (stats_gc) {
         printf("Compaction limits for this GC (#%d - #%d) \n", low_index, high_index - 1);
     }
-    
+
     for (unsigned int i = low_index; i < high_index; i++) {
-        
+
         // Set for compaction all single blocks
         if ( (_blocks_in_block_store[i].number_of_blocks == 1) &&	// Only simple blocks
              (_blocks_in_block_store[i].block_is_free == false) &&	// Only used blocks
@@ -938,21 +938,21 @@ void Block_Store::determine_compaction_areas_for_this_gc(std::set<block_info *> 
              (_blocks_in_block_store[i].block->is_single_object_block == false) &&	// If they are single object block, they will not be compacted
              (pinned_blocks.find(_blocks_in_block_store[i].block) == pinned_blocks.end()) // If the block is not in the list of pinned blocks
             ) {
-            
+
             assert(_blocks_in_block_store[i].block->in_nursery_p);
             assert(_blocks_in_block_store[i].is_compaction_block == false);
-            
+
             _blocks_in_block_store[i].is_compaction_block = true;
 //			++compaction_blocks;
-            
+
             assert(_blocks_in_block_store[i].block);
             _blocks_in_block_store[i].block->is_compaction_block = true;
             gc_trace_block(_blocks_in_block_store[i].block, "This block in compaction area.");
-            
+
             _blocks_in_block_store[i].total_live_objects_in_this_block = 0;
 
 			_blocks_in_block_store[i].block->from_block_has_been_evacuated = false;
-			_blocks_in_block_store[i].block->is_to_block = false; 
+			_blocks_in_block_store[i].block->is_to_block = false;
 			gc_trace_block (_blocks_in_block_store[i].block, "from_block_has_been_evacuated and is_to_block set to false.");
 
             _blocks_in_block_store[i].block_for_sliding_compaction_allocation_pointer_computation = _blocks_in_block_store[i].block;
@@ -960,7 +960,7 @@ void Block_Store::determine_compaction_areas_for_this_gc(std::set<block_info *> 
             _blocks_in_block_store[i].block_for_sliding_compaction_object_slides = _blocks_in_block_store[i].block;
         }
     }
-    
+
     // Setup regions for each GC thread to operate on
     unsigned int min_compact_blocks_per_gc_thread = (high_index - low_index) / g_num_cpus;
     unsigned int extra_tail_for_last_gc_thread = (high_index - low_index) % g_num_cpus;
@@ -968,7 +968,7 @@ void Block_Store::determine_compaction_areas_for_this_gc(std::set<block_info *> 
     unsigned int low_index_curr = low_index;
     unsigned int high_index_curr = low_index + min_compact_blocks_per_gc_thread;
     while (gc_thread < g_num_cpus) {
-        _per_gc_thread_compaction_blocks_low_index[gc_thread]  =  low_index_curr;	
+        _per_gc_thread_compaction_blocks_low_index[gc_thread]  =  low_index_curr;
         _per_gc_thread_compaction_blocks_high_index[gc_thread] = high_index_curr;
         low_index_curr   = high_index_curr;
         high_index_curr += min_compact_blocks_per_gc_thread;
@@ -1011,12 +1011,12 @@ void Block_Store::reset_compaction_areas_after_this_gc() {
 
     unsigned int low_index = 0;
     unsigned int high_index = 0;
-    
+
     if (_compaction_type_for_this_gc == gc_no_compaction) {
         // nothing
         return;
     }
-    
+
     get_compaction_limits_based_on_compaction_type_for_this_gc(&low_index, &high_index);
     for (unsigned int i = low_index; i < high_index; i++) {
 		if(_blocks_in_block_store[i].is_compaction_block == false) {
@@ -1024,21 +1024,21 @@ void Block_Store::reset_compaction_areas_after_this_gc() {
 		}
 
         // Set for compaction all single blocks
-        if ((_blocks_in_block_store[i].number_of_blocks == 1) && 
+        if ((_blocks_in_block_store[i].number_of_blocks == 1) &&
             (_blocks_in_block_store[i].block_is_free == false) &&
             (_blocks_in_block_store[i].block->in_los_p == false)&&
             (_blocks_in_block_store[i].block->is_single_object_block == false)&&
 			(is_compaction_block(_blocks_in_block_store[i].block))
             ) {
-            
+
             gc_trace_block(_blocks_in_block_store[i].block, "This block has compaction area reset.");
 
 			assert(_blocks_in_block_store[i].block->in_nursery_p);
 			assert(_blocks_in_block_store[i].is_compaction_block == true);
             // From block had better have been evacuated by now.
-           
+
             assert(_blocks_in_block_store[i].block->from_block_has_been_evacuated); // This block has not been evacuated yet.
-            
+
 
 			_blocks_in_block_store[i].is_compaction_block = false;
 			_blocks_in_block_store[i].block->is_compaction_block = false;
@@ -1060,7 +1060,7 @@ void Block_Store::reset_compaction_areas_after_this_gc() {
             assert(_blocks_in_block_store[i].block->block_has_been_swept);
         }
     }
-    
+
     if (_compaction_type_for_this_gc == gc_incremental_sliding_compaction) {
         if (_compaction_blocks_high_index == _number_of_blocks_in_heap) {
             // need to rotate back to beginning of heap since we just finished with last chunk of heap
@@ -1070,7 +1070,7 @@ void Block_Store::reset_compaction_areas_after_this_gc() {
             // Roll forward compaction area range for next GC cycle...this is still inside the heap...
             _compaction_blocks_low_index  = _compaction_blocks_low_index  + (_number_of_blocks_in_heap / _heap_compaction_ratio);
             _compaction_blocks_high_index = _compaction_blocks_high_index + (_number_of_blocks_in_heap / _heap_compaction_ratio);
-        } 
+        }
         if ((_number_of_blocks_in_heap - _compaction_blocks_high_index) < (_number_of_blocks_in_heap / _heap_compaction_ratio)) {
             // final section of heap incremental compaction...take care of the tail...compact till the very end of the heap....
             _compaction_blocks_high_index = _number_of_blocks_in_heap;
@@ -1116,10 +1116,10 @@ block_info * Block_Store::iter_get_next_compaction_block_for_gc_thread(unsigned 
         assert(curr_block->block_store_info_index >= low_index);
         assert(curr_block->block_store_info_index < high_index);
         // integrity of block_store_info_index
-        assert(curr_block->block_store_info_index == (((POINTER_SIZE_INT) curr_block - (POINTER_SIZE_INT) _p_heap_base) >> GC_BLOCK_SHIFT_COUNT));
+        assert(curr_block->block_store_info_index == (((uintptr_t) curr_block - (uintptr_t) _p_heap_base) >> GC_BLOCK_SHIFT_COUNT));
         assert(_blocks_in_block_store[curr_block->block_store_info_index].is_compaction_block);
         index = curr_block->block_store_info_index + 1;
-    } 
+    }
     while (index < high_index) {
         if (_blocks_in_block_store[index].is_compaction_block) {
             if(!search_for_owner || _blocks_in_block_store[index].block->thread_owner == owner) {
@@ -1136,15 +1136,15 @@ block_info * Block_Store::iter_get_next_compaction_block_for_gc_thread(unsigned 
 }
 
 Remembered_Set * Block_Store::get_slots_into_compaction_block(block_info *block) {
-#ifdef _DEBUG	
+#ifdef _DEBUG
     unsigned int block_no = (unsigned int) (((POINTER_SIZE_INT) block - (POINTER_SIZE_INT) _p_heap_base) >> GC_BLOCK_SHIFT_COUNT);
     assert(block->block_store_info_index == block_no);
 #endif // _DEBUG
-    
+
     unsigned int block_number = block->block_store_info_index;
-    
+
     for (unsigned int i = 0; i < g_num_cpus; i++) {
-        Remembered_Set *thr_slots = _blocks_in_block_store[block_number].per_thread_slots_into_compaction_block[i]; 
+        Remembered_Set *thr_slots = _blocks_in_block_store[block_number].per_thread_slots_into_compaction_block[i];
         if (thr_slots) {
             _blocks_in_block_store[block_number].per_thread_slots_into_compaction_block[i] = NULL;
             // The remembered set will be freed by the GC thread that works on these slots.
@@ -1155,55 +1155,55 @@ Remembered_Set * Block_Store::get_slots_into_compaction_block(block_info *block)
 }
 
 void Block_Store::init_live_object_iterator_for_block(block_info *block) {
-    unsigned int block_store_block_number = 
-        (unsigned int) (((POINTER_SIZE_INT) block - (POINTER_SIZE_INT) _p_heap_base) >> GC_BLOCK_SHIFT_COUNT);
+    unsigned int block_store_block_number =
+        (unsigned int) (((uintptr_t) block - (uintptr_t) _p_heap_base) >> GC_BLOCK_SHIFT_COUNT);
     _blocks_in_block_store[block_store_block_number].bit_index_into_all_lives_in_block = 0;
 }
 
 Partial_Reveal_Object * Block_Store::get_next_live_object_in_block(block_info *block) {
-    
+
     set_bit_search_info info;
-    
+
     uint8 *mark_vector_base = &(block->mark_bit_vector[0]);
-    
+
     // stop searching when we get close the the end of the vector
-    info.p_ceil_byte = (uint8 *) ((POINTER_SIZE_INT)mark_vector_base + GC_SIZEOF_MARK_BIT_VECTOR_IN_BYTES);
-    
-   
+    info.p_ceil_byte = (uint8 *) ((uintptr_t)mark_vector_base + GC_SIZEOF_MARK_BIT_VECTOR_IN_BYTES);
+
+
 #ifdef _DEBUG
     unsigned int bs_index = (unsigned int) (((POINTER_SIZE_INT) block - (POINTER_SIZE_INT) _p_heap_base) >> GC_BLOCK_SHIFT_COUNT);
     assert(bs_index == block->block_store_info_index);
 #endif // _DEBUG
-    
+
     unsigned int block_store_block_number = block->block_store_info_index;
-    
+
     unsigned int bit_index = _blocks_in_block_store[block_store_block_number].bit_index_into_all_lives_in_block;
-    
-    info.p_start_byte = (uint8 *)((POINTER_SIZE_INT) mark_vector_base + (bit_index / GC_NUM_BITS_PER_BYTE));
+
+    info.p_start_byte = (uint8 *)((uintptr_t) mark_vector_base + (bit_index / GC_NUM_BITS_PER_BYTE));
     info.start_bit_index = (bit_index % GC_NUM_BITS_PER_BYTE);	// convert this to a subtract later...XXX
-    
+
     get_next_set_bit(&info);
-    
+
     if (verify_gc) {
         verify_get_next_set_bit_code(&info);
-    }  
-    
+    }
+
     if (info.p_non_zero_byte == NULL) {
         _blocks_in_block_store[block_store_block_number].bit_index_into_all_lives_in_block = 0;
         return NULL;
     }
-    
+
     // Compute the address of the live object
     unsigned int obj_bit_index = (unsigned int) ((info.p_non_zero_byte - mark_vector_base) * GC_NUM_BITS_PER_BYTE + info.bit_set_index);
-    Partial_Reveal_Object *p_live_obj = (Partial_Reveal_Object *) ((POINTER_SIZE_INT)block + GC_BLOCK_INFO_SIZE_BYTES +  (obj_bit_index * GC_LIVE_OBJECT_CARD_SIZE_IN_BYTES));
-    
+    Partial_Reveal_Object *p_live_obj = (Partial_Reveal_Object *) ((uintptr_t)block + GC_BLOCK_INFO_SIZE_BYTES +  (obj_bit_index * GC_LIVE_OBJECT_CARD_SIZE_IN_BYTES));
+
 #ifdef _DEBUG
     // this might fail if sliding compaction is turned on
     //	verify_object(p_live_obj, get_object_size_bytes(p_live_obj));
 #endif // _DEBUG
-    
+
     // Next time we need to start searching from the next bit onwards
     _blocks_in_block_store[block_store_block_number].bit_index_into_all_lives_in_block = obj_bit_index + 1;
-    
+
     return p_live_obj;
 }

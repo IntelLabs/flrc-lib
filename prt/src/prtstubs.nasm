@@ -1,7 +1,7 @@
 ;;; COPYRIGHT_NOTICE_1
 ; $Header: /nfs/sc/proj/ctg/psl002/CVS/pillar_pthread/src/base/prtstubs.nasm,v 1.8 2012/03/16 21:15:42 taanders Exp $
 
-%ifndef __X86_64__
+%ifndef __x86_64__
 
 SECTION .data
 
@@ -13,7 +13,7 @@ SECTION .text
 
 ; =============================================================================
 ; Declare external functions as near ones for calls below.
-extern prt_ExitThread  
+extern prt_ExitThread
 extern printf
 extern exit
 extern prtYieldUnmanaged
@@ -35,7 +35,7 @@ extern prtPillarCompilerUnwinder
 common prt_Globals 4
 common prtMinFreeStackSpace 4
 
-%else ; // __X86_64__
+%else ; // __x86_64__
 
 SECTION .data
 
@@ -47,7 +47,7 @@ SECTION .text
 
 ; =============================================================================
 ; Declare external functions as near ones for calls below.
-extern prt_ExitThread  
+extern prt_ExitThread
 extern printf
 extern exit
 extern prtYieldUnmanaged
@@ -69,7 +69,7 @@ extern prtPillarCompilerUnwinder
 common prt_Globals 8
 common prtMinFreeStackSpace 4
 
-%endif ; // __X86_64__
+%endif ; // __x86_64__
 
 
 %define MIN_UNMANAGED_STACK 500000
@@ -90,7 +90,7 @@ common prtMinFreeStackSpace 4
 %define PRT_VSE_TARGET_CONTINUATION 2*REGISTER_SIZE ; targetContinuation
 %define CONTINUATION_EIP_OFFSET 0
 
-%ifndef __X86_64__
+%ifndef __x86_64__
 
 ; ==============================================================================
 ;  COMMON CODE SEQUENCES
@@ -164,10 +164,10 @@ common prtMinFreeStackSpace 4
 ; // Modifies ebx, ecx, esi, edi.
 ; // Upon exit, ebx will contain the number of bytes of arguments.
 ;%macro copyArgs 2 ; argStartOffsetFromEbp, argSizeOffsetFromEbp
-%macro copyArgs 2 
+%macro copyArgs 2
     mov ebx, [ ebp + %2 ]
-    shl ebx, 2               
-    sub esp, ebx            
+    shl ebx, 2
+    sub esp, ebx
     cld
     mov ecx, dword [ ebp + %2 ]
     mov esi, dword [ ebp + %1 ]
@@ -196,7 +196,7 @@ common prtMinFreeStackSpace 4
 %ifdef DEBUG_VSE_POPS
     push eax
     push edx
-    push %2 
+    push %2
     lea ecx, [ebp+%1]
     push ecx
     call dword prt_ValidateVsh
@@ -228,7 +228,7 @@ prt_WatermarkPostTopIndex1:
     mov dword [junk1], ecx                       ; // increment the stack's top
 prt_WatermarkPostTopIndex2:
     lea ecx, [junk2+ecx*REGISTER_SIZE]           ; // ecx = address of the top free stub stack array entry
-prt_WatermarkPostStubStackStart: 
+prt_WatermarkPostStubStackStart:
     mov dword [ecx], prt_WatermarkPrototypeStart ; // write the stub start value into the stub stack array
 prt_WatermarkPostStubStart:
     mov ecx, exit
@@ -292,19 +292,19 @@ prt_InvokeManagedFuncStart:
     ; // A stack limit check is unnecessary because we must already be running
     ; // on a full-sized stack for unmanaged code.
     fullStubProlog    ; // basic ebp-based frame prolog that saves ebx, esi, edi
-    sub esp , U2MFRAMESIZE 
+    sub esp , U2MFRAMESIZE
     copyArgs _argStart$ , _argSize$      ; // reserve space and copy arguments
 %ifdef TLS_REGISTER
     loadTlsRegister
 %endif
-    
+
     call dword [ ebp + _managedFunc$ ]   ; // call the managed function. don't disturb the return registers after this
 
 prt_InvokeManagedFuncAfterCall:
     add esp, U2MFRAMESIZE
     fullStubEpilog
     ret 12
-    
+
 prt_InvokeManagedFuncUnwindContinuation:
     continuationProlog _normalEsp$, _contStart$
     mov eax, dword [ ebp + _contArgLow32Bits$ ]
@@ -318,7 +318,7 @@ prt_InvokeManagedFuncEnd:
 global prtInvokeUnmanagedFunc                ; start of the function
 global prtInvokeUnmanagedIntRet              ; start of the function
 global prt_InvokeUnmanagedFuncStart          ; start of the function
-global prt_InvokeUnmanagedFuncPostCall       ; 
+global prt_InvokeUnmanagedFuncPostCall       ;
 global prt_InvokeUnmanagedFuncDestructor     ; VSE type identifier (code address)
 global prt_InvokeUnmanagedFuncUnwindContinuation
 global prt_InvokeUnmanagedFuncEnd            ; end of the function
@@ -363,20 +363,20 @@ prt_InvokeUnmanagedFuncStart:
     sub  esp, M2UFRAMESIZE                          ; // reserve space for rest of the frame and local vars.
     mov dword [ ebp + _realM2uUnwinder$ ], prtPillarCompilerUnwinder
     pushVse _vsePtr$, prt_InvokeUnmanagedFuncDestructor
-        
+
     push eax
     call dword prtToUnmanaged
     pop  eax
 
     ;mov dword [ebp+_callsite_id$], 0            ; // 0 in contArgLow32Bits means we're at the unmanaged call site
-        
+
     copyArgs _argStart$ , _argSize$                  ; // reserve space and copy arguments, sets ebx = number of arg bytes
     call dword [ ebp + _unmanagedFunc$ ]
 prt_InvokeUnmanagedFuncPostCall:
     mov ecx, [ ebp + _callingConvention$ ]               ; // ecx != 0 if target is a stdcall
     cmp ecx, 0
     jnz end_cc_check
-    add esp, ebx    
+    add esp, ebx
 end_cc_check:
 
 prt_InvokeUnmanagedFuncAfterCall:
@@ -390,20 +390,20 @@ prt_InvokeUnmanagedFuncAfterCall:
     ; call prtYieldUnmanaged
 
     getTlsIntoEax                                        ; // get current Prt_Task pointer
-        
+
     push eax
     call dword prtToManaged
     pop  eax
-        
+
     popVse _vsePtr$, prt_InvokeUnmanagedFuncDestructor
-    
+
     mov eax, savereg1                                    ; // restore return registers
     mov edx, savereg2
     add esp, M2UFRAMESIZE                                ; // remove the rest of the frame and local vars
-    
+
     fullStubEpilog
     ret 16
-    
+
 prt_InvokeUnmanagedFuncDestructor:
     continuationProlog _normalEsp$, _vsePtr$
     push dword [ ebp + _targetContinuation$ ]                  ; // recut
@@ -414,7 +414,7 @@ prt_InvokeUnmanagedFuncUnwindContinuation:
     mov eax, [ebp+_contArgLow32Bits$]
     mov edx, [ebp+_contArgHigh32Bits$]
     jmp prt_InvokeUnmanagedFuncAfterCall
-    
+
 prt_InvokeUnmanagedFuncEnd:
 
 ; ==============================================================================
@@ -441,7 +441,7 @@ prt_PcallDestructor:
 %endmacro
 
 global prt_getStubConstants                ; start of the function
-    
+
 prt_getStubConstants:
     setNextConstant PRT_TASK_LAST_VSE , REGISTER_SIZE*1
     setNextConstant PRT_TASK_USER_TLS , REGISTER_SIZE*2
@@ -512,7 +512,7 @@ prt_bootstrapTaskAsmStart:
 cimAlreadyCreated:
     ;; // get all the needed vars into regs before we update esp in case this is
     ;; // not an ebp based frame.
-    mov  edx, [ebp + _funcToCall$ ]      
+    mov  edx, [ebp + _funcToCall$ ]
 
     copyArgs _argStart$ , _argSize$      ; // reserve space and copy arguments
 
@@ -523,8 +523,8 @@ cimAlreadyCreated:
     mov tlsreg, eax
 ;    loadTlsRegister
     pop edx
-%endif   
-;    mov edx, edx     
+%endif
+;    mov edx, edx
     call edx                              ; // invoke the function
 ;    call dword edx                              ; // invoke the function
 prt_bootstrapTaskAsmCall:
@@ -549,7 +549,7 @@ prt_testStackSize:
     mov  esi, esp
     mov  edx, [ebp + _funcToCall$]       ; // edx = the function to invoke
     mov  esp, [ebp + _stackTop$ ]        ; // transition to a new stack
-        
+
     call edx                             ; // invoke the function
 
     mov  esp, esi
@@ -591,11 +591,11 @@ prt_getTlsRegisterEnd:
 
 
 ; ==============================================================================
-; =                      __X86_64__                                            =
+; =                      __x86_64__                                            =
 ; ==============================================================================
 
 
-%else ; // __X86_64__
+%else ; // __x86_64__
 
 ; // Like getTlsIntoEax below but always refreshes tlsreg from the current thread's TLS.
 %macro loadTlsRegister 0
@@ -615,11 +615,11 @@ prt_getTlsRegisterEnd:
 ; // At completion, rsi = size of args in bytes, rcx/rdx/r8/r9 are the args to the next function, rdi is trashed.
 ; // startReg and sizeReg should not be rbx, rcx, rsi or rdi.
 ; %macro copyArgs %1 = startReg, %2 = sizeReg
-;%macro copyArgs 2 
+;%macro copyArgs 2
 ; r11 = startReg, r12 = sizeReg
-%macro copyArgs 0 
+%macro copyArgs 0
     mov  r13, r12                               ;; // r13 = number of 8-byte params
-    shl  r13, 3                                 ;; // r13 = size of params in bytes 
+    shl  r13, 3                                 ;; // r13 = size of params in bytes
     mov  r14, rsp                               ;; // r14 = current stack pointer
     sub  r14, r13                               ;; // r14 = minimum required stack space
     mov  rax, 0FFffFFffFFffFFf0h                ;; // and then and'ing by 16 for alignment
@@ -657,7 +657,7 @@ prt_getTlsRegisterEnd:
     mov  r9, qword [rsp+40]
     movq xmm5, r9
 
-    mov  r11, r13                               ;; // r11 = space subtracted from stack  
+    mov  r11, r13                               ;; // r11 = space subtracted from stack
     mov  r12, r13       ; 8, 16, 56, 64         ;; // r12 = space subtracted from stack
     mov  r15, r13       ; 8, 16, 56, 64         ;; // r15 = space subtracted from stack
     and  r13, rax       ; 0, 16, 48, 64         ;; // r13 = space subtracted on 16-byte align
@@ -734,7 +734,7 @@ prt_WatermarkPostTopIndex1:
     mov  dword [rdx], ecx               ; // increment the stack's top
 
     mov  rdx, 01F2f3F4f5F6f7F8fh
-prt_WatermarkPostStubStackStart: 
+prt_WatermarkPostStubStackStart:
     lea  rcx, [rdx+rcx*REGISTER_SIZE]   ; // ecx = address of the top free stub stack array entry
 
     mov  rdx, 01F2f3F4f5F6f7F8fh
@@ -800,14 +800,14 @@ prt_InvokeManagedFuncStart:
 
     ;fullStubProlog                    ; // basic ebp-based frame prolog that saves ebx, esi, edi
     mov  rax, ARG_REG1
-    sub  rsp, U2MFRAMESIZE 
+    sub  rsp, U2MFRAMESIZE
     copyArgs ; // reserve space and copy arguments
     ;copyArgs ARG_REG2 , ARG_REG3      ; // reserve space and copy arguments
 
 %ifdef TLS_REGISTER
     loadTlsRegister
 %endif
-    
+
     call rax                          ; // call the managed function. don't disturb the return registers after this
 
 prt_InvokeManagedFuncAfterCall:
@@ -815,7 +815,7 @@ prt_InvokeManagedFuncAfterCall:
     add  rsp, U2MFRAMESIZE
     ;fullStubEpilog
     ret
-    
+
 prt_InvokeManagedFuncUnwindContinuation:
     continuationProlog _normalEsp$, _contStart$
     mov  rax, qword [ rbp + _contArgLow32Bits$ ]
@@ -831,7 +831,7 @@ prt_InvokeManagedFuncEnd:
 global prtInvokeUnmanagedFunc                ; start of the function
 global prtInvokeUnmanagedIntRet              ; start of the function
 global prt_InvokeUnmanagedFuncStart          ; start of the function
-global prt_InvokeUnmanagedFuncPostCall       ; 
+global prt_InvokeUnmanagedFuncPostCall       ;
 global prt_InvokeUnmanagedFuncDestructor     ; VSE type identifier (code address)
 global prt_InvokeUnmanagedFuncUnwindContinuation
 global prt_InvokeUnmanagedFuncEnd            ; end of the function
@@ -889,7 +889,7 @@ prt_InvokeUnmanagedFuncStart:
     mov  r14, ARG_REG3                               ; // save args in callee-saves
     mov  r13, ARG_REG2
     mov  r12, ARG_REG1
-        
+
     getTlsIntoEax
 
     mov  qword [rbp + _realM2uUnwinder$], prtPillarCompilerUnwinder
@@ -909,16 +909,16 @@ prt_InvokeUnmanagedFuncStart:
     mov  r10, r12
     mov  r11, r13
     mov  r12, r14
- 
+
     copyArgs                                         ; // reserve space and copy arguments, rsi = size of args
     call r10
     add  rsp, r12
 
 prt_InvokeUnmanagedFuncPostCall:
 prt_InvokeUnmanagedFuncAfterCall:
-        
+
     mov  r12, rax                                    ; // save result away in r12
-        
+
     restoreTlsRegister
 
     getTlsIntoEax
@@ -932,10 +932,10 @@ prt_InvokeUnmanagedFuncAfterCall:
     mov  rcx, [rax+PRT_TASK_LAST_VSE]
     mov  rcx, [rcx+PRT_VSE_NEXT_FRAME]
     mov  [rax+PRT_TASK_LAST_VSE], rcx
-    
+
     mov  rax, r12                                    ; // restore return value
     add  rsp, 7*REGISTER_SIZE                        ; // remove the rest of the frame and local vars
-    
+
     pop  r15
     pop  r14
     pop  r13
@@ -943,19 +943,19 @@ prt_InvokeUnmanagedFuncAfterCall:
     pop  rbx
     pop  rbp
     ret
-    
+
 prt_InvokeUnmanagedFuncDestructor:
     continuationProlog _normalEsp$, _vsePtr$
     mov  ARG_REG1, [rbp+_targetContinuation$]        ; // recut
     sub  rsp, 32
     call prtFatCutTo
-    
+
 prt_InvokeUnmanagedFuncUnwindContinuation:
     continuationProlog _normalEsp$, _contStart$
     mov rax, [rbp+_contArgLow32Bits$]
     mov rdx, [rbp+_contArgHigh32Bits$]
     jmp prt_InvokeUnmanagedFuncAfterCall
-    
+
 prt_InvokeUnmanagedFuncEnd:
 
 ; =============================================================================================
@@ -1074,7 +1074,7 @@ prt_pcallAsm:
     mov  ARG_REG4, [rsp+3*REGISTER_SIZE]
 
     mov  rax, rsp
-    and  rax, 0Fh                       
+    and  rax, 0Fh
     sub  rsp, rax                         ; // align rsp
 
     call pcallOnSystemStack
@@ -1114,7 +1114,7 @@ prt_testStackSize:
     mov  r12, rsp
     mov  rsp, ARG_REG2                    ;; // transition to a new stack
 
-    sub  rsp, 40        
+    sub  rsp, 40
     call ARG_REG1                         ;; // invoke the function
     add  rsp, 40
 
@@ -1157,4 +1157,4 @@ prtYieldUntilDestructor:
 ; ==============================================================================
 
 
-%endif ; //__X86_64__
+%endif ; //__x86_64__

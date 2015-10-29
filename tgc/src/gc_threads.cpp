@@ -64,23 +64,23 @@ GC_Thread::GC_Thread(Garbage_Collector *p_gc, unsigned int gc_thread_id) {
 #endif
 #endif
 	zero_out_mark_stack(_mark_stack);
-	
+
 	if (g_gen || sweeps_during_gc) {
 		_sweep_start_index = -1;
 		_num_chunks_to_sweep = -1;
 		zero_out_sweep_stats((chunk_sweep_stats *) &(_sweep_stats));
 	}
-		
+
 	//////////////////
-     _gc_thread_start_work_event = orp_synch_create_event(FALSE);  // flag for manual-reset event  -- auto reset mode 
-										
+     _gc_thread_start_work_event = orp_synch_create_event(FALSE);  // flag for manual-reset event  -- auto reset mode
+
 	assert(_gc_thread_start_work_event);
 	Boolean rstat = orp_synch_reset_event(_gc_thread_start_work_event);
 	assert(rstat);
 
 
 	//////////////////
-    _gc_thread_work_done_event = orp_synch_create_event(FALSE);  // flag for manual-reset event  -- auto reset mode 
+    _gc_thread_work_done_event = orp_synch_create_event(FALSE);  // flag for manual-reset event  -- auto reset mode
 	assert(_gc_thread_work_done_event);
 
 	rstat = orp_synch_reset_event(_gc_thread_work_done_event);
@@ -100,7 +100,7 @@ GC_Thread::GC_Thread(Garbage_Collector *p_gc, unsigned int gc_thread_id) {
 #endif // USE_PTHREADS
     }
 
-	if (_thread_handle == NULL) { 
+	if (_thread_handle == NULL) {
 		orp_cout << "GC_Thread::GC_Thread(..): CreateThread() failed...exiting...\n";
 		orp_exit(17010);
 	}
@@ -114,7 +114,7 @@ GC_Thread::GC_Thread(Garbage_Collector *p_gc, unsigned int gc_thread_id) {
 
 	_num_marked_objects = 0;
 	_marked_object_size = 0;
-	
+
 	// Reset every GC
 	_num_bytes_recovered_by_sweep = 0;
 
@@ -122,7 +122,7 @@ GC_Thread::GC_Thread(Garbage_Collector *p_gc, unsigned int gc_thread_id) {
 
 	_output_packet = NULL;
 
-///////////////////////////////////////////////////	
+///////////////////////////////////////////////////
 	_compaction_turned_on_during_this_gc = false;
 	_num_slots_collected_for_later_fixing = 0;
 }
@@ -164,7 +164,7 @@ void GC_Thread::reset(bool compact_this_gc) {
 
 
 void GC_Thread::wait_for_work() {
-	unsigned int wstat = orp_synch_wait_for_event(_gc_thread_start_work_event, INFINITE);		
+	unsigned int wstat = orp_synch_wait_for_event(_gc_thread_start_work_event, INFINITE);
 	assert(wstat != EVENT_WAIT_FAILED);
 } // GC_Thread::wait_for_work
 
@@ -177,19 +177,19 @@ void GC_Thread::signal_work_is_done() {
 } // GC_Thread::signal_work_is_done
 
 
-volatile POINTER_SIZE_INT dummy_for_good_cache_performance = 0;				
+volatile POINTER_SIZE_INT dummy_for_good_cache_performance = 0;
 
 
 #if 1 //def USE_BEGINTHREADEX
 unsigned int PRT_STDCALL gc_thread_func (void *arg)
 #else
-DWORD WINAPI 
+DWORD WINAPI
 gc_thread_func(LPVOID arg)
 #endif
 {
     orp_set_affinity();
 
-	GC_Thread *p_gc_thread = (GC_Thread *) arg; 
+	GC_Thread *p_gc_thread = (GC_Thread *) arg;
     p_gc_thread->started = 1;
 	assert(p_gc_thread);
 #ifdef _WINDOWS
@@ -219,7 +219,7 @@ gc_thread_func(LPVOID arg)
 
 			if (stats_gc) {
 #if 1 // def USE_BEGINTHREADEX
-                printf ("%d: %u objects %u size\n",  (POINTER_SIZE_INT)p_gc_thread->get_thread_handle(), p_gc_thread->get_num_marked_objects(), p_gc_thread->get_marked_object_size() );
+                printf ("%d: %u objects %u size\n",  (uintptr_t)p_gc_thread->get_thread_handle(), p_gc_thread->get_num_marked_objects(), p_gc_thread->get_marked_object_size() );
 #else
                 printf ("%p: %u objects\n",  p_gc_thread->get_thread_handle(), p_gc_thread->get_num_marked_objects() );
 #endif
@@ -253,15 +253,15 @@ gc_thread_func(LPVOID arg)
   		    assert(0);
 			orp_cout << "BAD GC configuration\n";
 			orp_exit(17011);
-			
+
 		} else if (p_gc_thread->get_task_to_do() == GC_INSERT_COMPACTION_LIVE_OBJECTS_INTO_COMPACTION_BLOCKS_TASK) {
 
             assert(0);
 			orp_cout << "BAD GC configuration\n";
 			orp_exit(17012);
-            
+
 		} else if (p_gc_thread->get_task_to_do() == GC_ALLOCATE_FORWARDING_POINTERS_FOR_COMPACTION_LIVE_OBJECTS_TASK) {
-            
+
 			allocate_forwarding_pointers_for_compaction_live_objects(p_gc_thread);
 
 		} else if (p_gc_thread->get_task_to_do() == GC_FIX_SLOTS_TO_COMPACTION_LIVE_OBJECTS_TASK) {
@@ -279,7 +279,7 @@ gc_thread_func(LPVOID arg)
 		} else {
 			assert(0);
 		}
-	
+
 		// Work is done!!!
 		p_gc_thread->signal_work_is_done();
 
@@ -288,4 +288,3 @@ gc_thread_func(LPVOID arg)
 	assert(0);
 	return 0;
 }
-

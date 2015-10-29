@@ -32,7 +32,7 @@ Garbage_Collector *p_global_gc = NULL;
 #ifdef _WINDOWS
 LARGE_INTEGER performance_frequency;
 #endif // _WINDOWS
-// Aug. 1, 2003. Changed by RLH to true since that seems the more reasonable default even if it does 
+// Aug. 1, 2003. Changed by RLH to true since that seems the more reasonable default even if it does
 // slow done javac and some of the specjvm numbers a bit.
 bool fullheapcompact_at_forcegc = true;
 bool incremental_compaction = true;
@@ -67,7 +67,7 @@ bool g_cheney = true;
 #endif
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 extern void init_verify_live_heap_data_structures();
-extern void take_snapshot_of_lives_before_gc(unsigned int, Object_List *);  
+extern void take_snapshot_of_lives_before_gc(unsigned int, Object_List *);
 extern void verify_live_heap_before_and_after_gc(unsigned int, Object_List *);
 void process_object(Partial_Reveal_Object *p_obj, GC_Thread *gc_thread, MARK_STACK *ms);
 void process_mark_stack(GC_Thread *gc_thread, MARK_STACK *ms);
@@ -169,16 +169,16 @@ Garbage_Collector::Garbage_Collector(POINTER_SIZE_INT initial_heap_size, POINTER
     _wpo_lock = 0;
     _los_blocks = NULL;
     _single_object_blocks = NULL;
-    
+
     _gc_threads = NULL;
     _gc_num = 0;
     _total_gc_time = 0;
     _gc_num_time = 0;
     _p_block_store = NULL;
     _gc_thread_work_finished_event_handles = NULL;
-    
+
     memset(_gc_chunks, 0, sizeof(chunk_info) * GC_MAX_CHUNKS);
-    
+
     num_root_limit = 100000; // initial array size
     _array_of_roots = (Partial_Reveal_Object***)malloc(sizeof(Partial_Reveal_Object**) * num_root_limit);
     _save_array_of_roots = (Partial_Reveal_Object***)malloc(sizeof(Partial_Reveal_Object**) * num_root_limit);
@@ -187,9 +187,9 @@ Garbage_Collector::Garbage_Collector(POINTER_SIZE_INT initial_heap_size, POINTER
     memset(_array_of_roots, 0, sizeof(Partial_Reveal_Object **) * num_root_limit);
     dup_removal_enum_hash_table = new Hash_Table();
     assert (dup_removal_enum_hash_table->is_empty());
-    
+
     _num_roots = 0;
-    
+
     _p_block_store  = new Block_Store(initial_heap_size, final_heap_size, block_size_bytes);
 
 #ifdef CONCURRENT
@@ -197,13 +197,13 @@ Garbage_Collector::Garbage_Collector(POINTER_SIZE_INT initial_heap_size, POINTER
 #endif // CONCURRENT
 
     _gc_thread_work_finished_event_handles = (SynchEventHandle *) malloc(sizeof(SynchEventHandle) * g_num_cpus);
-    
+
     if (mark_scan_load_balanced) {
         _mark_scan_pool = new Work_Packet_Manager();
     } else {
         _mark_scan_pool= NULL;
     }
-    
+
     last_young_gen_percentage = 1.0; // first generational collect is always just the young generation.
 
     //// V E R I F Y /////////////
@@ -211,7 +211,7 @@ Garbage_Collector::Garbage_Collector(POINTER_SIZE_INT initial_heap_size, POINTER
     _live_objects_found_by_first_trace_heap = NULL;
     _num_live_objects_found_by_second_trace_heap = 0;
     _live_objects_found_by_second_trace_heap = NULL;
-    
+
     memset(_verify_array_of_roots, 0, sizeof(Partial_Reveal_Object **) * num_root_limit);
 
     protect_roots = orp_synch_create_critical_section();
@@ -315,33 +315,33 @@ void Garbage_Collector::remove_finalize_object(Partial_Reveal_Object *p_object) 
 void Garbage_Collector::gc_v4_init() {
     assert(_p_block_store);
     unsigned int total_blocks = _p_block_store->get_num_total_blocks_in_block_store();
-    
+
     // Lets allocated 80% of blocks into chunks for starts
     unsigned int num_chunks_to_allocated = (((unsigned int)(0.8 * total_blocks)) / GC_NUM_BLOCKS_PER_CHUNK);
-    
-    
+
+
     for (int i = 0; i < GC_MAX_CHUNKS; i++) {
         memset(&(_gc_chunks[i]), 0, sizeof(chunk_info));
     }
-    
+
     if(!concurrent_mode) {
         init_gc_threads();
     } else {
 //        SetPriorityClass(GetCurrentProcess(),0x100);
     }
-    
+
     roots_init();
-    
+
     gc_add_fresh_chunks(num_chunks_to_allocated);
-    
+
 #ifdef _WINDOWS
     QueryPerformanceFrequency(&performance_frequency);
 #endif // _WINDOWS
-    
+
     if (incremental_compaction && verbose_gc) {
         orp_cout << "GC will incrementally compact the heap every collection" << std::endl;
     }
-    
+
     m_listFinalize = new std::list<Partial_Reveal_Object*>;
     m_finalize_list_lock = 0;
 
@@ -349,7 +349,7 @@ void Garbage_Collector::gc_v4_init() {
 #ifdef CONCURRENT
     if (orp_thread_create(gc_reclamation_func,
         (void *)this,
-        (unsigned int *)&concurrent_gc_thread_id) == NULL) { 
+        (unsigned int *)&concurrent_gc_thread_id) == NULL) {
         orp_cout << "Could not create the GC concurrent reclamation thread...exiting...\n";
         orp_exit(17015);
     }
@@ -361,7 +361,7 @@ void Garbage_Collector::gc_v4_init() {
 }
 
 //
-// Retrieves a fresh chunk from the block store. If if is for object placement then 
+// Retrieves a fresh chunk from the block store. If if is for object placement then
 // stay_above_water_line will be false, if it is for a chunk to be allocated
 // stay_above_water_line will the true.
 //
@@ -377,49 +377,49 @@ void Garbage_Collector::uncleared_to_free_block(block_info *block) {
     assert(block->age == 0);
     block->in_los_p = false;
     block->is_single_object_block = false;
-    
-    block->set_nursery_status(block->get_nursery_status(),free_nursery); 
+
+    block->set_nursery_status(block->get_nursery_status(),free_nursery);
     block->thread_owner = NULL;
-    
+
     // Allocate free areas per block if not already allocated
     if (!block->block_free_areas)  {
         block->size_block_free_areas = GC_MAX_FREE_AREAS_PER_BLOCK(GC_MIN_FREE_AREA_SIZE);
         block->block_free_areas = (free_area *)malloc(sizeof(free_area) * block->size_block_free_areas);
         assert(block->block_free_areas);
     }
-    
+
     memset(block->mark_bit_vector, 0, GC_SIZEOF_MARK_BIT_VECTOR_IN_BYTES);
-    
+
     // It is fully allocatable
     // RLH Removed Aug 04 block->is_free_block = true; ???
     //assert (block->is_free_block == false); // RLH Aug 04
     // Initialize free areas for block....
     gc_trace_block (block, " calling clear_block_free_areas in get_fresh_chunk_from_block_store.");
     clear_block_free_areas(block);
-    
+
     // JUST ONE LARGE FREE AREA initially
     free_area *area = &(block->block_free_areas[0]);
     area->area_base = GC_BLOCK_ALLOC_START(block);
-    area->area_ceiling = (void *)((POINTER_SIZE_INT)GC_BLOCK_ALLOC_START(block) + (POINTER_SIZE_INT)GC_BLOCK_ALLOC_SIZE - 1);
+    area->area_ceiling = (void *)((uintptr_t)GC_BLOCK_ALLOC_START(block) + (POINTER_SIZE_INT)GC_BLOCK_ALLOC_SIZE - 1);
     area->area_size = GC_BLOCK_ALLOC_SIZE;
-    
+
     area->has_been_zeroed = false;
-    
+
     block->num_free_areas_in_block = 1;
-    
+
 #ifndef GC_SLOW_ALLOC
-    block->current_alloc_area = -1;            
+    block->current_alloc_area = -1;
 #else
-    block->current_alloc_area = 0;    
+    block->current_alloc_area = 0;
 #endif
-    
+
     //        if (!sweeps_during_gc) {
-    // Needed....This block is fresh from the block store...its ONLY allocation area has 
+    // Needed....This block is fresh from the block store...its ONLY allocation area has
     // been determined above. Allocator should not try to sweep it since it is meaningless...
     // (since it was not collectable during the previous GC cycle
     block->block_has_been_swept = true;
     //        }
-    
+
     // Start allocation in this block at the base of the first and only area
     block->curr_free = area->area_base;
     block->curr_ceiling = area->area_ceiling;
@@ -427,12 +427,12 @@ void Garbage_Collector::uncleared_to_free_block(block_info *block) {
 
 block_info * Garbage_Collector::get_fresh_chunk_from_block_store(bool stay_above_water_line) {
     block_info *chunk_start = NULL;
-    
+
     for (int j = 0; j < GC_NUM_BLOCKS_PER_CHUNK; j++) {
-        
+
         block_info *block = _p_block_store->p_get_new_block(stay_above_water_line);
         if (block == NULL) { // Block store couldnt satisfy request.
-            
+
             if (chunk_start) {
                 // Return all previously acquired blocks of this partial chunk to the block store.
                 block = chunk_start;
@@ -441,19 +441,19 @@ block_info * Garbage_Collector::get_fresh_chunk_from_block_store(bool stay_above
                     assert(block->number_of_blocks == 1);
                     _p_block_store->link_free_blocks(block, block->number_of_blocks);
                     block = block_next;
-                }    
+                }
                 return NULL;
             }
             return chunk_start; // NULL
-        }   
+        }
 
         uncleared_to_free_block(block);
-        
+
         // Insert new block into chunk
         block->next_free_block = chunk_start;
         chunk_start = block;
     }
-    
+
     return chunk_start;
 }
 
@@ -466,7 +466,7 @@ block_info * Garbage_Collector::get_free_chunk_from_global_gc_chunks(void *new_t
     block_info *fresh_chunk = NULL;
     bool search_from_hint_failed = false;
     int chunk_index = 0;
-    
+
 retry_get_free_chunk_label:
     if (!search_from_hint_failed) {
         chunk_index = chunk_index_hint;
@@ -475,7 +475,7 @@ retry_get_free_chunk_label:
     }
     // Search available chunks and grab one atomically
     while (chunk_index <= _free_chunks_end_index) {
-        chunk_info *curr_chunk = &(_gc_chunks[chunk_index]); 
+        chunk_info *curr_chunk = &(_gc_chunks[chunk_index]);
         if (curr_chunk) {
             volatile void *free_val = curr_chunk->free_chunk;
             fresh_chunk = NULL;
@@ -493,10 +493,10 @@ retry_get_free_chunk_label:
                             fresh_chunk->generation = 0;
                             chunk_index_hint = chunk_index;
                             break;
-                        } 
+                        }
                     }
                 } else {
-                    if((curr_chunk->chunk->block_contains_only_immutables == desired_chunk_mutability && 
+                    if((curr_chunk->chunk->block_contains_only_immutables == desired_chunk_mutability &&
                         curr_chunk->chunk->thread_owner == new_thread_owner) ||
                         curr_chunk->chunk->block_free_areas[0].area_size == GC_BLOCK_ALLOC_SIZE) {
                         // Duplicate pointers to the same free chunk
@@ -528,7 +528,7 @@ retry_get_free_chunk_label:
                             chunk_index_hint = chunk_index;
                             break;
 #endif // !CONCURRENT
-                        } 
+                        }
                     } else {
     //                    printf("============ Mutability problem!!!! ==============\n");
     //                    printf("%d %d\n",curr_chunk->chunk->block_free_areas[0].area_size,GC_BLOCK_ALLOC_SIZE);
@@ -539,13 +539,13 @@ retry_get_free_chunk_label:
         }
         chunk_index++;
     }
-    
+
     if ((fresh_chunk == NULL) && (search_from_hint_failed == false)) {
         // Try again...exactly once more....this time from index 0;
         search_from_hint_failed = true;
         goto retry_get_free_chunk_label;
     }
-    
+
     // Better have got some chunk...otherwise may need to cause GC
     if (fresh_chunk) {
         assert(chunk_index <= _free_chunks_end_index);
@@ -567,29 +567,29 @@ retry_get_free_chunk_label:
 
 //
 // THIS FUNCTION is called from only inside a critical section or at gc_init()
-// so it is thread safe. It gets new blocks from the block store and creates 
+// so it is thread safe. It gets new blocks from the block store and creates
 // chunks out of them and adds them to "global_gc_chunks"
 //
 // Secondarily it can be called from p_cycle_chunk
 // Then the gc lock has been taken before this is called.
-// So it is thread safe again. Multiple threads cant try to add fresh chunks from 
+// So it is thread safe again. Multiple threads cant try to add fresh chunks from
 // the block store at the same time. The first one that fails would cause GC,
-// and the rest of the threads that block on the lock would retry to get a 
+// and the rest of the threads that block on the lock would retry to get a
 // chunk before doing anything else....
 //
 void Garbage_Collector::gc_add_fresh_chunks(unsigned int num_chunks_to_add) {
     unsigned int empty_chunk_index = 0;
     unsigned int num_chunks_added = 0;
-    
+
     while (num_chunks_added < num_chunks_to_add) {
-        
+
         while (_gc_chunks[empty_chunk_index].chunk != NULL) {
             empty_chunk_index++;
         }
         assert(empty_chunk_index < GC_MAX_CHUNKS);
-        
+
         block_info *chunk = get_fresh_chunk_from_block_store(true); // Stay above the waterline.
-        
+
         if (chunk != NULL) {
             assert(_gc_chunks[empty_chunk_index].chunk == NULL);
             assert(_gc_chunks[empty_chunk_index].free_chunk == NULL);
@@ -598,27 +598,27 @@ void Garbage_Collector::gc_add_fresh_chunks(unsigned int num_chunks_to_add) {
             empty_chunk_index++;
             continue;
         }
-        
+
         if (num_chunks_added > 0) {
-            // I could successfully add some chunks....lets postpone GC    
+            // I could successfully add some chunks....lets postpone GC
             break;
         }
-        
+
         assert(num_chunks_added == 0);
-        
+
         // All chunks that were cleaned up during the last GC have been exhausted.
         if (stats_gc) {
             // get_fresh_chunk_from_block_store() failed
             orp_cout << "get_fresh_chunk_from_block_store() failed...calling reclaim_full_heap(..)" << std::endl;
             fflush(stdout);
         }
-        
+
         reclaim_full_heap(0, false, false);
         // GC should have made many chunks available...lets not do anythin now.
         // No need to adjust the chunk limits.
-        
+
         return;
-    }    
+    }
     while (_gc_chunks[empty_chunk_index].chunk != NULL) {
         empty_chunk_index++;
     }
@@ -641,7 +641,7 @@ protected:
     TIME_STRUCT last_timestamp;
     unsigned first_time;
 public:
-    CircularTimeBuffer() : 
+    CircularTimeBuffer() :
         m_wma(0.0),
         first_time(0) {
     }
@@ -684,9 +684,9 @@ void get_chunk_lock(struct GC_Thread_Info *gc_info) {
 
 #if 0
             // BTL 20090213 Debug
-            printf(">>>> get_chunk_lock: gc_info=%p, loc_coll=%p, loc_coll->m_original_task=%p, act_gc_th=%p\n", 
-                   gc_info, local_collector, 
-                   (local_collector? local_collector->m_original_task : (struct PrtTaskStruct *)0xDEADBEEF), 
+            printf(">>>> get_chunk_lock: gc_info=%p, loc_coll=%p, loc_coll->m_original_task=%p, act_gc_th=%p\n",
+                   gc_info, local_collector,
+                   (local_collector? local_collector->m_original_task : (struct PrtTaskStruct *)0xDEADBEEF),
                    active_gc_thread);
             fflush(stdout);
 #endif //0
@@ -726,14 +726,14 @@ void release_chunk_lock(struct GC_Thread_Info *gc_info) {
 //
 // The Thread just ran out of another chunk. Give it a fresh one.
 //
-block_info * Garbage_Collector::p_cycle_chunk(block_info *p_used_chunk, 
-                                 bool returnNullOnFail, 
-                                 bool immutable, 
+block_info * Garbage_Collector::p_cycle_chunk(block_info *p_used_chunk,
+                                 bool returnNullOnFail,
+                                 bool immutable,
                                  void *new_thread_owner,
                                  GC_Thread_Info *current_thread) {
     if (p_used_chunk) {
         block_info *spent_block = p_used_chunk;
-        
+
         while (spent_block) {
             assert(spent_block);
             assert(spent_block->get_nursery_status() == active_nursery);
@@ -757,10 +757,10 @@ block_info * Garbage_Collector::p_cycle_chunk(block_info *p_used_chunk,
         }
     }
 
-    // Check to see if someone has beaten me to this and 
+    // Check to see if someone has beaten me to this and
     // added free chunks to the global chunk store
-        
-    free_chunk = get_free_chunk_from_global_gc_chunks(new_thread_owner,immutable); 
+
+    free_chunk = get_free_chunk_from_global_gc_chunks(new_thread_owner,immutable);
     unsigned loop_max = 10;
 
     if(returnNullOnFail && free_chunk == NULL) {
@@ -769,12 +769,12 @@ block_info * Garbage_Collector::p_cycle_chunk(block_info *p_used_chunk,
         return NULL;
     }
 
-    while (free_chunk == NULL) { 
+    while (free_chunk == NULL) {
         // Add fresh chunks from the global block_store.USE ALL OF THEM???
         unsigned int free_blocks_in_bs = _p_block_store->get_num_free_blocks_in_block_store();
         // Add at least one...otherwise no forward progress is made
         unsigned int chunks_to_add = (free_blocks_in_bs > GC_NUM_BLOCKS_PER_CHUNK) ? (free_blocks_in_bs / GC_NUM_BLOCKS_PER_CHUNK) : 1;
-        
+
 		if(g_regular_block_ratio != 0.0) {
 			chunks_to_add = (unsigned int)(chunks_to_add * g_regular_block_ratio);
 			if(chunks_to_add == 0) {
@@ -782,10 +782,10 @@ block_info * Garbage_Collector::p_cycle_chunk(block_info *p_used_chunk,
 			}
 		}
         gc_add_fresh_chunks(chunks_to_add);
-        
+
         // Above function may have caused GC if block store was empty.
         // So, we can try again with a very high probability of success.
-        free_chunk = get_free_chunk_from_global_gc_chunks(new_thread_owner,immutable); 
+        free_chunk = get_free_chunk_from_global_gc_chunks(new_thread_owner,immutable);
 
         loop_max--;
         if(loop_max == 0) {
@@ -793,13 +793,13 @@ block_info * Garbage_Collector::p_cycle_chunk(block_info *p_used_chunk,
             exit(17014);
         }
     }
-    
+
     orp_gc_unlock_enum();
     release_chunk_lock(current_thread);
 #else  // CONCURRENT
 
     free_chunk = get_free_chunk_from_global_gc_chunks(new_thread_owner);
-    
+
     if (free_chunk == NULL) {
         if(returnNullOnFail) {
             return NULL;
@@ -809,19 +809,19 @@ block_info * Garbage_Collector::p_cycle_chunk(block_info *p_used_chunk,
         // pressure off the GC lock and makes plugging the GC into other runtimes easier.
         get_chunk_lock(current_thread);
         orp_gc_lock_enum();
-        
-        // Check to see if someone has beaten me to this and 
+
+        // Check to see if someone has beaten me to this and
         // added free chunks to the global chunk store
-        
-        free_chunk = get_free_chunk_from_global_gc_chunks(new_thread_owner); 
+
+        free_chunk = get_free_chunk_from_global_gc_chunks(new_thread_owner);
         unsigned loop_max = 10;
 
-        while (free_chunk == NULL) { 
+        while (free_chunk == NULL) {
             // Add fresh chunks from the global block_store.USE ALL OF THEM???
             unsigned int free_blocks_in_bs = _p_block_store->get_num_free_blocks_in_block_store();
             // Add at least one...otherwise no forward progress is made
             unsigned int chunks_to_add = (free_blocks_in_bs > GC_NUM_BLOCKS_PER_CHUNK) ? (free_blocks_in_bs / GC_NUM_BLOCKS_PER_CHUNK) : 1;
-            
+
 			if(g_regular_block_ratio != 0.0) {
 				chunks_to_add = (unsigned int)(chunks_to_add * g_regular_block_ratio);
 				if(chunks_to_add == 0) {
@@ -829,10 +829,10 @@ block_info * Garbage_Collector::p_cycle_chunk(block_info *p_used_chunk,
 				}
 			}
             gc_add_fresh_chunks(chunks_to_add);
-            
+
             // Above function may have caused GC if block store was empty.
             // So, we can try again with a very high probability of success.
-            free_chunk = get_free_chunk_from_global_gc_chunks(new_thread_owner); 
+            free_chunk = get_free_chunk_from_global_gc_chunks(new_thread_owner);
 
             loop_max--;
             if(loop_max == 0) {
@@ -840,15 +840,15 @@ block_info * Garbage_Collector::p_cycle_chunk(block_info *p_used_chunk,
                 exit(17014);
             }
         }
-        
+
         orp_gc_unlock_enum();
         release_chunk_lock(current_thread);
     }
 
 #endif // CONCURRENT
-    
+
     assert(free_chunk != NULL);
-    
+
     // Better have got some free chunk...
     if (free_chunk) {
         // Make each block in the chunk "active" before returning
@@ -869,8 +869,8 @@ block_info * Garbage_Collector::p_cycle_chunk(block_info *p_used_chunk,
             block->thread_owner = new_thread_owner;
             block = block->next_free_block;
         }
-    } 
-    
+    }
+
     return free_chunk;
 }
 
@@ -879,23 +879,23 @@ block_info * Garbage_Collector::p_cycle_chunk(block_info *p_used_chunk,
 unsigned int Garbage_Collector::return_free_blocks_to_block_store(int blocks_to_return, bool to_coalesce_block_store, bool compaction_has_been_done_this_gc, bool has_block_store_lock) {
     unsigned int num_blocks_returned = 0;
     unsigned int num_empty_chunks = 0;
-    
+
     sweep_stats stats;
-    for (int chunk_index = 0; chunk_index <= _free_chunks_end_index; chunk_index++) {        
+    for (int chunk_index = 0; chunk_index <= _free_chunks_end_index; chunk_index++) {
         chunk_info *this_chunk = &_gc_chunks[chunk_index];
         assert(this_chunk);
-        
+
         if ((this_chunk->chunk) && (this_chunk->chunk->get_nursery_status() != active_nursery)) {
             // Will return only free blocks (no nursery is spent after a GC..either it is active or it is free
             if(this_chunk->chunk->get_nursery_status() != free_nursery) {
                 continue;
             }
-            
+
             block_info *block = this_chunk->chunk;
             assert(block);
-            
+
             block_info *new_chunk_start = NULL;
-            
+
             while (block) {
                 gc_trace_block (block, "in return_free_blocks_to_block_store looking for free blocks");
                 // If any compaction has happened in this GC
@@ -916,12 +916,12 @@ unsigned int Garbage_Collector::return_free_blocks_to_block_store(int blocks_to_
 
                 if (!block->is_empty()) {
                     assert (block->block_free_areas[0].area_size < GC_BLOCK_ALLOC_SIZE);
-                    
+
                     block_info *next_block = block->next_free_block;
                     // Relink onto the new chunk
                     block->next_free_block = new_chunk_start;
                     new_chunk_start = block;
-                    block = next_block;        
+                    block = next_block;
                 } else {
                     gc_trace_block (block, "in return_free_blocks_to_block_store returing free block to block store.");
                     // Fully free block means.....NO live data...can go back to the block store
@@ -937,18 +937,18 @@ unsigned int Garbage_Collector::return_free_blocks_to_block_store(int blocks_to_
             if (new_chunk_start == NULL) {
                 num_empty_chunks++;
             }
-            this_chunk->chunk = this_chunk->free_chunk = new_chunk_start;    
+            this_chunk->chunk = this_chunk->free_chunk = new_chunk_start;
         }
-        
+
         // check if we are done...
         if ((blocks_to_return != -1) && ((int) num_blocks_returned >= blocks_to_return)) {
             // Stop with this chunk
             break;
         }
     }
-    
+
     assert(to_coalesce_block_store == false);
-    
+
     if (stats_gc) {
         orp_cout << "return_free_blocks_to_block_store() returned " << num_blocks_returned << " to the block store\n";
         orp_cout << "amount of usable space found by sweeping = " << stats.amount_recovered << "\n";
@@ -961,7 +961,7 @@ unsigned int Garbage_Collector::return_free_blocks_to_block_store(int blocks_to_
             }
         }
     }
-    
+
     return num_blocks_returned;
 } //return_free_blocks_to_block_store
 
@@ -969,21 +969,21 @@ unsigned int Garbage_Collector::return_free_blocks_to_block_store_prob(float pro
     unsigned int num_blocks_returned = 0;
     unsigned int num_empty_chunks = 0;
 	unsigned int num_blocks_could_returned = 0;
-    
+
     sweep_stats stats;
-    for (int chunk_index = 0; chunk_index <= _free_chunks_end_index; chunk_index++) {        
+    for (int chunk_index = 0; chunk_index <= _free_chunks_end_index; chunk_index++) {
         chunk_info *this_chunk = &_gc_chunks[chunk_index];
         assert(this_chunk);
-        
+
         if ((this_chunk->chunk) && (this_chunk->chunk->get_nursery_status() != active_nursery)) {
             // Will return only free blocks (no nursery is spent after a GC..either it is active or it is free
             if(this_chunk->chunk->get_nursery_status() != free_nursery) {
                 continue;
             }
-            
+
             block_info *block = this_chunk->chunk;
             assert(block);
-            
+
             block_info *new_chunk_start = NULL;
 
 			unsigned total_blocks_so_far = num_blocks_returned + num_blocks_could_returned;
@@ -993,7 +993,7 @@ unsigned int Garbage_Collector::return_free_blocks_to_block_store_prob(float pro
 			} else {
 				do_return = false;
 			}
-            
+
 			if(do_return) {
 	            while (block) {
 					gc_trace_block (block, "in return_free_blocks_to_block_store looking for free blocks");
@@ -1015,12 +1015,12 @@ unsigned int Garbage_Collector::return_free_blocks_to_block_store_prob(float pro
 
 					if (!block->is_empty()) {
 						assert (block->block_free_areas[0].area_size < GC_BLOCK_ALLOC_SIZE);
-                    
+
 						block_info *next_block = block->next_free_block;
 						// Relink onto the new chunk
 						block->next_free_block = new_chunk_start;
 						new_chunk_start = block;
-						block = next_block;        
+						block = next_block;
 					} else {
 						gc_trace_block (block, "in return_free_blocks_to_block_store returing free block to block store.");
 						// Fully free block means.....NO live data...can go back to the block store
@@ -1036,7 +1036,7 @@ unsigned int Garbage_Collector::return_free_blocks_to_block_store_prob(float pro
 				if (new_chunk_start == NULL) {
 					num_empty_chunks++;
 				}
-				this_chunk->chunk = this_chunk->free_chunk = new_chunk_start;    
+				this_chunk->chunk = this_chunk->free_chunk = new_chunk_start;
     		} else {
 	            while (block) {
 					if(block->is_empty()) {
@@ -1047,9 +1047,9 @@ unsigned int Garbage_Collector::return_free_blocks_to_block_store_prob(float pro
 			}
 	    }
     }
-    
+
     assert(to_coalesce_block_store == false);
-    
+
     if (stats_gc) {
         orp_cout << "return_free_blocks_to_block_store() returned " << num_blocks_returned << " to the block store\n";
         orp_cout << "amount of usable space found by sweeping = " << stats.amount_recovered << "\n";
@@ -1062,7 +1062,7 @@ unsigned int Garbage_Collector::return_free_blocks_to_block_store_prob(float pro
             }
         }
     }
-    
+
     return num_blocks_returned;
 } //return_free_blocks_to_block_store
 
@@ -1090,10 +1090,10 @@ void Garbage_Collector::gc_enumerate_root_set_all_threads() {
 #ifdef OLD_MULTI_LOCK
     get_active_thread_gc_info_list_lock();     // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvv Is this needed or can it be placed lower down...
 #endif // OLD_MULTI_LOCK
-    
+
     bool success = false;
     bool all_stopped = false;
-    volatile GC_Thread_Info *temp_active_thread_gc_info_list = active_thread_gc_info_list;   
+    volatile GC_Thread_Info *temp_active_thread_gc_info_list = active_thread_gc_info_list;
     GC_Thread_Info *this_thread = (struct GC_Thread_Info *)get_gc_thread_local();
 
     //    volatile GC_Thread_Info *previous_active_thread_gc_info_list = active_thread_gc_info_list;
@@ -1106,7 +1106,7 @@ void Garbage_Collector::gc_enumerate_root_set_all_threads() {
         temp_active_thread_gc_info_list = temp_active_thread_gc_info_list->p_active_gc_thread_info;
     }
 
-    /* Enumerate this thread first before all the others are stopped, it can actually be enumerated anywhere. 
+    /* Enumerate this thread first before all the others are stopped, it can actually be enumerated anywhere.
        Adam: Consulted with Rick moving it here - need to access the thread initiating GC for irrevocability */
     if(this_thread) {
         enumerate_thread (this_thread);
@@ -1120,7 +1120,7 @@ void Garbage_Collector::gc_enumerate_root_set_all_threads() {
                     /* No need to stop this thread */
                     success = orp_suspend_thread_for_enumeration ((PrtTaskHandle)temp_active_thread_gc_info_list->thread_handle);
                     if (success) {
-                        temp_active_thread_gc_info_list->enumeration_state = gc_enumeration_state_stopped; 
+                        temp_active_thread_gc_info_list->enumeration_state = gc_enumeration_state_stopped;
                         enumerate_thread(temp_active_thread_gc_info_list);
                     } else {
 //                        all_stopped = false;
@@ -1130,7 +1130,7 @@ void Garbage_Collector::gc_enumerate_root_set_all_threads() {
             temp_active_thread_gc_info_list = temp_active_thread_gc_info_list->p_active_gc_thread_info;
         }
     }
-    
+
 //    printf("Num roots from threads = %d\n",_num_roots);
     orp_enumerate_global_refs();
 //    printf("Num roots from threads + globals = %d\n",_num_roots);
@@ -1143,7 +1143,7 @@ void Garbage_Collector::gc_enumerate_root_set_all_threads() {
 void Garbage_Collector::stop_the_world() {
     bool success = false;
     bool all_stopped = false;
-    volatile GC_Thread_Info *temp_active_thread_gc_info_list = active_thread_gc_info_list;   
+    volatile GC_Thread_Info *temp_active_thread_gc_info_list = active_thread_gc_info_list;
     GC_Thread_Info *this_thread = (struct GC_Thread_Info *)get_gc_thread_local();
 
     //    volatile GC_Thread_Info *previous_active_thread_gc_info_list = active_thread_gc_info_list;
@@ -1178,7 +1178,7 @@ void Garbage_Collector::stop_the_world() {
 } // Garbage_Collector::stop_the_world
 
 void Garbage_Collector::enumerate_the_world(void) {
-    volatile GC_Thread_Info *temp_active_thread_gc_info_list = active_thread_gc_info_list;   
+    volatile GC_Thread_Info *temp_active_thread_gc_info_list = active_thread_gc_info_list;
     //    volatile GC_Thread_Info *previous_active_thread_gc_info_list = active_thread_gc_info_list;
     assert (active_thread_gc_info_list);
 
@@ -1191,7 +1191,7 @@ void Garbage_Collector::enumerate_the_world(void) {
 } // Garbage_Collector::enumerate_the_world
 
 void Garbage_Collector::resume_the_world(void) {
-    volatile GC_Thread_Info *temp_active_thread_gc_info_list = active_thread_gc_info_list;   
+    volatile GC_Thread_Info *temp_active_thread_gc_info_list = active_thread_gc_info_list;
     //    volatile GC_Thread_Info *previous_active_thread_gc_info_list = active_thread_gc_info_list;
     assert (active_thread_gc_info_list);
 
@@ -1212,7 +1212,7 @@ void Garbage_Collector::resume_the_world(void) {
 } // Garbage_Collector::resume_the_world
 
 
-/* RLH is rolling this back USE_GC_STW is being used as the #ifdef for the rollback so it needs to 
+/* RLH is rolling this back USE_GC_STW is being used as the #ifdef for the rollback so it needs to
  * be defined in more than this file to reenable GC_STW.
  */
 
@@ -1452,17 +1452,17 @@ unsigned int PRT_STDCALL gc_reclamation_func(void *arg) {
 
 void Garbage_Collector::init_gc_threads() {
     assert(_gc_threads == NULL);
-    
+
     _gc_threads = (GC_Thread **) malloc(sizeof(GC_Thread *) * g_num_cpus);
     assert(_gc_threads);
-    
+
     unsigned i;
     for (i = 0; i < g_num_cpus; i++) {
         // Point the GC thread to the GC object
         _gc_threads[i] = new GC_Thread(this, i);
         assert(_gc_threads[i]);
-    }        
-    
+    }
+
     // Grab the work done handles of the GC worker threads so that we know when the work is done by each thread
     for (i = 0; i < g_num_cpus; i++) {
         _gc_thread_work_finished_event_handles[i] = _gc_threads[i]->get_gc_thread_work_done_event_handle();
@@ -1474,18 +1474,18 @@ void Garbage_Collector::reset_gc_threads(bool compaction_gc) {
     for (unsigned int i = 0; i < g_num_cpus ; i++) {
         assert(_gc_threads[i]);
         _gc_threads[i]->reset(compaction_gc);
-    }        
+    }
 }
 
 void Garbage_Collector::get_gc_threads_to_begin_task(gc_thread_action task) {
     for (unsigned int y = 0; y < g_num_cpus; y++) {
-        
+
         _gc_threads[y]->set_task_to_do(task);
         Boolean sstat = orp_synch_set_event(_gc_threads[y]->get_gc_thread_start_work_event_handle());
         assert(sstat);
     }
 }
- 
+
 void Garbage_Collector::wait_for_gc_threads_to_complete_assigned_task() {
     unsigned int ret = orp_synch_wait_for_multiple_events( g_num_cpus, _gc_thread_work_finished_event_handles, INFINITE);
     assert((ret != EVENT_WAIT_TIMEOUT) && (ret != EVENT_WAIT_FAILED));
@@ -1511,7 +1511,7 @@ void Garbage_Collector::identify_and_mark_objects_moving_to_finalizable_queue(bo
 
     std::list<Partial_Reveal_Object*>::iterator finalize_iter = m_listFinalize->begin();
 
-    // Make sure the set of objects added to the finalizable queue in the 
+    // Make sure the set of objects added to the finalizable queue in the
     // previous GC has been emptied.
     m_unmarked_objects.clear();
 
@@ -1533,13 +1533,13 @@ void Garbage_Collector::identify_and_mark_objects_moving_to_finalizable_queue(bo
             // remove and use !m_unmarked_objects.empty()
             object_was_finalizable   = true;
         }
-            
+
         if (_num_roots >= num_root_limit) {
             expand_root_arrays();
         }
-        
+
         // The eumeration needs to provide a set which means no duplicates. Remove duplicates here.
-        
+
         Partial_Reveal_Object **slot = NULL;
         if (object_was_finalizable) {
             // Add a root that could be modified later from m_unmarked_objects list.
@@ -1620,9 +1620,9 @@ void Garbage_Collector::expand_root_arrays() {
 // latter approach may be employed later.
 void Garbage_Collector::process_weak_roots(bool process_short_roots,bool compaction_this_gc) {
     std::list<MyPair> *cur_list = NULL;
-    if (process_short_roots) { 
+    if (process_short_roots) {
         cur_list = &m_short_weak_roots;
-    } else { 
+    } else {
         cur_list = &m_long_weak_roots;
     }
 
@@ -1636,7 +1636,7 @@ void Garbage_Collector::process_weak_roots(bool process_short_roots,bool compact
 
         // Remove the first item from the list.
         cur_list->pop_front();
-        
+
         // No need to do anything if the root is already a NULL pointer.
         if (!root_object) {
             continue;
@@ -1658,7 +1658,7 @@ void Garbage_Collector::process_weak_roots(bool process_short_roots,bool compact
             if (_num_roots >= num_root_limit) {
                 expand_root_arrays();
             }
-            
+
             assert (dup_removal_enum_hash_table->size() == _num_roots);
             if (dup_removal_enum_hash_table->add_entry_if_required(root_slot)) {
                 assert(*root_slot);
@@ -1666,7 +1666,7 @@ void Garbage_Collector::process_weak_roots(bool process_short_roots,bool compact
             } else  {
                 assert(0);
             }
-            
+
             // save away this root as well so that it can be updated
             if(compaction_this_gc) {
                 _save_array_of_roots[_num_roots] = root_slot;
@@ -1686,9 +1686,9 @@ void Garbage_Collector::process_weak_roots(bool process_short_roots,bool compact
 
 void Garbage_Collector::process_weak_roots_concurrent(bool process_short_roots) {
     std::list<MyPair> *cur_list = NULL;
-    if (process_short_roots) { 
+    if (process_short_roots) {
         cur_list = &m_short_weak_roots;
-    } else { 
+    } else {
         cur_list = &m_long_weak_roots;
     }
 
@@ -1702,7 +1702,7 @@ void Garbage_Collector::process_weak_roots_concurrent(bool process_short_roots) 
 
         // Remove the first item from the list.
         cur_list->pop_front();
-        
+
         if(*(pair.rootAddr) == NULL) {
             continue;
         }
@@ -1730,14 +1730,14 @@ void Garbage_Collector::repoint_all_roots_into_compacted_areas() {
         // Save current low bits on the root.
         unsigned low_bits = (*(unsigned*)root_slot) & 0x3;
         // Get a pointer to the original object minus the low bits.
-        Partial_Reveal_Object *root_object = (Partial_Reveal_Object*)((POINTER_SIZE_INT)(*root_slot) & ~(0x3));
+        Partial_Reveal_Object *root_object = (Partial_Reveal_Object*)((uintptr_t)(*root_slot) & ~(0x3));
         if (root_object->isForwarded()) { // has been forwarded
             // only objects in compaction blocks get forwarded
             assert(is_compaction_block(GC_BLOCK_INFO(root_object)));
-            
+
             Partial_Reveal_Object *new_root_object = root_object->get_forwarding_pointer();
             // Update root slot and add back in any low bits set in the original root.
-            *root_slot = (Partial_Reveal_Object*)((POINTER_SIZE_INT)new_root_object | low_bits);
+            *root_slot = (Partial_Reveal_Object*)((uintptr_t)new_root_object | low_bits);
             roots_repointed++;
         }
     }
@@ -1777,13 +1777,13 @@ void Garbage_Collector::repoint_all_roots_with_offset_into_compacted_areas() {
         Partial_Reveal_Object *root_base = entry.base;
         POINTER_SIZE_INT root_offset = entry.offset;
 
-        uint32 new_slot_contents = (uint32)(POINTER_SIZE_INT)((Byte*)root_base - root_offset);
+        uint32 new_slot_contents = (uint32)(uintptr_t)((Byte*)root_base - root_offset);
         if (new_slot_contents != *root_slot) {
             *root_slot = new_slot_contents;
             roots_with_offset_repointed ++;
         }
     }
-    
+
     if (stats_gc) {
         orp_cout << "roots_with_offset_repointed = " << roots_with_offset_repointed << std::endl;
     }
@@ -1828,7 +1828,7 @@ Arena *init_arena(void *space,Arena *next_arena,/*unsigned*/ size_t size) {
 Arena *alloc_arena(Arena *next,/*unsigned*/ size_t size) {
     // malloc a chunk of memory for a new arena
     // we add space for 3 pointers - the arena's next and end fields and next arena
-    // make sure it is rounded up or else space will be wasted 
+    // make sure it is rounded up or else space will be wasted
     // and unneccesssary reallocs will occur
     unsigned header_size = (sizeof(struct Arena *)+sizeof(char *)+sizeof(char *));
     return init_arena(malloc(size + header_size),next,size);
@@ -1859,7 +1859,7 @@ Arena *free_all_but_one_arena(Arena *a) {
 void *arena_alloc_space(Arena *arena,/*unsigned*/ size_t size) {
     if (size == 0)
         return NULL;
-    
+
     if (arena->next_byte + size > arena->last_byte) {
         // not enough space
         return NULL;
@@ -1896,12 +1896,12 @@ extern "C" void local_root_callback(void *env, void **rootAddr, PrtGcTag tag, vo
             the_roots->add_inter_slot((Partial_Reveal_Object**)rootAddr, NULL /* unknown base */);
             break;
         case PrtGcTagOffset:
-            offset = (POINTER_SIZE_INT)parameter;
+            offset = (uintptr_t)parameter;
             assert(offset > 0);
 
             p_obj = (Partial_Reveal_Object *)((Byte*)*rootAddr - offset);
             assert (p_obj->vt());
-            
+
             the_roots->interior_pointer_table_public.add_entry (slot_offset_entry(rootAddr, p_obj, offset));
             // pass the slot from the interior pointer table to the gc.
 //            addr = the_roots->interior_pointer_table_public.get_last_addr();
@@ -1910,8 +1910,8 @@ extern "C" void local_root_callback(void *env, void **rootAddr, PrtGcTag tag, vo
         case PrtGcTagBase:
             p_obj = (Partial_Reveal_Object *)parameter;
             assert (p_obj->vt());
-            
-            offset = (POINTER_SIZE_INT)*rootAddr - (POINTER_SIZE_INT)p_obj;
+
+            offset = (uintptr_t)*rootAddr - (uintptr_t)p_obj;
             the_roots->interior_pointer_table_public.add_entry (slot_offset_entry(rootAddr, p_obj, offset));
             // pass the slot from the interior pointer table to the gc.
 //            addr = the_roots->interior_pointer_table_public.get_last_addr();
@@ -1928,7 +1928,7 @@ extern "C" void local_root_callback(void *env, void **rootAddr, PrtGcTag tag, vo
         the_roots->m_roots.push_back((Partial_Reveal_Object**)rootAddr);
         break;
     case PrtGcTagOffset:
-        offset = (POINTER_SIZE_INT)parameter;
+        offset = (uintptr_t)parameter;
         assert(offset > 0);
 
         p_obj = (Partial_Reveal_Object *)((Byte*)*rootAddr - offset);
@@ -1942,7 +1942,7 @@ extern "C" void local_root_callback(void *env, void **rootAddr, PrtGcTag tag, vo
     case PrtGcTagBase:
         p_obj = (Partial_Reveal_Object *)parameter;
         assert (p_obj->vt());
-        offset = (POINTER_SIZE_INT)*rootAddr - (POINTER_SIZE_INT)p_obj;
+        offset = (uintptr_t)*rootAddr - (uintptr_t)p_obj;
         the_roots->interior_pointer_table.add_entry (slot_offset_entry(rootAddr, p_obj, offset));
         // pass the slot from the interior pointer table to the gc.
         addr = the_roots->interior_pointer_table.get_last_addr();
@@ -1962,8 +1962,8 @@ extern "C" void local_root_callback(void *env, void **rootAddr, PrtGcTag tag, vo
 
 #ifdef NEW_APPROACH
 
-inline static void local_scan_one_slot (Slot p_slot, 
-                                        pn_info &collector, 
+inline static void local_scan_one_slot (Slot p_slot,
+                                        pn_info &collector,
                                         INTER_SLOT_MODE collect_inter_slots,
                                         bool is_weak=false) {
 #if defined _DEBUG
@@ -2000,7 +2000,7 @@ inline static void local_scan_one_slot (Slot p_slot,
 			if(!p_obj->isMarked()) {
                 push_bottom_on_local_mark_stack(p_obj, &(collector.mark_stack));
 			}
-		} 
+		}
         if(collect_inter_slots == PRIVATE_HEAP_SLOT_NON_ESCAPING) {
             if(p_obj->isLowFlagSet()) {
                 collector.add_inter_slot((Partial_Reveal_Object**)p_slot.get_value(),p_slot.base);
@@ -2040,9 +2040,9 @@ inline static void local_scan_one_slot (Slot p_slot,
 //===========================================================================================================
 
 // Returns true if this array has an entry that points into the private heap.
-static inline void local_scan_one_array_object(Partial_Reveal_Object *p_object, 
+static inline void local_scan_one_array_object(Partial_Reveal_Object *p_object,
                                                Partial_Reveal_VTable *obj_vt,
-                                               pn_info &collector, 
+                                               pn_info &collector,
                                                INTER_SLOT_MODE collect_inter_slots)
 {
     Type_Info_Handle tih = class_get_element_type_info(obj_vt->get_gcvt()->gc_clss);
@@ -2053,14 +2053,14 @@ static inline void local_scan_one_array_object(Partial_Reveal_Object *p_object,
 
         // Initialize the array scanner which will scan the array from the
         // top to the bottom. IE from the last element to the first element.
-    
+
         int32 array_length = vector_get_length_with_vt((Vector_Handle)p_object,obj_vt);
         for (int32 i=start_index; i < array_length; i++) {
             Slot p_element(vector_get_element_address_ref_with_vt((Vector_Handle)p_object, i, obj_vt));
             p_element.base = p_object;
             local_scan_one_slot(p_element, collector, collect_inter_slots);
         }
-    } else if(type_info_is_primitive(tih)) { 
+    } else if(type_info_is_primitive(tih)) {
         // intentionally do nothing
     } else if(type_info_is_unboxed(tih)) {
         Class_Handle ech = type_info_get_class(tih);
@@ -2110,9 +2110,9 @@ static inline void local_scan_one_array_object(Partial_Reveal_Object *p_object,
 //===========================================================================================================
 
 // Returns true if this object has an entry that points into the private heap.
-static void local_scan_one_object(Partial_Reveal_Object *p_obj, 
+static void local_scan_one_object(Partial_Reveal_Object *p_obj,
                                   Partial_Reveal_VTable *obj_vt,
-                                  pn_info &collector, 
+                                  pn_info &collector,
                                   INTER_SLOT_MODE collect_inter_slots) {
     if(obj_vt == wpo_vtable && !g_treat_wpo_as_normal) {
         weak_pointer_object *wpo = (weak_pointer_object*)p_obj;
@@ -2142,7 +2142,7 @@ static void local_scan_one_object(Partial_Reveal_Object *p_obj,
     if (obj_gcvt->gc_object_has_slots) {
         if (is_vt_array(obj_vt)) {
             local_scan_one_array_object(p_obj, obj_vt, collector, collect_inter_slots);
-        } 
+        }
 
         unsigned int *offset_scanner = init_object_scanner_from_vt (obj_vt);
         Slot pp_target_object(NULL);
@@ -2150,8 +2150,8 @@ static void local_scan_one_object(Partial_Reveal_Object *p_obj,
 
         while ((pp_target_object.set(p_get_ref(offset_scanner, p_obj))) != NULL) {
             // Each live object in the heap gets scanned exactly once...so each live EDGE in the heap gets looked at exactly once...
-            // So, the logic here is independent of whether the object pointed to by this slot has already been reached and 
-            // marked by the collector...we still need to collect edge counts since this edge is being visited for the first 
+            // So, the logic here is independent of whether the object pointed to by this slot has already been reached and
+            // marked by the collector...we still need to collect edge counts since this edge is being visited for the first
             // and last time...
             // If parent is not a delinquent type we are not interested in this edge at all....
             local_scan_one_slot (pp_target_object, collector, collect_inter_slots);
@@ -2165,8 +2165,8 @@ static void local_scan_one_object(Partial_Reveal_Object *p_obj,
 
         while ((pp_target_object.set(p_get_ref(offset_scanner, p_obj))) != NULL) {
             // Each live object in the heap gets scanned exactly once...so each live EDGE in the heap gets looked at exactly once...
-            // So, the logic here is independent of whether the object pointed to by this slot has already been reached and 
-            // marked by the collector...we still need to collect edge counts since this edge is being visited for the first 
+            // So, the logic here is independent of whether the object pointed to by this slot has already been reached and
+            // marked by the collector...we still need to collect edge counts since this edge is being visited for the first
             // and last time...
             // If parent is not a delinquent type we are not interested in this edge at all....
             local_scan_one_slot (pp_target_object, collector, collect_inter_slots, true);
@@ -2178,10 +2178,10 @@ static void local_scan_one_object(Partial_Reveal_Object *p_obj,
 
 #else
 
-inline static void local_scan_one_slot (PncLiveObject *from_pnc, 
+inline static void local_scan_one_slot (PncLiveObject *from_pnc,
                                  PncLiveObject *to_pnc,
-                                 Slot p_slot, 
-                                 pn_info &collector, 
+                                 Slot p_slot,
+                                 pn_info &collector,
                                  INTER_SLOT_MODE collect_inter_slots,
                                  bool is_weak=false)
 {
@@ -2194,7 +2194,7 @@ inline static void local_scan_one_slot (PncLiveObject *from_pnc,
         return;
     }
     Partial_Reveal_Object *p_obj = p_slot.dereference();
-    
+
     if(collect_inter_slots != ONLY_INTER_SLOT) {
 		REMOVE_INDIR_RES rir;
 		while((rir = remove_one_indirection(p_obj, p_slot, 5)) == RI_REPLACE_OBJ);
@@ -2250,14 +2250,14 @@ inline static void local_scan_one_slot (PncLiveObject *from_pnc,
                         dest_prefix = "ML";
                     }
                 }
-                (*collector.ph_ofstream) << to_prefix.c_str() << to_pnc->old_location << " -> " << 
+                (*collector.ph_ofstream) << to_prefix.c_str() << to_pnc->old_location << " -> " <<
                                           dest_prefix.c_str() << p_obj << " ;\n";
             }
 #endif
 			if(!p_obj->isMarked()) {
                 push_bottom_on_local_mark_stack(to_pnc, p_obj, &(collector.mark_stack));
 			}
-		} 
+		}
 		if(collect_inter_slots != NO_INTER_SLOT) {
             collector.add_inter_slot((Partial_Reveal_Object**)p_slot.get_value(),p_slot.base);
 		}
@@ -2292,11 +2292,11 @@ inline static void local_scan_one_slot (PncLiveObject *from_pnc,
 //===========================================================================================================
 
 // Returns true if this array has an entry that points into the private heap.
-static inline void local_scan_one_array_object(Partial_Reveal_Object *p_object, 
+static inline void local_scan_one_array_object(Partial_Reveal_Object *p_object,
                                                Partial_Reveal_VTable *obj_vt,
                                                PncLiveObject *from_pnc,
                                                PncLiveObject *to_pnc,
-                                               pn_info &collector, 
+                                               pn_info &collector,
                                                INTER_SLOT_MODE collect_inter_slots)
 {
     Type_Info_Handle tih = class_get_element_type_info(obj_vt->get_gcvt()->gc_clss);
@@ -2307,14 +2307,14 @@ static inline void local_scan_one_array_object(Partial_Reveal_Object *p_object,
 
         // Initialize the array scanner which will scan the array from the
         // top to the bottom. IE from the last element to the first element.
-    
+
         int32 array_length = vector_get_length_with_vt((Vector_Handle)p_object,obj_vt);
         for (int32 i=start_index; i < array_length; i++) {
             Slot p_element(vector_get_element_address_ref_with_vt((Vector_Handle)p_object, i, obj_vt));
             p_element.base = p_object;
             local_scan_one_slot(from_pnc, to_pnc, p_element, collector, collect_inter_slots);
         }
-    } else if(type_info_is_primitive(tih)) { 
+    } else if(type_info_is_primitive(tih)) {
         // intentionally do nothing
     } else if(type_info_is_unboxed(tih)) {
         Class_Handle ech = type_info_get_class(tih);
@@ -2364,11 +2364,11 @@ static inline void local_scan_one_array_object(Partial_Reveal_Object *p_object,
 //===========================================================================================================
 
 // Returns true if this object has an entry that points into the private heap.
-static void local_scan_one_object(Partial_Reveal_Object *p_obj, 
+static void local_scan_one_object(Partial_Reveal_Object *p_obj,
                                   Partial_Reveal_VTable *obj_vt,
                                   PncLiveObject *from_pnc,
                                   PncLiveObject *to_pnc,
-                                  pn_info &collector, 
+                                  pn_info &collector,
                                   INTER_SLOT_MODE collect_inter_slots) {
     if(obj_vt == wpo_vtable && !g_treat_wpo_as_normal) {
         weak_pointer_object *wpo = (weak_pointer_object*)p_obj;
@@ -2398,7 +2398,7 @@ static void local_scan_one_object(Partial_Reveal_Object *p_obj,
     if (obj_gcvt->gc_object_has_slots) {
         if (is_vt_array(obj_vt)) {
             local_scan_one_array_object(p_obj, obj_vt, from_pnc, to_pnc, collector, collect_inter_slots);
-        } 
+        }
 
         unsigned int *offset_scanner = init_object_scanner_from_vt (obj_vt);
         Slot pp_target_object(NULL);
@@ -2406,8 +2406,8 @@ static void local_scan_one_object(Partial_Reveal_Object *p_obj,
 
         while ((pp_target_object.set(p_get_ref(offset_scanner, p_obj))) != NULL) {
             // Each live object in the heap gets scanned exactly once...so each live EDGE in the heap gets looked at exactly once...
-            // So, the logic here is independent of whether the object pointed to by this slot has already been reached and 
-            // marked by the collector...we still need to collect edge counts since this edge is being visited for the first 
+            // So, the logic here is independent of whether the object pointed to by this slot has already been reached and
+            // marked by the collector...we still need to collect edge counts since this edge is being visited for the first
             // and last time...
             // If parent is not a delinquent type we are not interested in this edge at all....
             local_scan_one_slot (from_pnc, to_pnc, pp_target_object, collector, collect_inter_slots);
@@ -2421,8 +2421,8 @@ static void local_scan_one_object(Partial_Reveal_Object *p_obj,
 
         while ((pp_target_object.set(p_get_ref(offset_scanner, p_obj))) != NULL) {
             // Each live object in the heap gets scanned exactly once...so each live EDGE in the heap gets looked at exactly once...
-            // So, the logic here is independent of whether the object pointed to by this slot has already been reached and 
-            // marked by the collector...we still need to collect edge counts since this edge is being visited for the first 
+            // So, the logic here is independent of whether the object pointed to by this slot has already been reached and
+            // marked by the collector...we still need to collect edge counts since this edge is being visited for the first
             // and last time...
             // If parent is not a delinquent type we are not interested in this edge at all....
             local_scan_one_slot (from_pnc, to_pnc, pp_target_object, collector, collect_inter_slots, true);
@@ -2513,14 +2513,14 @@ void pn_collection_process_obj_slot(Slot p_slot, Partial_Reveal_Object *p_obj, v
                         dest_prefix = "ML";
                     }
                 }
-                (*info->collector->ph_ofstream) << to_prefix.c_str() << info->to_pnc->old_location << " -> " << 
+                (*info->collector->ph_ofstream) << to_prefix.c_str() << info->to_pnc->old_location << " -> " <<
                                           dest_prefix.c_str() << p_obj << " ;\n";
             }
 #endif
 			if(!p_obj->isMarked()) {
                 push_bottom_on_local_mark_stack(info->to_pnc, p_obj, &(info->collector->mark_stack));
 			}
-		} 
+		}
 		if(info->collect_inter_slots != NO_INTER_SLOT) {
             info->collector->add_inter_slot((Partial_Reveal_Object**)p_slot.get_value(),p_slot.base);
 		}
@@ -2552,7 +2552,7 @@ void pn_collection_process_obj_slot(Slot p_slot, Partial_Reveal_Object *p_obj, v
     }
 }
 
-inline void generic_scan_one_slot(Slot p_slot, 
+inline void generic_scan_one_slot(Slot p_slot,
                                   GenericScanControl *control,
                                   bool is_weak=false) {
 #if defined _DEBUG
@@ -2571,7 +2571,7 @@ inline void generic_scan_one_slot(Slot p_slot,
 } // generic_scan_one_slot
 
 // Returns true if this array has an entry that points into the private heap.
-inline void generic_scan_one_array_object(Partial_Reveal_Object *p_object, 
+inline void generic_scan_one_array_object(Partial_Reveal_Object *p_object,
                                           Partial_Reveal_VTable *obj_vt,
                                           GenericScanControl *control) {
     Type_Info_Handle tih = class_get_element_type_info(obj_vt->get_gcvt()->gc_clss);
@@ -2582,14 +2582,14 @@ inline void generic_scan_one_array_object(Partial_Reveal_Object *p_object,
 
         // Initialize the array scanner which will scan the array from the
         // top to the bottom. IE from the last element to the first element.
-    
+
         int32 array_length = vector_get_length_with_vt((Vector_Handle)p_object,obj_vt);
         for (int32 i=start_index; i < array_length; i++) {
             Slot p_element(vector_get_element_address_ref_with_vt((Vector_Handle)p_object, i, obj_vt));
             p_element.base = p_object;
             generic_scan_one_slot(p_element, control);
         }
-    } else if(type_info_is_primitive(tih)) { 
+    } else if(type_info_is_primitive(tih)) {
         // intentionally do nothing
     } else if(type_info_is_unboxed(tih)) {
         Class_Handle ech = type_info_get_class(tih);
@@ -2636,7 +2636,7 @@ inline void generic_scan_one_array_object(Partial_Reveal_Object *p_object,
     } else assert(!"Tried to scan an array of unknown internal type.");
 } // generic_scan_one_array_object
 
-void generic_scan_one_object(Partial_Reveal_Object *p_obj, 
+void generic_scan_one_object(Partial_Reveal_Object *p_obj,
                              Partial_Reveal_VTable *obj_vt,
                              GenericScanControl *control) {
     if(obj_vt == wpo_vtable && !g_treat_wpo_as_normal) {
@@ -2667,7 +2667,7 @@ void generic_scan_one_object(Partial_Reveal_Object *p_obj,
     if (obj_gcvt->gc_object_has_slots) {
         if (is_vt_array(obj_vt)) {
             generic_scan_one_array_object(p_obj, obj_vt, control);
-        } 
+        }
 
         unsigned int *offset_scanner = init_object_scanner_from_vt (obj_vt);
         Slot pp_target_object(NULL);
@@ -2675,8 +2675,8 @@ void generic_scan_one_object(Partial_Reveal_Object *p_obj,
 
         while ((pp_target_object.set(p_get_ref(offset_scanner, p_obj))) != NULL) {
             // Each live object in the heap gets scanned exactly once...so each live EDGE in the heap gets looked at exactly once...
-            // So, the logic here is independent of whether the object pointed to by this slot has already been reached and 
-            // marked by the collector...we still need to collect edge counts since this edge is being visited for the first 
+            // So, the logic here is independent of whether the object pointed to by this slot has already been reached and
+            // marked by the collector...we still need to collect edge counts since this edge is being visited for the first
             // and last time...
             // If parent is not a delinquent type we are not interested in this edge at all....
             generic_scan_one_slot (pp_target_object, control);
@@ -2690,8 +2690,8 @@ void generic_scan_one_object(Partial_Reveal_Object *p_obj,
 
         while ((pp_target_object.set(p_get_ref(offset_scanner, p_obj))) != NULL) {
             // Each live object in the heap gets scanned exactly once...so each live EDGE in the heap gets looked at exactly once...
-            // So, the logic here is independent of whether the object pointed to by this slot has already been reached and 
-            // marked by the collector...we still need to collect edge counts since this edge is being visited for the first 
+            // So, the logic here is independent of whether the object pointed to by this slot has already been reached and
+            // marked by the collector...we still need to collect edge counts since this edge is being visited for the first
             // and last time...
             // If parent is not a delinquent type we are not interested in this edge at all....
             generic_scan_one_slot (pp_target_object, control, true);
@@ -2761,8 +2761,8 @@ bool lc_finalize_object_not_marked(Partial_Reveal_Object *obj) {
 
 void local_mark_loop(pn_info *local_collector,
                      unsigned &size_survivors,
-                     NEW_LOCATION_CLASSIFIER default_new_loc, 
-                     INTER_SLOT_MODE collect_inter_slots, 
+                     NEW_LOCATION_CLASSIFIER default_new_loc,
+                     INTER_SLOT_MODE collect_inter_slots,
                      uint64_t *count,
                      void (*end_loop)(Partial_Reveal_Object*)) {
     Partial_Reveal_Object *obj_to_trace;
@@ -2838,7 +2838,7 @@ void setLowBit(Partial_Reveal_Object *p_obj) {
 void cheney_roots(GC_Small_Nursery_Info *private_nursery,
                   struct PrtStackIterator *additional_si_to_walk,
                   pn_info *local_collector,
-                  void *thread_handle, 
+                  void *thread_handle,
                   bool use_watermarks) {
     unsigned root_index;
 
@@ -2948,7 +2948,7 @@ void cheney_roots(GC_Small_Nursery_Info *private_nursery,
         ++root_index) {
         Partial_Reveal_Object **root = (Partial_Reveal_Object**)&(local_collector->m_wpos[root_index]);
         local_collector->m_roots.push_back(root);
-    }            
+    }
 
     // ====weak pointer stuff end==============
 } // cheney_roots
@@ -2958,8 +2958,8 @@ void cheney_roots(GC_Small_Nursery_Info *private_nursery,
 void local_nursery_roots_and_mark(GC_Small_Nursery_Info *private_nursery,
                                   struct PrtStackIterator *additional_si_to_walk,
                                   pn_info *local_collector,
-                                  void *thread_handle, 
-                                  INTER_SLOT_MODE collect_inter_slots, 
+                                  void *thread_handle,
+                                  INTER_SLOT_MODE collect_inter_slots,
                                   Partial_Reveal_Object *escaping_object,
                                   unsigned &size_survivors,
                                   bool is_future,
@@ -3115,7 +3115,7 @@ void local_nursery_roots_and_mark(GC_Small_Nursery_Info *private_nursery,
     }
 
     bool futures_escaped = false;
-    
+
     // If we are doing this collection because a future is escaping then we check if
     // any other futures with the same vtable are in the private nursery and if so we
     // move them as well.  We know that futures will be enumerated as roots from the
@@ -3174,7 +3174,7 @@ void local_nursery_roots_and_mark(GC_Small_Nursery_Info *private_nursery,
                     local_collector->add_inter_slot(root,NULL /* no object base for roots */);
                 }
             }
-        
+
             if(!(*root)->isMarked()) {
 #ifdef NEW_APPROACH
                 push_bottom_on_local_mark_stack(*root,&(local_collector->mark_stack));
@@ -3248,7 +3248,7 @@ void local_nursery_roots_and_mark(GC_Small_Nursery_Info *private_nursery,
         if(get_object_location(*root,local_collector) != PRIVATE_NURSERY) {
             assert(0);
         }
-            
+
 #ifdef NEW_APPROACH
         push_bottom_on_local_mark_stack(*root,&(local_collector->mark_stack));
 #else
@@ -3276,13 +3276,13 @@ void local_nursery_roots_and_mark(GC_Small_Nursery_Info *private_nursery,
 
 		assert(is_object_pointer(root));
         assert(get_object_location(root,local_collector) == PRIVATE_NURSERY);
-        
+
 #ifdef NEW_APPROACH
         push_bottom_on_local_mark_stack(root,&(local_collector->mark_stack));
 #else
         push_bottom_on_local_mark_stack(NULL,root,&(local_collector->mark_stack));
 #endif
-    }            
+    }
 
     local_mark_loop(local_collector,size_survivors,CAN_STAY,collect_inter_slots,NULL,NULL);
 
@@ -3310,7 +3310,7 @@ void local_nursery_roots_and_mark(GC_Small_Nursery_Info *private_nursery,
         }
     }
     if(for_local_collection) {
-        std::vector<Partial_Reveal_Object*>::iterator new_end = 
+        std::vector<Partial_Reveal_Object*>::iterator new_end =
             std::remove_if(local_collector->m_finalize.begin(), local_collector->m_finalize.end(), lc_finalize_object_not_marked);
         local_collector->m_finalize.erase(new_end, local_collector->m_finalize.end());
     }
@@ -3442,7 +3442,7 @@ void make_object_gray_local(pn_info *local_collector,Partial_Reveal_Object *obj)
     }
 } // make_object_gray
 
-void make_object_gray_in_concurrent_thread(Partial_Reveal_Object *obj, 
+void make_object_gray_in_concurrent_thread(Partial_Reveal_Object *obj,
                                            std::deque<Partial_Reveal_Object *> &gray_list) {
 #ifdef _DEBUG
 //    g_remembered_lives.insert(obj);
@@ -3468,7 +3468,7 @@ void make_object_gray_in_concurrent_thread(Partial_Reveal_Object *obj,
 
 //===========================================================================================================
 
-void report_one_slot_to_concurrent_gc(Partial_Reveal_Object *pro, 
+void report_one_slot_to_concurrent_gc(Partial_Reveal_Object *pro,
                                       pn_info *local_collector,
                                       std::vector<Partial_Reveal_Object*> &gray_list) {
     OBJECT_LOCATION location = get_object_location(pro,local_collector);
@@ -3552,7 +3552,7 @@ unsigned ADAPTIVE_SEARCHING_SAMPLE_SIZE  = 2;
 unsigned ADAPTIVE_PHASE_SAMPLE_SIZE      = 100000;
 unsigned ADAPTIVE_HIGH_LOW_SAMPLE_SIZE   = 100000;
 float    ADAPTIVE_HIGH_LOW_FACTOR        = 0.05;
-float    ADAPTIVE_PHASE_THRESHOLD        = 2.0; 
+float    ADAPTIVE_PHASE_THRESHOLD        = 2.0;
 
 //#define ADAPTIVE_DEBUG
 
@@ -3568,7 +3568,7 @@ void do_nursery_size_adaptation(
     }
 #endif // 0
 
-    unsigned space_used_this_time = ((POINTER_SIZE_INT)private_nursery->tls_current_free - (POINTER_SIZE_INT)private_nursery->start);
+    unsigned space_used_this_time = ((uintptr_t)private_nursery->tls_current_free - (uintptr_t)private_nursery->start);
     if(space_used_this_time > 10000) {
         local_collector->adaptive_cumul_time += time;
         local_collector->adaptive_cumul_size += space_used_this_time;
@@ -4128,7 +4128,7 @@ retry:
 		// private nursery object then multiple entries will be added to the remembered set.  The
 		// first such remembered set entry to be processed will (possibly) update the slot to point
 		// to a new object location in the other side of the pn two space.  Here, we detect that such
-		// a previous rs entry for this slot has been processed and already updated so there is no 
+		// a previous rs entry for this slot has been processed and already updated so there is no
 		// work we need to do here.
 		if(g_use_pub_priv &&
 		   g_two_space_pn &&
@@ -4187,7 +4187,7 @@ retry:
 
 #ifdef PUB_PRIV
 		if(g_use_pub_priv  &&
-		   g_two_space_pn  && 
+		   g_two_space_pn  &&
 		   info->two_space &&
 		  (g_pure_two_space || (
 		   obj >= info->collector->two_spaces[info->collector->two_space_in_use].get_fill() &&
@@ -4264,12 +4264,12 @@ retry:
         frontier = (Partial_Reveal_Object *)nursery_to_use->tls_current_free;
         unsigned skip_size = adjust_frontier_to_alignment(frontier, obj_vtable);
 
-        POINTER_SIZE_INT new_free = (obj_size + (POINTER_SIZE_INT)frontier);
-        if (new_free <= (POINTER_SIZE_INT) nursery_to_use->tls_current_ceiling) {
+        POINTER_SIZE_INT new_free = (obj_size + (uintptr_t)frontier);
+        if (new_free <= (uintptr_t) nursery_to_use->tls_current_ceiling) {
             if(skip_size) {
                 *((POINTER_SIZE_INT*)((char*)frontier - skip_size)) = skip_size;
             }
-            frontier->set_vtable((Allocation_Handle)obj_vtable);
+            frontier->set_vtable((uintptr_t)obj_vtable);
             // increment free ptr and return object
             nursery_to_use->tls_current_free = (void *) new_free;
             new_location = frontier;
@@ -4282,7 +4282,7 @@ retry:
             // GC may happen here!!!
             new_location = (Partial_Reveal_Object*)gc_malloc_slow_no_constraints_with_nursery(
                 obj_size,
-                (Allocation_Handle)obj_vtable,
+                (uintptr_t)obj_vtable,
                 info->tls_for_gc,
                 nursery_to_use
 #ifdef PUB_PRIV
@@ -4442,7 +4442,7 @@ void local_nursery_collection(GC_Thread_Info *tls_for_gc,
 #if defined _DEBUG
         private_nursery->num_survivors  += pci.num_surviving;
         private_nursery->size_survivors += pci.size_surviving;
-        unsigned saved_space_used        = ((POINTER_SIZE_INT)private_nursery->tls_current_free - (POINTER_SIZE_INT)private_nursery->start); 
+        unsigned saved_space_used        = ((POINTER_SIZE_INT)private_nursery->tls_current_free - (POINTER_SIZE_INT)private_nursery->start);
         private_nursery->space_used     += saved_space_used;
         private_nursery->size_objects_escaping += pci.size_surviving;
 #endif // _DEBUG
@@ -4471,7 +4471,7 @@ void local_nursery_collection(GC_Thread_Info *tls_for_gc,
             for(unsigned wpo_index = 0;
                 wpo_index < local_collector->m_wpos.size();
                 ++wpo_index) {
-        
+
                 Partial_Reveal_Object *root = (Partial_Reveal_Object*)local_collector->m_wpos[wpo_index];
 
                 if(get_object_location(root,local_collector) == PRIVATE_NURSERY) {
@@ -4481,11 +4481,11 @@ void local_nursery_collection(GC_Thread_Info *tls_for_gc,
                 } else {
                     p_global_gc->m_wpos.push_back((weak_pointer_object*)root);
                 }
-            }            
-        
+            }
+
             local_collector->m_wpos.resize(num_staying);
             p_global_gc->_wpo_lock = 0;
-        }   
+        }
 
         if(!local_collector->m_finalize.empty()) {
             unsigned final_index;
@@ -4506,7 +4506,7 @@ void local_nursery_collection(GC_Thread_Info *tls_for_gc,
                     p_global_gc->add_finalize_object_prelocked(root,false);
                 }
             }
-        
+
             p_global_gc->unlock_finalize_list();
             local_collector->m_finalize.resize(num_staying);
         }
@@ -4542,7 +4542,7 @@ void local_nursery_collection(GC_Thread_Info *tls_for_gc,
             memset(private_nursery->tls_current_ceiling,0,((POINTER_SIZE_INT)next_copy_ep - (POINTER_SIZE_INT)private_nursery->tls_current_ceiling));
         }
         private_nursery->tls_current_ceiling = next_copy_ep;
-        // tls_current_free can point into the middle of remembered set if more 
+        // tls_current_free can point into the middle of remembered set if more
         // external pointers are created than existed on the way in.  If this is the
         // case then adjust tls_current_free to just after the last byte that needs to
         // be zeroed.
@@ -4580,7 +4580,7 @@ void local_nursery_collection(GC_Thread_Info *tls_for_gc,
             memset(private_nursery->tls_current_ceiling,0,((POINTER_SIZE_INT)next_copy_ep - (POINTER_SIZE_INT)private_nursery->tls_current_ceiling));
         }
         private_nursery->tls_current_ceiling = next_copy_ep;
-        // tls_current_free can point into the middle of remembered set if more 
+        // tls_current_free can point into the middle of remembered set if more
         // external pointers are created than existed on the way in.  If this is the
         // case then adjust tls_current_free to just after the last byte that needs to
         // be zeroed.
@@ -4602,21 +4602,21 @@ void local_nursery_collection(GC_Thread_Info *tls_for_gc,
 			local_collector->currently_used_nursery_end = local_collector->two_spaces[local_collector->two_space_in_use].get_end();
 #ifdef _DEBUG
 			if(g_maximum_debug) {
-				POINTER_SIZE_INT size = 
-					(POINTER_SIZE_INT)local_collector->two_spaces[local_collector->two_space_in_use].get_end() - 
+				POINTER_SIZE_INT size =
+					(POINTER_SIZE_INT)local_collector->two_spaces[local_collector->two_space_in_use].get_end() -
 					(POINTER_SIZE_INT)local_collector->two_spaces[local_collector->two_space_in_use].get_start();
-				POINTER_SIZE_INT used = 
-					(POINTER_SIZE_INT)local_collector->two_spaces[local_collector->two_space_in_use].get_free() - 
+				POINTER_SIZE_INT used =
+					(POINTER_SIZE_INT)local_collector->two_spaces[local_collector->two_space_in_use].get_free() -
 					(POINTER_SIZE_INT)local_collector->two_spaces[local_collector->two_space_in_use].get_start();
-				POINTER_SIZE_INT eps = 
-					(POINTER_SIZE_INT)local_collector->two_spaces[local_collector->two_space_in_use].get_end() - 
+				POINTER_SIZE_INT eps =
+					(POINTER_SIZE_INT)local_collector->two_spaces[local_collector->two_space_in_use].get_end() -
 					(POINTER_SIZE_INT)local_collector->two_spaces[local_collector->two_space_in_use].get_ceiling();
 				printf("%d live: %d %f, rs: %d, promoted: %d, copy: %d, new_rs: %d, ",local_collector->num_micro_collections,
-					pci.size_surviving, 
+					pci.size_surviving,
 					pci.size_surviving / (float)size,
 					pci.num_rs,
 					pci.size_surviving - pci.two_space_copy,
-					pci.two_space_copy, 
+					pci.two_space_copy,
 					pci.rs_created);
 				for(unsigned cps_res_index = 0; cps_res_index < CPS_END; ++cps_res_index) {
 					printf("%d ",cps_reses[cps_res_index]);
@@ -4637,7 +4637,7 @@ void local_nursery_collection(GC_Thread_Info *tls_for_gc,
 			}
 #endif
 		}
-		memset(zero_start,0,((POINTER_SIZE_INT)zero_end - (POINTER_SIZE_INT)zero_start));
+		memset(zero_start,0,((uintptr_t)zero_end - (uintptr_t)zero_start));
 #endif
 
         local_collector->clear();
@@ -4701,7 +4701,7 @@ void local_nursery_collection(GC_Thread_Info *tls_for_gc,
     printf("%d\n",local_collector->num_micro_collections);
     p_global_gc->reclaim_full_heap(0,true);
 #endif
-    
+
     // BTL 20090204 Two local nursery collections going on at once
     if (local_collector->gc_state != LOCAL_MARK_IDLE) {
         printf("local_nursery_collection: local_collector->gc_state=%u, not LOCAL_MARK_IDLE\n", local_collector->gc_state);  fflush(stdout);
@@ -4821,8 +4821,8 @@ void local_nursery_collection(GC_Thread_Info *tls_for_gc,
         p_obj = (*live_iter);
 #else // 1
     }
-    for(p_obj = (Partial_Reveal_Object*)local_collector->start_iterator(); 
-        p_obj; 
+    for(p_obj = (Partial_Reveal_Object*)local_collector->start_iterator();
+        p_obj;
         p_obj = (Partial_Reveal_Object*)local_collector->next_iterator()) {
 
 #endif
@@ -4905,9 +4905,9 @@ void local_nursery_collection(GC_Thread_Info *tls_for_gc,
         frontier = (Partial_Reveal_Object *)nursery_to_use->tls_current_free;
         adjust_frontier_to_alignment(frontier, obj_vtable);
 
-        POINTER_SIZE_INT new_free = (obj_size + (POINTER_SIZE_INT)frontier);
-        if (new_free <= (POINTER_SIZE_INT) nursery_to_use->tls_current_ceiling) {
-            frontier->set_vtable((Allocation_Handle)obj_vtable);
+        POINTER_SIZE_INT new_free = (obj_size + (uintptr_t)frontier);
+        if (new_free <= (uintptr_t) nursery_to_use->tls_current_ceiling) {
+            frontier->set_vtable((uintptr_t)obj_vtable);
             // increment free ptr and return object
             nursery_to_use->tls_current_free = (void *) new_free;
             new_location = frontier;
@@ -4919,7 +4919,7 @@ void local_nursery_collection(GC_Thread_Info *tls_for_gc,
             // GC may happen here!!!
             new_location = (Partial_Reveal_Object*)gc_malloc_slow_no_constraints_with_nursery(
                 obj_size,
-                (Allocation_Handle)obj_vtable,
+                (uintptr_t)obj_vtable,
                 tls_for_gc,
                 nursery_to_use
 #ifdef PUB_PRIV
@@ -4934,7 +4934,7 @@ void local_nursery_collection(GC_Thread_Info *tls_for_gc,
         p_obj->set_forwarding_pointer(new_location);
 #else
         pnc->new_location = new_location;
-        pnc->old_location->set_vtable((POINTER_SIZE_INT)pnc);
+        pnc->old_location->set_vtable((uintptr_t)pnc);
 #endif
 
         // We have to put the array size in the new object location because at the next object allocation some
@@ -5004,9 +5004,9 @@ void local_nursery_collection(GC_Thread_Info *tls_for_gc,
 #endif // ALLOC_TIMES
     }
 
-    // We can't naively assign new private nursery address above when we encounter 
+    // We can't naively assign new private nursery address above when we encounter
     // new objects because doing so will assign them in random order.  If you had
-    // an object at the beginning of the private nursery moved farther down and 
+    // an object at the beginning of the private nursery moved farther down and
     // another object moved to the beginning then the that move would overwrite
     // the object at the beginning that hasn't been moved yet.  The solution is to
     // sort the addresses of objects that are staying and move them in this order
@@ -5068,11 +5068,11 @@ void local_nursery_collection(GC_Thread_Info *tls_for_gc,
     printf("%d\n",local_collector->num_micro_collections);
     p_global_gc->reclaim_full_heap(0,true);
 #endif
-    
+
 #if defined _DEBUG
     private_nursery->num_survivors  += num_surviving;
     private_nursery->size_survivors += size_surviving;
-    unsigned saved_space_used        = ((POINTER_SIZE_INT)private_nursery->tls_current_free - (POINTER_SIZE_INT)private_nursery->start); 
+    unsigned saved_space_used        = ((POINTER_SIZE_INT)private_nursery->tls_current_free - (POINTER_SIZE_INT)private_nursery->start);
     private_nursery->space_used     += saved_space_used;
     private_nursery->size_objects_escaping += size_surviving;
 #endif // _DEBUG
@@ -5410,8 +5410,8 @@ void local_nursery_collection(GC_Thread_Info *tls_for_gc,
      *****************************************************************************************************/
     // move objects
 #ifdef NEW_APPROACH
-    for(p_obj = (Partial_Reveal_Object*)local_collector->start_zero_iterator(); 
-        p_obj; 
+    for(p_obj = (Partial_Reveal_Object*)local_collector->start_zero_iterator();
+        p_obj;
         p_obj = (Partial_Reveal_Object*)local_collector->next_zero_iterator()) {
 
         assert(p_obj->isLowFlagSet());
@@ -5448,8 +5448,8 @@ void local_nursery_collection(GC_Thread_Info *tls_for_gc,
 
         if(get_object_location(p_dest_obj,local_collector) == PRIVATE_NURSERY) {
             continue;
-        } 
-        p_obj->set_vtable((POINTER_SIZE_INT)pnc->vt);
+        }
+        p_obj->set_vtable((uintptr_t)pnc->vt);
 
         assert(p_obj != p_dest_obj);
 
@@ -5457,7 +5457,7 @@ void local_nursery_collection(GC_Thread_Info *tls_for_gc,
 #endif // NEW_APPROACH
 
         // No need to recopy the vtable of each object.
-        // Moreover, the source objects have their mark bits set which we don't want. 
+        // Moreover, the source objects have their mark bits set which we don't want.
 #ifdef _DEBUG
 #ifdef TYPE_SURVIVAL
         std::pair<std::map<struct Partial_Reveal_VTable *,TypeSurvivalInfo>::iterator, bool> res;
@@ -5501,7 +5501,7 @@ void local_nursery_collection(GC_Thread_Info *tls_for_gc,
             }
 
             // No need to recopy the vtable of each object.
-            // Moreover, the source objects have their mark bits set which we don't want. 
+            // Moreover, the source objects have their mark bits set which we don't want.
 #ifdef _DEBUG
             sprintf(buf,"Transfering %p in local to %p in local.",p_obj,p_dest_obj);
             gc_trace (p_obj, buf);
@@ -5526,7 +5526,7 @@ void local_nursery_collection(GC_Thread_Info *tls_for_gc,
         for(unsigned wpo_index = 0;
             wpo_index < local_collector->m_wpos.size();
             ++wpo_index) {
-        
+
             Partial_Reveal_Object *root = (Partial_Reveal_Object*)local_collector->m_wpos[wpo_index];
 
             if(get_object_location(root,local_collector) == PRIVATE_NURSERY) {
@@ -5536,11 +5536,11 @@ void local_nursery_collection(GC_Thread_Info *tls_for_gc,
             } else {
                 p_global_gc->m_wpos.push_back((weak_pointer_object*)root);
             }
-        }            
-        
+        }
+
         local_collector->m_wpos.resize(num_staying);
         p_global_gc->_wpo_lock = 0;
-    }   
+    }
 
     if(!local_collector->m_finalize.empty()) {
         unsigned final_index;
@@ -5561,7 +5561,7 @@ void local_nursery_collection(GC_Thread_Info *tls_for_gc,
                 p_global_gc->add_finalize_object_prelocked(root,false);
             }
         }
-        
+
         p_global_gc->unlock_finalize_list();
         local_collector->m_finalize.resize(num_staying);
     }
@@ -5631,7 +5631,7 @@ void local_nursery_collection(GC_Thread_Info *tls_for_gc,
         memset(private_nursery->tls_current_ceiling,0,((POINTER_SIZE_INT)next_copy_ep - (POINTER_SIZE_INT)private_nursery->tls_current_ceiling));
     }
     private_nursery->tls_current_ceiling = next_copy_ep;
-    // tls_current_free can point into the middle of remembered set if more 
+    // tls_current_free can point into the middle of remembered set if more
     // external pointers are created than existed on the way in.  If this is the
     // case then adjust tls_current_free to just after the last byte that needs to
     // be zeroed.
@@ -5648,7 +5648,7 @@ void local_nursery_collection(GC_Thread_Info *tls_for_gc,
 #endif // PUB_PRIV
 
     // tls_current_free is still set to the end of the last object allocated in the private nursery
-    memset(next_compact_spot_in_pn,0,((POINTER_SIZE_INT)private_nursery->tls_current_free - (POINTER_SIZE_INT)next_compact_spot_in_pn));
+    memset(next_compact_spot_in_pn,0,((uintptr_t)private_nursery->tls_current_free - (uintptr_t)next_compact_spot_in_pn));
 
 #ifdef _DEBUG
     gc_time_start_hook(&_end_time);
@@ -5815,8 +5815,8 @@ unsigned g_start_concurrent_compact_block;
 unsigned g_end_concurrent_compact_block;
 
 bool is_block_concurrent_compaction(block_info *block) {
-    return separate_immutable && 
-           incremental_compaction && 
+    return separate_immutable &&
+           incremental_compaction &&
            block->block_store_info_index >= g_start_concurrent_compact_block &&
            block->block_store_info_index <  g_end_concurrent_compact_block &&
            block->block_contains_only_immutables &&
@@ -5828,7 +5828,7 @@ bool is_block_concurrent_compaction(block_info *block) {
 }
 
 static void concurrent_scan_one_slot (Partial_Reveal_Object *base,
-                                      Slot p_slot, 
+                                      Slot p_slot,
                                       std::deque<Partial_Reveal_Object*> &gray_list,
                                       CONCURRENT_SCAN_MODE csm) {
     assert(p_slot.get_value());
@@ -5911,7 +5911,7 @@ static void concurrent_scan_one_slot (Partial_Reveal_Object *base,
     }
 } // concurrent_scan_one_slot
 
-static inline void concurrent_scan_one_array_object(Partial_Reveal_Object *p_object, 
+static inline void concurrent_scan_one_array_object(Partial_Reveal_Object *p_object,
                                                     std::deque<Partial_Reveal_Object*> &gray_list,
                                                     CONCURRENT_SCAN_MODE csm) {
     Type_Info_Handle tih = class_get_element_type_info(p_object->vt()->get_gcvt()->gc_clss);
@@ -5920,13 +5920,13 @@ static inline void concurrent_scan_one_array_object(Partial_Reveal_Object *p_obj
        type_info_is_general_array(tih)) {
         // Initialize the array scanner which will scan the array from the
         // top to the bottom. IE from the last element to the first element.
-    
+
         int32 array_length = vector_get_length_with_vt((Vector_Handle)p_object,p_object->vt());
         for (int32 i=array_length-1; i>=0; i--) {
             Slot p_element(vector_get_element_address_ref_with_vt((Vector_Handle)p_object, i, p_object->vt()));
             concurrent_scan_one_slot(p_object,p_element,gray_list,csm);
         }
-    } else if(type_info_is_primitive(tih)) { 
+    } else if(type_info_is_primitive(tih)) {
         // intentionally do nothing
     } else if(type_info_is_unboxed(tih)) {
         Class_Handle ech = type_info_get_class(tih);
@@ -5990,14 +5990,14 @@ void concurrent_scan_one_object(Partial_Reveal_Object *p_obj,
     if (p_obj->vt()->get_gcvt()->gc_object_has_slots) {
         if (is_array(p_obj)) {
             concurrent_scan_one_array_object(p_obj,gray_list,csm);
-        } 
+        }
 
         unsigned int *offset_scanner = init_object_scanner (p_obj);
         Slot pp_target_object(NULL);
         while ((pp_target_object.set(p_get_ref(offset_scanner, p_obj))) != NULL) {
             // Each live object in the heap gets scanned exactly once...so each live EDGE in the heap gets looked at exactly once...
-            // So, the logic here is independent of whether the object pointed to by this slot has already been reached and 
-            // marked by the collector...we still need to collect edge counts since this edge is being visited for the first 
+            // So, the logic here is independent of whether the object pointed to by this slot has already been reached and
+            // marked by the collector...we still need to collect edge counts since this edge is being visited for the first
             // and last time...
             // If parent is not a delinquent type we are not interested in this edge at all....
             concurrent_scan_one_slot (p_obj,pp_target_object,gray_list,csm);
@@ -6059,7 +6059,7 @@ void Garbage_Collector::wait_for_marks_concurrent(void) {
         cur_thread_node = active_thread_gc_info_list;
         while (cur_thread_node) {
             GC_Small_Nursery_Info *private_nursery = cur_thread_node->get_private_nursery();
-                
+
             if(private_nursery->concurrent_state_copy != CONCURRENT_MARKING) {
                 bool success = orp_suspend_thread_for_enumeration((PrtTaskHandle)cur_thread_node->thread_handle);
                 if(!success) {
@@ -6121,7 +6121,7 @@ void Garbage_Collector::wait_for_marks_concurrent(void) {
 
                             // We don't collect inter-slots in every local nursery collection
                             // since it is too expensive.  So, if we interrupt a local nursery collection
-                            // in the allocating new object phase then we walk the live objects and 
+                            // in the allocating new object phase then we walk the live objects and
                             // collect inter-slots here and let the code below add them normally.
                             Partial_Reveal_Object *old_location, *new_location;
 
@@ -6185,7 +6185,7 @@ void Garbage_Collector::wait_for_marks_concurrent(void) {
                         private_nursery->concurrent_state_copy = CONCURRENT_MARKING;
                         private_nursery->current_state = CONCURRENT_MARKING;
                     } else {
-                        // If the state changes before and after the suspension then it obviously a 
+                        // If the state changes before and after the suspension then it obviously a
                         // private nursery collection is or has taken place.
                         if(private_nursery->current_state != CONCURRENT_MARKING) {
                             all_in_right_mode = false;
@@ -6285,7 +6285,7 @@ void Garbage_Collector::wait_for_sweep_or_idle_concurrent(CONCURRENT_GC_STATE ne
         cur_thread_node = active_thread_gc_info_list;
         while (cur_thread_node) {
             GC_Small_Nursery_Info *private_nursery = cur_thread_node->get_private_nursery();
-                
+
             if(private_nursery->concurrent_state_copy != new_gc_state) {
                 bool success = orp_suspend_thread_for_enumeration((PrtTaskHandle)cur_thread_node->thread_handle);
                 if(!success) {
@@ -6445,13 +6445,13 @@ static inline void verify_scan_one_array_object(Partial_Reveal_Object *p_object,
        type_info_is_general_array(tih)) {
         // Initialize the array scanner which will scan the array from the
         // top to the bottom. IE from the last element to the first element.
-    
+
         int32 array_length = vector_get_length_with_vt((Vector_Handle)p_object,p_object->vt());
         for (int32 i=array_length-1; i>=0; i--) {
             Slot p_element(vector_get_element_address_ref_with_vt((Vector_Handle)p_object, i, p_object->vt()));
             verify_scan_one_slot(p_element,lives,to_be_scanned);
         }
-    } else if(type_info_is_primitive(tih)) { 
+    } else if(type_info_is_primitive(tih)) {
         // intentionally do nothing
     } else if(type_info_is_unboxed(tih)) {
         Class_Handle ech = type_info_get_class(tih);
@@ -6496,14 +6496,14 @@ static void verify_scan_one_object(Partial_Reveal_Object *p_obj,
     if (p_obj->vt()->get_gcvt()->gc_object_has_slots) {
         if (is_array(p_obj)) {
             verify_scan_one_array_object(p_obj,lives,to_be_scanned);
-        } 
+        }
 
         unsigned int *offset_scanner = init_object_scanner (p_obj);
         Slot pp_target_object(NULL);
         while ((pp_target_object.set(p_get_ref(offset_scanner, p_obj))) != NULL) {
             // Each live object in the heap gets scanned exactly once...so each live EDGE in the heap gets looked at exactly once...
-            // So, the logic here is independent of whether the object pointed to by this slot has already been reached and 
-            // marked by the collector...we still need to collect edge counts since this edge is being visited for the first 
+            // So, the logic here is independent of whether the object pointed to by this slot has already been reached and
+            // marked by the collector...we still need to collect edge counts since this edge is being visited for the first
             // and last time...
             // If parent is not a delinquent type we are not interested in this edge at all....
             verify_scan_one_slot (pp_target_object,lives,to_be_scanned);
@@ -6518,7 +6518,7 @@ void verify_no_objects_marked(void) {
     pn_info::inter_iterator inter_iter;
     Slot one_slot(NULL);
     std::set<Partial_Reveal_Object*> lives, to_be_scanned;
-    
+
     get_active_thread_gc_info_list_lock();     // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 
     GC_Thread_Info *cur_thread_node = NULL;
@@ -6553,7 +6553,7 @@ void verify_no_objects_marked(void) {
                     Partial_Reveal_Object *obj = one_slot.dereference();
                     verify_found_obj(obj,lives,to_be_scanned);
                 }
-                
+
                 local_undo_marks(&verify_stuff);
                 verify_stuff.clear();
                 local_collector->gc_state = LOCAL_MARK_IDLE;
@@ -6573,7 +6573,7 @@ void verify_no_objects_marked(void) {
 
                     // We don't collect inter-slots in every local nursery collection
                     // since it is too expensive.  So, if we interrupt a local nursery collection
-                    // in the allocating new object phase then we walk the live objects and 
+                    // in the allocating new object phase then we walk the live objects and
                     // collect inter-slots here and let the code below add them normally.
                     Partial_Reveal_Object *old_location, *new_location;
 
@@ -6645,7 +6645,7 @@ void verify_no_objects_marked(void) {
             }
         }
 
-        
+
         cur_thread_node = cur_thread_node->p_active_gc_thread_info; // Do it for all the threads.
     }
 
@@ -6661,7 +6661,7 @@ void verify_no_objects_marked(void) {
     cur_thread_node = active_thread_gc_info_list;
     while (cur_thread_node) {
         orp_resume_thread_after_enumeration((PrtTaskHandle)cur_thread_node->thread_handle);
-        
+
         cur_thread_node = cur_thread_node->p_active_gc_thread_info; // Do it for all the threads.
     }
 
@@ -6693,28 +6693,28 @@ void verify_no_objects_marked(void) {
 
 
 
-//#define NO_LINK_TEST 
+//#define NO_LINK_TEST
 //#define ONLY_EMPTY
 
 unsigned int Garbage_Collector::return_free_blocks_concurrent(void)
 {
     unsigned int num_blocks_returned = 0;
     unsigned int num_empty_chunks = 0;
-    
+
     get_chunk_lock(NULL);
     orp_gc_lock_enum();
 
     for (int chunk_index = 0; chunk_index <= _free_chunks_end_index; chunk_index++) {
-        
+
         chunk_info *this_chunk = &_gc_chunks[chunk_index];
         assert(this_chunk);
-        
+
         if ((this_chunk->chunk) && (this_chunk->chunk->get_nursery_status() == free_nursery)) {
             block_info *block = this_chunk->chunk;
             assert(block);
-            
+
             block_info *new_chunk_start = NULL;
-            
+
 #if 1
             while (block) {
                 if(!block->set_nursery_status(free_nursery,concurrent_sweeper_nursery)) {
@@ -6745,14 +6745,14 @@ unsigned int Garbage_Collector::return_free_blocks_concurrent(void)
                     assert (block->block_free_areas[0].area_size < GC_BLOCK_ALLOC_SIZE);      // RLH Aug 04
 #endif
                     //assert (block->is_free_block == false);                                   // RLH Aug 04
-                    
+
                     block_info *next_block = block->next_free_block;
                     // Relink onto the new chunk
                     block->next_free_block = new_chunk_start;
                     new_chunk_start = block;
 //                    ++g_num_blocks_available;
                     block->set_nursery_status(concurrent_sweeper_nursery,free_nursery);
-                    block = next_block;        
+                    block = next_block;
 #ifdef NO_LINK_TEST
                 } else {
                     gc_trace_block (block, "in return_free_blocks_concurrent returing free block to block store.");
@@ -6775,19 +6775,19 @@ unsigned int Garbage_Collector::return_free_blocks_concurrent(void)
             if (new_chunk_start == NULL) {
                 num_empty_chunks++;
             }
-            this_chunk->chunk = this_chunk->free_chunk = new_chunk_start;    
+            this_chunk->chunk = this_chunk->free_chunk = new_chunk_start;
 #endif
-            
+
         }
     }
-    
+
     orp_gc_unlock_enum();
     release_chunk_lock(NULL);
 
     if (stats_gc) {
         orp_cout << "return_free_blocks_concurrent() returned " << num_blocks_returned << " to the block store\n";
     }
-    
+
     return num_blocks_returned;
 } //return_free_blocks_concurrent
 
@@ -6795,7 +6795,7 @@ unsigned int Garbage_Collector::return_free_blocks_concurrent(void)
 
 unsigned remove_unmarked_moved_objects(unsigned cur_gc_num);
 
-//#define STOP_SWEEP_PHASE 
+//#define STOP_SWEEP_PHASE
 
 void Garbage_Collector::reclaim_full_heap_concurrent(GC_Nursery_Info *copy_to) {
 start:
@@ -6818,13 +6818,13 @@ start:
     unsigned max_blocks_to_compact = num_blocks / _p_block_store->get_heap_compaction_ratio();
 
     gc_time_start_hook(&_gc_start_time);
-    
+
     if (verbose_gc || stats_gc) {
         printf("==============================GC[%d]======================================\n", _gc_num);
     }
 
     _gc_num_time = 0;
-    
+
     if(separate_immutable && incremental_compaction && !copy_to->chunk) {
         copy_to->chunk = (GC_Nursery_Info*)p_global_gc->p_cycle_chunk(NULL, true, true, NULL, (struct GC_Thread_Info*)get_gc_thread_local());
         copy_to->curr_alloc_block = copy_to->chunk;
@@ -7030,7 +7030,7 @@ start:
     cur_thread_node = active_thread_gc_info_list;
     while (cur_thread_node) {
         GC_Small_Nursery_Info *private_nursery = cur_thread_node->get_private_nursery();
-            
+
         printf("Stopping %p\n",cur_thread_node->thread_handle);
         bool success = orp_suspend_thread_for_enumeration(cur_thread_node->thread_handle);
 //        assert(success);
@@ -7065,7 +7065,7 @@ start:
                     p_obj->unmark();
                 }
                 //printf("single_object_block return = %p, obj_start = %p\n",bi,GC_BLOCK_ALLOC_START(bi));
-    
+
 //                assert(!p_obj->isMarked());
                 // It is free, relink the blocks onto the free list.
                 assert (bi->number_of_blocks);
@@ -7224,7 +7224,7 @@ start:
 
     gc_time_end_hook("Sweeping...", &_gc_start_time, &_end_time, stats_gc ? true : false);
 #endif
-  
+
 #if 1
     // Refresh block store
     return_free_blocks_concurrent();
@@ -7457,7 +7457,7 @@ void Garbage_Collector::reset_thread_nurseries(void) {
         cur_thread_node->reset_nurseries();
         if(local_nursery_size) {
             GC_Small_Nursery_Info *private_nursery = cur_thread_node->get_private_nursery();
-    
+
             pn_info *local_collector = private_nursery->local_gc_info;
             assert(local_collector);
             if(local_collector->gc_state == LOCAL_MARK_GC) {
@@ -7600,7 +7600,7 @@ void Garbage_Collector::reclaim_full_heap_from_gc_thread(unsigned int size_faile
     }
     return;
 #endif // CONCURRENT
-    
+
 	unsigned block_type_los, block_type_regular, block_type_single;
 	if(g_return_free_block_policy == MAINTAIN_RATIO) {
 		p_global_gc->_p_block_store->get_block_type_stats(block_type_regular, block_type_single, block_type_los);
@@ -7624,14 +7624,14 @@ void Garbage_Collector::reclaim_full_heap_from_gc_thread(unsigned int size_faile
 		fflush(stdout);
     }
     // Tell the block store if any compaction will be done in this GC cycle
-    
+
     if (verify_live_heap) {
         init_verify_live_heap_data_structures();
     }
 
     _gc_num++;
     _gc_num_time = 0;
-    
+
     if(g_gen) {
         if(last_young_gen_percentage < g_full_gc_trigger_in_gen) {
             g_gen_all = true;
@@ -7642,7 +7642,7 @@ void Garbage_Collector::reclaim_full_heap_from_gc_thread(unsigned int size_faile
 
     // Are we doing compaction this GC?
     bool compaction_this_gc = (g_gen || incremental_compaction || (fullheapcompact_at_forcegc && force_gc));
-    
+
 #ifdef GC_VERIFY_VM
     assert(!running_gc); // If we are testing the gc we had better have the GC lock.
     running_gc = true; // We hold gc lock so we can change this without race conditions.
@@ -7664,7 +7664,7 @@ void Garbage_Collector::reclaim_full_heap_from_gc_thread(unsigned int size_faile
     reset_gc_threads(compaction_this_gc);
     gc_time_end_hook("Reset GC Threads", &_start_time, &_end_time, stats_gc ? true : false);
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    
+
     gc_time_start_hook(&_start_time);
     prepare_root_containers();
     if (compaction_this_gc) {
@@ -7673,10 +7673,10 @@ void Garbage_Collector::reclaim_full_heap_from_gc_thread(unsigned int size_faile
 //        memset(_save_array_of_roots, 0, sizeof(void *) * GC_MAX_ROOTS);
     }
     gc_time_end_hook("Reset root containers", &_start_time, &_end_time, stats_gc ? true : false);
-    
+
     // Stop-the-world begins just now!!!
     gc_time_start_hook(&_gc_start_time);
-    
+
     gc_time_start_hook(&_start_time);
 
     // Forget any pinned blocks that may have been identified during a previous GC.
@@ -7687,10 +7687,10 @@ void Garbage_Collector::reclaim_full_heap_from_gc_thread(unsigned int size_faile
 //    m_long_weak_roots.clear();
 
 #ifndef OLD_MULTI_LOCK
-    get_active_thread_gc_info_list_lock();     // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvv 
+    get_active_thread_gc_info_list_lock();     // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 #endif // OLD_MULTI_LOCK
     // Stop the threads and collect the roots.
-    _get_orp_live_references(); 
+    _get_orp_live_references();
 
     GC_Thread_Info *cur_thread_node = NULL;
 
@@ -7718,7 +7718,7 @@ void Garbage_Collector::reclaim_full_heap_from_gc_thread(unsigned int size_faile
             assert(local_collector);
 
             pn_ranges.add(local_collector->local_nursery_start,local_collector->local_nursery_end);
-            
+
             if(g_cheney && local_collector->gc_state == LOCAL_MARK_ACTIVE) {
 				TIME_STRUCT _cheney_start_time, _cheney_end_time;
 				gc_time_start_hook(&_cheney_start_time);
@@ -7899,8 +7899,8 @@ void Garbage_Collector::reclaim_full_heap_from_gc_thread(unsigned int size_faile
 
                     old_location = (*live_iter);
 #else
-                for(old_location = (Partial_Reveal_Object*)local_collector->start_iterator(); 
-                    old_location; 
+                for(old_location = (Partial_Reveal_Object*)local_collector->start_iterator();
+                    old_location;
                     old_location = (Partial_Reveal_Object*)local_collector->next_iterator()) {
 #endif
 
@@ -7933,7 +7933,7 @@ void Garbage_Collector::reclaim_full_heap_from_gc_thread(unsigned int size_faile
 
                     // We don't collect inter-slots in every local nursery collection
                     // since it is too expensive.  So, if we interrupt a local nursery collection
-                    // in the allocating new object phase then we walk the live objects and 
+                    // in the allocating new object phase then we walk the live objects and
                     // collect inter-slots here and let the code below add them normally.
                     Partial_Reveal_Object *old_location, *new_location;
 
@@ -8037,7 +8037,7 @@ void Garbage_Collector::reclaim_full_heap_from_gc_thread(unsigned int size_faile
         memcpy(_save_array_of_roots, _array_of_roots, _num_roots * sizeof(void *));
     }
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    
+
     // All the roots have been obtained from ORP.
     if (verify_gc || verify_live_heap) {
         memset(_verify_array_of_roots, 0, sizeof(void *) * _num_roots);
@@ -8046,13 +8046,13 @@ void Garbage_Collector::reclaim_full_heap_from_gc_thread(unsigned int size_faile
         if (verbose_gc) {
             printf("%d  live objects found before starting GC[%d]\n", lives_before_gc, _gc_num - 1);
         }
-        
+
         if (verify_live_heap) {
             take_snapshot_of_lives_before_gc(_num_live_objects_found_by_first_trace_heap, _live_objects_found_by_first_trace_heap);
         }
     }
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    
+
     gc_time_start_hook(&_start_time);
     if(parallel_clear) {
         get_gc_threads_to_begin_task(GC_CLEAR_MARK_BIT_VECTORS);
@@ -8061,7 +8061,7 @@ void Garbage_Collector::reclaim_full_heap_from_gc_thread(unsigned int size_faile
         clear_all_mark_bit_vectors_of_unswept_blocks();
     }
     gc_time_end_hook("clear_all_mark_bit_vectors_of_unswept_blocks", &_start_time, &_end_time, stats_gc ? true : false);
-    
+
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     if (compaction_this_gc) {
         gc_time_start_hook(&_start_time);
@@ -8083,10 +8083,10 @@ void Garbage_Collector::reclaim_full_heap_from_gc_thread(unsigned int size_faile
         setup_mark_scan_pools();
         gc_time_end_hook("setup_mark_scan_pools", &_start_time, &_end_time, stats_gc ? true : false);
     }
-    
+
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Lets begin the MARK SCAN PHASE
-    
+
     gc_time_start_hook(&_start_time);
 
     // Mix up the roots if randomization is turned on.
@@ -8098,7 +8098,7 @@ void Garbage_Collector::reclaim_full_heap_from_gc_thread(unsigned int size_faile
             while(swapper == i) {
                 swapper = GetRandom(0,_num_roots-1);
             }
-            
+
             Partial_Reveal_Object **temp = _array_of_roots[i];
             _array_of_roots[i] = _array_of_roots[swapper];
             _array_of_roots[swapper] = temp;
@@ -8264,7 +8264,7 @@ void Garbage_Collector::reclaim_full_heap_from_gc_thread(unsigned int size_faile
     }
 #endif
     ////////////////////////// M A R K S   C H E C K   A F T E R    M A R K / S C A N ///////////////////////////////////////////
-    
+
     verify_marks_for_all_lives();
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     if (mark_scan_load_balanced) {
@@ -8272,18 +8272,18 @@ void Garbage_Collector::reclaim_full_heap_from_gc_thread(unsigned int size_faile
         _verify_gc_threads_state();
     }
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    
+
     if (compaction_this_gc) {
         gc_time_start_hook(&_start_time);
         get_gc_threads_to_begin_task(GC_ALLOCATE_FORWARDING_POINTERS_FOR_COMPACTION_LIVE_OBJECTS_TASK);
         wait_for_gc_threads_to_complete_assigned_task();
         gc_time_end_hook("GC_ALLOCATE_FORWARDING_POINTERS_FOR_COMPACTION_LIVE_OBJECTS_TASK", &_start_time, &_end_time, stats_gc ? true : false);
-        
+
         gc_time_start_hook(&_start_time);
         get_gc_threads_to_begin_task(GC_FIX_SLOTS_TO_COMPACTION_LIVE_OBJECTS_TASK);
         wait_for_gc_threads_to_complete_assigned_task();
         gc_time_end_hook("GC_FIX_SLOTS_TO_COMPACTION_LIVE_OBJECTS_TASK", &_start_time, &_end_time, stats_gc ? true : false);
-        
+
         gc_time_start_hook(&_start_time);
         // Now repoint all root slots if the root objects that they pointed to will be slide compacted.
         // this should be small and we should be able to do this as part of the main thread with little overhead
@@ -8297,7 +8297,7 @@ void Garbage_Collector::reclaim_full_heap_from_gc_thread(unsigned int size_faile
 
             if (root->isForwarded()) { // has been forwarded
                 assert(is_compaction_block(GC_BLOCK_INFO(root)));
-            
+
                 Partial_Reveal_Object *new_root_object = root->get_forwarding_pointer();
                 // Update root slot
                 wpos_left[wpo_index] = (weak_pointer_object*)new_root_object;
@@ -8310,7 +8310,7 @@ void Garbage_Collector::reclaim_full_heap_from_gc_thread(unsigned int size_faile
 
             if (root->isForwarded()) { // has been forwarded
                 assert(is_compaction_block(GC_BLOCK_INFO(root)));
-            
+
                 Partial_Reveal_Object *new_root_object = root->get_forwarding_pointer();
                 // Update root slot
                 p_global_gc->m_wpos[wpo_index] = (weak_pointer_object*)new_root_object;
@@ -8323,7 +8323,7 @@ void Garbage_Collector::reclaim_full_heap_from_gc_thread(unsigned int size_faile
         get_gc_threads_to_begin_task(GC_SLIDE_COMPACT_LIVE_OBJECTS_IN_COMPACTION_BLOCKS);
         wait_for_gc_threads_to_complete_assigned_task();
         gc_time_end_hook("GC_SLIDE_COMPACT_LIVE_OBJECTS_IN_COMPACTION_BLOCKS", &_start_time, &_end_time, stats_gc ? true : false);
-       
+
 #if 0
         gc_time_start_hook(&_start_time);
         get_gc_threads_to_begin_task(GC_RESTORE_HIJACKED_HEADERS);
@@ -8331,7 +8331,7 @@ void Garbage_Collector::reclaim_full_heap_from_gc_thread(unsigned int size_faile
         gc_time_end_hook("GC_RESTORE_HIJACKED_HEADERS", &_start_time, &_end_time, stats_gc ? true : false);
 #endif
     }
-    
+
 ////////////////////////////////////////// NOW SWEEP THE ENTIRE HEAP/////////////////////////////////////////////////////////
     if (sweeps_during_gc || g_gen) {
         gc_time_start_hook(&_start_time);
@@ -8341,7 +8341,7 @@ void Garbage_Collector::reclaim_full_heap_from_gc_thread(unsigned int size_faile
         get_gc_threads_to_begin_task(GC_SWEEP_TASK);
         wait_for_gc_threads_to_complete_assigned_task();
 
-        if (stats_gc) {    
+        if (stats_gc) {
             unsigned int recovered = 0;
             unsigned int fragments = 0;
             unsigned int bswept    = 0;
@@ -8408,9 +8408,9 @@ void Garbage_Collector::reclaim_full_heap_from_gc_thread(unsigned int size_faile
 
 /////////////////////////////////////// RESET the gc TLS state. /////////////////////////////////////////////////////////////
 
-    // Reset the gc_information fields for each thread that is active. This includes setting the current 
+    // Reset the gc_information fields for each thread that is active. This includes setting the current
     // free and ceiling to NULL and reset alloc block to the start of the chuck.
-    // The gc malloc code should be able to deal with seeing free set to 0 and know that it needs to just 
+    // The gc malloc code should be able to deal with seeing free set to 0 and know that it needs to just
     // go to the alloca block and get the next free alloc area.
     //
     reset_thread_nurseries();
@@ -8433,7 +8433,7 @@ void Garbage_Collector::reclaim_full_heap_from_gc_thread(unsigned int size_faile
     if (_single_object_blocks) {
         total_LOB_bytes_recovered += sweep_single_object_blocks(_single_object_blocks,los_stats);
     }
-    if (stats_gc) {    
+    if (stats_gc) {
         gc_time_end_hook("LOB & SOB Sweep", &_start_time, &_end_time, true);
         orp_cout << "total_LOB_bytes_recovered = " << total_LOB_bytes_recovered << std::endl;
         orp_cout << "amount of usable space found by los sweeping = " << los_stats.amount_recovered << "\n";
@@ -8441,9 +8441,9 @@ void Garbage_Collector::reclaim_full_heap_from_gc_thread(unsigned int size_faile
     } else {
         gc_time_end_hook("LOB & SOB Sweep", &_start_time, &_end_time, false);
     }
-    
+
     gc_time_start_hook(&_start_time);
-    
+
     // Refresh block store if needed
     if(g_gen) {
         // return all free blocks to block store if this GC was due to a LOS request.
@@ -8505,7 +8505,7 @@ void Garbage_Collector::reclaim_full_heap_from_gc_thread(unsigned int size_faile
         }
     }
     gc_time_end_hook("Block store management after GC", &_start_time, &_end_time, verbose_gc && stats_gc ? true : false);
-    
+
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     _gc_num_time = gc_time_end_hook("GC time", &_gc_start_time, &_gc_end_time, false);
     _total_gc_time += _gc_num_time;
@@ -8518,7 +8518,7 @@ void Garbage_Collector::reclaim_full_heap_from_gc_thread(unsigned int size_faile
     running_gc = false; // We hold gc lock so we can change this without race conditions.
 #endif // GC_VERIFY_VM
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////                                                                       //
-    
+
     if(stats_gc) {
         p_global_gc->_p_block_store->print_block_stats();
     }
@@ -8573,7 +8573,7 @@ void Garbage_Collector::reclaim_full_heap_from_gc_thread(unsigned int size_faile
         gc_time_end_hook("Reset compaction areas after GC", &_start_time, &_end_time, stats_gc ? true : false);
     }
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    
+
 #ifdef _IA64_
     // dynopt_pass_GC_time_to_PMU_driver only available on IA64
     if (delta_dynopt) {
@@ -8688,7 +8688,7 @@ void collect_private_heap(GC_Small_Nursery_Info *private_nursery,
 
 	// Mark the escaping objects and set the MUST_LEAVE flag so that we know to only allocate new spots for these objects.
     push_bottom_on_local_mark_stack(escaping_object,&(local_collector->mark_stack));
-	
+
     std::vector<Partial_Reveal_Object*> ph_lives;
     std::map<Partial_Reveal_Object*,Partial_Reveal_Object*> ph_escaping;
 
@@ -8752,7 +8752,7 @@ void collect_private_heap(GC_Small_Nursery_Info *private_nursery,
         if(separate_immutable && obj_is_immutable) {
             nursery_to_use = immutable_nursery;
         }
-        
+
 		frontier = (Partial_Reveal_Object *)nursery_to_use->tls_current_free;
         adjust_frontier_to_alignment(frontier, obj_vtable);
 
@@ -9044,7 +9044,7 @@ void collect_private_heap(GC_Small_Nursery_Info *private_nursery,
 
 	// Mark the escaping objects and set the MUST_LEAVE flag so that we know to only allocate new spots for these objects.
     push_bottom_on_local_mark_stack(NULL,escaping_object,&(local_collector->mark_stack));
-	
+
 	while(1) {
 		Partial_Reveal_Object *obj_to_trace;
         PncLiveObject *cur_pnc;
@@ -9306,7 +9306,7 @@ void collect_private_heap(GC_Small_Nursery_Info *private_nursery,
 				}
 				p_global_gc->m_wpos[wpo_index] = (weak_pointer_object*)p_new_obj;
 			}
-#if 0			
+#if 0
 			if(get_object_location(root->m_key,local_collector) == PRIVATE_HEAP) {
 				PncLiveObject *plo = (PncLiveObject*)root->m_key->vt();
 				Partial_Reveal_Object *p_new_obj = plo->new_location;
@@ -9366,7 +9366,7 @@ void collect_private_heap(GC_Small_Nursery_Info *private_nursery,
                 exit(-1);
             }
     		// No need to recopy the vtable of each object.
-	    	// Moreover, the source objects have their mark bits set which we don't want. 
+	    	// Moreover, the source objects have their mark bits set which we don't want.
 #ifdef _DEBUG
 			char buf[1000];
 			sprintf(buf,"Transfering %p in private heap to %p in public heap.",p_obj,p_dest_obj);
@@ -9443,7 +9443,7 @@ bool block_info::set_nursery_status(const nursery_state &expected_state, const n
 #if 0
         if(new_state == active_nursery) {
             // We will sweep blocks only right before we start using it. This seems to have good cache benefits
-        
+
 		    if (!sweeps_during_gc) {
 			    // Sweep the block
 			    if (block_has_been_swept == false) {
@@ -9469,7 +9469,7 @@ extern "C" unsigned global_is_in_heap(Partial_Reveal_Object *p_obj) {
 }
 
 #if defined ORP_POSIX && defined __GNUC__
-#ifdef __X86_64__
+#ifdef __x86_64__
 PVOID InterlockedCompareExchangePosix(IN OUT PVOID *Destination,
 				 IN PVOID Exchange,
 				 IN PVOID Comperand
@@ -9481,7 +9481,7 @@ PVOID InterlockedCompareExchangePosix(IN OUT PVOID *Destination,
     : "r" (Exchange), "m" (*Destination), "a" (Comperand));
     return(old);
 }
-#else // __X86_64__
+#else // __x86_64__
 PVOID InterlockedCompareExchangePosix(IN OUT PVOID *Destination,
 				 IN PVOID Exchange,
 				 IN PVOID Comperand
@@ -9493,9 +9493,9 @@ PVOID InterlockedCompareExchangePosix(IN OUT PVOID *Destination,
     : "r" (Exchange), "m" (*Destination), "a" (Comperand));
     return(old);
 }
-#endif // __X86_64__
+#endif // __x86_64__
 
-#ifdef __X86_64__
+#ifdef __x86_64__
 LONG InterlockedExchangeAddPosix(
 				IN OUT PVOID Addend,
 				IN LONG Value
@@ -9510,7 +9510,7 @@ __asm__ (
 :"memory" );
 return ret;
 }
-#else  // __X86_64__
+#else  // __x86_64__
 LONG InterlockedExchangeAddPosix(
 				IN OUT PVOID Addend,
 				IN LONG Value
@@ -9525,7 +9525,7 @@ __asm__ (
 :"memory" );
 return ret;
 }
-#endif // __X86_64__
+#endif // __x86_64__
 #endif
 
 bool is_young_gen(Partial_Reveal_Object *p_obj) {

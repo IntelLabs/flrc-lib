@@ -31,9 +31,9 @@ PILLAR_EXPORT PrtCodeInfoManager prtRegisterCodeInfoManager(const char *theCimNa
 
 // Indicates that the given Code Info Manager is responsible for the closed interval of code
 // addresses as specified by start and end.
-PILLAR_EXPORT void prtAddCodeRegion(PrtCodeInfoManager     theCim, 
+PILLAR_EXPORT void prtAddCodeRegion(PrtCodeInfoManager     theCim,
                                     PrtCodeAddress         start,
-                                    PrtCodeAddress         end, 
+                                    PrtCodeAddress         end,
                                     PrtCimSpecificDataType opaqueData)
 {
     assert(theCim);
@@ -43,7 +43,7 @@ PILLAR_EXPORT void prtAddCodeRegion(PrtCodeInfoManager     theCim,
 
 
 // Returns a pointer to the code info manager for the current activation described by si, or NULL if none was found.
-// If the code info manager was found and the pointer opaqueData is not NULL, then *opaqueData will be set to the 
+// If the code info manager was found and the pointer opaqueData is not NULL, then *opaqueData will be set to the
 // opaque data associated with this stack iterator.
 Prt_Cim *prt_LookupCodeInfoManager(PrtCodeAddress eip,
                                    PrtBool isIpPast,
@@ -62,7 +62,7 @@ Prt_Cim *prt_LookupCodeInfoManager(PrtCodeAddress eip,
 
 void prt_ErrorNoCim(PrtStackIterator *si, const char *message)
 {
-#ifdef __X86_64__
+#ifdef __x86_64__
     printf("%s: no CodeInfoManager for rip=0x%p, rsp=0x%p, vsh=0x%p\n",
         message, (si->ripPtr == NULL ? 0 : *si->ripPtr), si->rsp, si->vsh);
     if (si->originalVsh) {
@@ -77,7 +77,7 @@ void prt_ErrorNoCim(PrtStackIterator *si, const char *message)
             prtNextActivation(&_si);
         }
     }
-#else  // __X86_64__
+#else  // __x86_64__
     printf("%s: no CodeInfoManager for eip=0x%p, esp=0x%p, vsh=0x%p\n",
         message, (si->eipPtr == NULL ? 0 : *si->eipPtr), si->esp, si->vsh);
     if (si->originalVsh) {
@@ -92,7 +92,7 @@ void prt_ErrorNoCim(PrtStackIterator *si, const char *message)
             prtNextActivation(&_si);
         }
     }
-#endif // __X86_64__
+#endif // __x86_64__
     assert(0);
     exit(-2);
 } //prt_ErrorNoCim
@@ -110,7 +110,7 @@ void prt_DeleteCodeIntervalTree(Prt_CodeIntervalTree *cit)
 } //Prt_CodeIntervalTree
 
 
-// Perform a lookup in the Prt_CodeIntervalTree.  Find the interval node that includes the specified IP.  
+// Perform a lookup in the Prt_CodeIntervalTree.  Find the interval node that includes the specified IP.
 // If such a node is found, set *cim to the corresponding Prt_Cim and return true; otherwise return false.
 bool Prt_CodeIntervalTree::find(PrtCodeAddress ip, Prt_Cim **cim, PrtCimSpecificDataType *opaqueData) const
 {
@@ -125,11 +125,11 @@ bool Prt_CodeIntervalTree::find(PrtCodeAddress ip, Prt_Cim **cim, PrtCimSpecific
 } //Prt_CodeIntervalTree::find
 
 
-// Insert a code interval into the tree and remember that it is managed by the specified Prt_Cim.  
+// Insert a code interval into the tree and remember that it is managed by the specified Prt_Cim.
 // Return true if successful.  Return false if the some portion of the specified code range is already in the tree.
 void Prt_CodeIntervalTree::insert(Prt_Cim *theCim,
                                   PrtCodeAddress start,
-                                  PrtCodeAddress end, 
+                                  PrtCodeAddress end,
 							      PrtCimSpecificDataType opaqueData)
 {
     prt_SuspendWrapper lock();

@@ -1,6 +1,6 @@
 ;;; COPYRIGHT_NOTICE_1
 
-%ifndef __X86_64__
+%ifndef __x86_64__
 
 SECTION .text
 
@@ -759,7 +759,7 @@ gc_heap_slot_gen_write_interior_ref_p_prt_end:
 
 ; -----------------------------------------------------------------------
 
-%else  ; // __X86_64__
+%else  ; // __x86_64__
 
 %define REGISTER_SIZE 8
 
@@ -770,7 +770,7 @@ extern prtInvokeUnmanagedFunc
 extern get_m2u_vse_size
 extern tgc_enter_unmanaged
 extern tgc_reenter_managed
-extern g_tls_offset_bytes 
+extern g_tls_offset_bytes
 extern local_nursery_size
 
 
@@ -792,7 +792,7 @@ gc_heap_slot_write_ref_p:
     mov  r10, rbx                      ; // Pillar task * into rcx
 %ifndef TLS0
     add  r10, REGISTER_SIZE            ; // Go to TLS field in PrtTask
-%endif ; TLS0 
+%endif ; TLS0
     mov  r10,  qword [r10]             ; // TLS value (GC_Thread_Info*) into r10
     add  r10d, dword [g_tls_offset_bytes]
 
@@ -1182,7 +1182,7 @@ gc_cas_write_ref_p:
     mov  r10, rbx                      ; // Pillar task * into rcx
 %ifndef TLS0
     add  r10, REGISTER_SIZE            ; // Go to TLS field in PrtTask
-%endif ; TLS0 
+%endif ; TLS0
     mov  r10,  qword [r10]             ; // TLS value (GC_Thread_Info*) into r10
     add  r10d, dword [g_tls_offset_bytes]
 
@@ -1666,4 +1666,4 @@ gc_heap_slot_gen_write_interior_ref_p_prt_end:
 
 
 
-%endif ; // __X86_64__
+%endif ; // __x86_64__

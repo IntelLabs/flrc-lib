@@ -2,7 +2,7 @@
 
 ; $Header: /nfs/sc/proj/ctg/psl002/CVS/pillar_pthread/src/base/prtstubs.asm,v 1.10 2013/02/15 21:20:15 taanders Exp $
 
-IFNDEF __X86_64__
+IFNDEF __x86_64__
 .586
 .xmm
 .model flat, c
@@ -16,7 +16,7 @@ dseg ends
 
 ; =============================================================================================
 ; Declare external functions as near ones for calls below.
-EXTERN C prt_ExitThread : NEAR  
+EXTERN C prt_ExitThread : NEAR
 EXTERN C printf : NEAR
 EXTERN C exit : NEAR
 EXTERN C prtYieldUnmanaged : NEAR
@@ -38,9 +38,9 @@ REGISTER_SIZE = 4
 EXTERN C prt_Globals : DWORD
 EXTERN C prtMinFreeStackSpace : DWORD
 
-ELSE ; // __X86_64__
+ELSE ; // __x86_64__
 
-EXTERN prt_ExitThread : NEAR  
+EXTERN prt_ExitThread : NEAR
 EXTERN printf : NEAR
 EXTERN exit : NEAR
 EXTERN prtYieldUnmanaged : NEAR
@@ -56,14 +56,14 @@ REGISTER_SIZE = 8
 
 EXTERN prt_Globals : DWORD
 
-ENDIF ; // __X86_64__
+ENDIF ; // __x86_64__
 
 
 MIN_UNMANAGED_STACK   = 500000
 ;MIN_UNMANAGED_STACK   = 16384
 
 
-; // Macros that work for both IA32 and __X86_64__
+; // Macros that work for both IA32 and __x86_64__
 firstArg MACRO Names:vararg
     _argNum$ = REGISTER_SIZE
     nextArg Names
@@ -101,7 +101,7 @@ nextStackOffset MACRO Names:vararg
 ENDM
 
 
-IFNDEF __X86_64__
+IFNDEF __x86_64__
 
 ; =============================================================================================
 ; These constants are verified in the validateStubConstants function
@@ -270,7 +270,7 @@ prt_WatermarkPostTopIndex1::
     mov dword ptr [junk1], ecx  ; // increment the stack's top...replace DEADBEEF with the address of this task's stub stack top
 prt_WatermarkPostTopIndex2::
 	lea ecx, junk2[ecx*4]   ; // ecx = address of the top free stub stack array entry
-prt_WatermarkPostStubStackStart:: 
+prt_WatermarkPostStubStackStart::
 	mov dword ptr [ecx], prt_WatermarkPrototypeStart ; // write the stub start value into the stub stack array
 prt_WatermarkPostStubStart::
     mov ecx, exit
@@ -340,7 +340,7 @@ prt_InvokeManagedFuncStart::
 IFDEF TLS_REGISTER
     loadTlsRegister
 ENDIF
-    
+
     getTlsIntoEax                       ; // leaves eax set to TLS
     push eax
     call prtToManaged
@@ -361,7 +361,7 @@ prt_InvokeManagedFuncAfterCall:
     add esp, U2MFRAMESIZE
     fullStubEpilog
     ret 12
-    
+
 prt_InvokeManagedFuncUnwindContinuation::
     continuationProlog _normalEsp$, _contStart$
     mov eax, [ebp+_contArgLow32Bits$]
@@ -378,7 +378,7 @@ prtInvokeManagedFunc@12 ENDP
 PUBLIC prtInvokeUnmanagedFunc@16             ; start of the function
 PUBLIC prtInvokeUnmanagedIntRet@16           ; start of the function
 PUBLIC prt_InvokeUnmanagedFuncStart          ; start of the function
-PUBLIC prt_InvokeUnmanagedFuncPostCall       ; 
+PUBLIC prt_InvokeUnmanagedFuncPostCall       ;
 PUBLIC prt_InvokeUnmanagedFuncDestructor     ; VSE type identifier (code address)
 PUBLIC prt_InvokeUnmanagedFuncUnwindContinuation
 PUBLIC prt_InvokeUnmanagedFuncEnd            ; end of the function
@@ -421,7 +421,7 @@ prt_InvokeUnmanagedFuncStart::
         lea  esi, prtPillarCompilerUnwinder
         mov  dword ptr _realM2uUnwinder$[ebp], esi
         pushVse _vsePtr$, prt_InvokeUnmanagedFuncDestructor
-        
+
         push eax
         call prtToUnmanaged
         pop  eax
@@ -431,7 +431,7 @@ prt_InvokeUnmanagedFuncStart::
 prt_InvokeUnmanagedFuncPostCall::
         mov ecx, _callingConvention$[ebp]               ; // ecx != 0 if target is a stdcall
         .IF (ecx == 0)                                  ; // if target was cdecl instead of stdcall, then remove arguments from stack
-            add esp, ebx    
+            add esp, ebx
         .ENDIF
 
 prt_InvokeUnmanagedFuncAfterCall:
@@ -445,20 +445,20 @@ prt_InvokeUnmanagedFuncAfterCall:
         ; call prtYieldUnmanaged
 
         getTlsIntoEax                                   ; // get current Prt_Task pointer
-        
+
         push eax
         call prtToManaged
         pop  eax
-        
+
         popVse _vsePtr$, prt_InvokeUnmanagedFuncDestructor
-    
+
         mov eax, savereg1                               ; // restore return registers
         mov edx, savereg2
         add esp, M2UFRAMESIZE                           ; // remove the rest of the frame and local vars
-    
+
         fullStubEpilog
         ret 16
-    
+
 prt_InvokeUnmanagedFuncDestructor::
     continuationProlog _normalEsp$, _vsePtr$
     push [ebp+_targetContinuation$]                     ; // recut
@@ -469,7 +469,7 @@ prt_InvokeUnmanagedFuncUnwindContinuation::
     mov eax, [ebp+_contArgLow32Bits$]
     mov edx, [ebp+_contArgHigh32Bits$]
     jmp prt_InvokeUnmanagedFuncAfterCall
-    
+
 prt_InvokeUnmanagedFuncEnd::
 prtInvokeUnmanagedFunc@16 ENDP
 
@@ -499,7 +499,7 @@ setNextConstant MACRO Value
 ENDM
 
 PUBLIC prt_getStubConstants                ; start of the function
-    
+
 _cur$ = 0
 
 prt_getStubConstants PROC EXPORT
@@ -579,7 +579,7 @@ IFDEF TLS_REGISTER
     push edx
     loadTlsRegister
     pop edx
-ENDIF        
+ENDIF
     call edx                              ;; // invoke the function
 prt_bootstrapTaskAsmCall::
 
@@ -604,7 +604,7 @@ ENDIF
     mov  esi, esp
     mov  edx, _funcToCall$[ebp]           ;; // edx = the function to invoke
     mov  esp, _stackTop$[ebp]             ;; // transition to a new stack
-        
+
     call edx                              ;; // invoke the function
 
     mov  esp, esi
@@ -656,7 +656,7 @@ _TEXT   ENDS
 ; =============================================================================================
 
 
-ELSE ; // __X86_64__
+ELSE ; // __x86_64__
 
 
 ; =============================================================================================
@@ -678,12 +678,12 @@ ARG_REG2 EQU rdx
 ARG_REG3 EQU r8
 ARG_REG4 EQU r9
 
-; // Modifies esp to start using the stack originally given to the current task.  
+; // Modifies esp to start using the stack originally given to the current task.
 ; // Modifies eax and esp, other regs unchanged.
 goToSystemStack MACRO
     getTlsIntoEax
     ;; // Go to the original stack stored at a known offset from the start of the Pillar task.
-    mov rsp, [rax+PRT_TASK_STARTING_STACK]    
+    mov rsp, [rax+PRT_TASK_STARTING_STACK]
     and  rsp, 0FFffFFffFFffFFf0h
 ENDM
 
@@ -719,7 +719,7 @@ copyArgs MACRO startReg, sizeReg
     and rcx, 32
     add rbx, rcx
     sub rsp, rbx                                ;; // make room to copy args that are on the stack
-    
+
 
     ;; // copy the stack arguments to the next stack locationstack starting at esp.
     cld
@@ -730,20 +730,20 @@ copyArgs MACRO startReg, sizeReg
     rep movsq
 
 ;    cmp rbx, 8
-;    jl copyDone        
+;    jl copyDone
         ; // MOVE ARGS INTO REGISTERS?  BUT WE DON'T HAVE TYPE INFORMATION!!!
         mov ARG_REG1,  QWORD PTR [rsp+0]
         movd xmm0, ARG_REG1
 ;    cmp rbx, 16
-;    jl copyDone        
+;    jl copyDone
         mov ARG_REG2,  QWORD PTR [rsp+8]
         movd xmm1, ARG_REG2
 ;    cmp rbx, 24
-;    jl copyDone        
+;    jl copyDone
         mov ARG_REG3,   QWORD PTR [rsp+16]
         movd xmm2, ARG_REG3
 ;    cmp rbx, 32
-;    jl copyDone        
+;    jl copyDone
         mov ARG_REG4,   QWORD PTR [rsp+24]
         movd xmm3, ARG_REG4
 ;copyDone::
@@ -768,7 +768,7 @@ IFDEF DEBUG_VSE_POPS
 
     mov  ARG_REG2, VseType
     lea  ARG_REG1, [rbp+VseOffsetFromEbp]
-    
+
     sub  rsp, 32
     call prt_ValidateVsh
     add  rsp, 32
@@ -801,7 +801,7 @@ restoreArgRegs MACRO
     pop ARG_REG1
 ENDM
 
-; // Returns the current thread's TLS (its PrtTask pointer) in rax.  
+; // Returns the current thread's TLS (its PrtTask pointer) in rax.
 ; // Leaves argument registers unchanged.
 ; // r13 out = mcrt thread handle
 getTlsIntoEax MACRO
@@ -953,7 +953,7 @@ prt_InvokeUnmanagedFuncStart::
         mov _argSize$[rbp], ARG_REG3
         mov _argStart$[rbp], ARG_REG2
         mov _unmanagedFunc$[rbp], ARG_REG1
-        
+
         sub rsp, M2UFRAMESIZE                           ; // reserve space for rest of the frame and local vars.
         pushVse _vsePtr$, prt_InvokeUnmanagedFuncDestructor ; // doesn't modify input args
 
@@ -961,38 +961,38 @@ prt_InvokeUnmanagedFuncStart::
         copyArgs ARG_REG2, ARG_REG3                     ; // reserve space and copy arguments, sets ebx = number of arg bytes
         call rax
 prt_InvokeUnmanagedFuncAfterCall::
-        
+
         mov rcx, QWORD PTR _callingConvention$[rbp]
         cmp rcx, 0
         jne TARGET_WAS_STDCALL
         add rsp, rbx                                    ; // if target was cdecl instead of stdcall, then remove arguments from stack
 TARGET_WAS_STDCALL:
-    
+
         mov rdi, rax                                    ; // save possible return registers away
-        
+
 ;        call prtYieldUnmanaged
 
         getTlsIntoEax                                   ; // get current Prt_Task pointer
         popVse _vsePtr$, prt_InvokeUnmanagedFuncDestructor
-    
+
         mov rax, rdi                                    ; // restore return registers
         add rsp, M2UFRAMESIZE                           ; // remove the rest of the frame and local vars
-    
+
         fullStubEpilog
         ret
-    
+
 prt_InvokeUnmanagedFuncDestructor::
     continuationProlog _normalEsp$, _vsePtr$
     mov  ARG_REG1, [rbp+_targetContinuation$]                ; // recut
     sub  rsp, 32
     call prtFatCutTo
-    
+
 prt_InvokeUnmanagedFuncUnwindContinuation::
     continuationProlog _normalEsp$, _contStart$
     mov rax, [rbp+_contArgLow32Bits$]
     mov rdx, [rbp+_contArgHigh32Bits$]
     jmp prt_InvokeUnmanagedFuncAfterCall
-    
+
 prt_InvokeUnmanagedFuncEnd::
 prtInvokeUnmanagedFunc ENDP
 
@@ -1103,7 +1103,7 @@ cimAlreadyCreated:
     movd xmm2, ARG_REG3
     mov ARG_REG4,   QWORD PTR [rsp+24]
     movd xmm3, ARG_REG4
-    
+
     sub  rsp, 32
     call rax                              ;; // invoke the function
     add  rsp, 32
@@ -1164,7 +1164,7 @@ prt_testStackSize PROC EXPORT
     mov  rbx, rsp
     mov  rsp, ARG_REG2                    ;; // transition to a new stack
 
-    sub  rsp, 40        
+    sub  rsp, 40
     call ARG_REG1                         ;; // invoke the function
     add  rsp, 40
 
@@ -1197,6 +1197,6 @@ prt_getTlsRegister ENDP
 
 _TEXT   ENDS
 
-ENDIF ; // __X86_64__
+ENDIF ; // __x86_64__
 
 end
