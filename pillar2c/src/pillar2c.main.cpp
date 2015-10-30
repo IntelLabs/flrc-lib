@@ -192,9 +192,9 @@ int main(int argc, char *argv[]) {
 #endif
 #endif
 
-#ifdef __X86_64__
+#ifdef __x86_64__
     g_ref_param_in_pseudo = true;
-#endif // 
+#endif //
 
     int arg_index;
     for(arg_index = 0; arg_index < argc; ++arg_index) {
@@ -296,9 +296,9 @@ int main(int argc, char *argv[]) {
             } else if(strcmp("-p2c-instrument",argv[arg_index]) == 0) {
                 g_instrument = true;
             } else if(strcmp("-p2c-no-ref-param-pseudo",argv[arg_index]) == 0) {
-#ifdef __X86_64__
+#ifdef __x86_64__
                 printf("Warning: ref params must go in the pseudo-frame in 64-bit.  Ignoring -p2c-no-ref-param-pseudo.\n");
-#endif // 
+#endif //
                 g_ref_param_in_pseudo = false;
             } else if(strcmp("-p2c-ref-param-pseudo",argv[arg_index]) == 0) {
                 g_ref_param_in_pseudo = true;
@@ -348,7 +348,7 @@ int main(int argc, char *argv[]) {
             } else if(strcmp("-p2c-no-topo-tailcall",argv[arg_index]) == 0) {
                 g_use_topo_tailcall = false;
             } else if(strncmp("-p2c-topo-tailcall",argv[arg_index],18) == 0) {
-#ifdef __X86_64__
+#ifdef __x86_64__
                 printf("Topographical tailcalls cannot be used in 64-bit mode.\n");
                 exit(-1);
 #else
@@ -412,7 +412,7 @@ int main(int argc, char *argv[]) {
     } else {
         g_output_file = stdout;
     }
-#else 
+#else
     if(g_output_file_base != "") {
         std::string complete_name = g_output_file_base + ".c";
         g_output_file = fopen(complete_name.c_str(),"w");
@@ -497,7 +497,7 @@ int main(int argc, char *argv[]) {
         perror("");
         assert(0);
         exit(-4);
-    } 
+    }
 	}
 } // main
 

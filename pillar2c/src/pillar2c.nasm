@@ -1,6 +1,6 @@
 ;;; COPYRIGHT_NOTICE_1
 
-%ifndef __X86_64__
+%ifndef __x86_64__
 
 SECTION .text
 
@@ -23,10 +23,10 @@ SECTION .text
     pop ebp
 %endmacro
 
-%macro copyArgs 2 
+%macro copyArgs 2
     mov ebx, [ ebp + %2 ]
-    shl ebx, 2               
-    sub esp, ebx            
+    shl ebx, 2
+    sub esp, ebx
     cld
     mov ecx, dword [ ebp + %2 ]
     mov esi, dword [ ebp + %1 ]
@@ -146,17 +146,17 @@ global pillar2c_pcall_target_end
 pillar2c_pcall_target:
 pillar2c_pcall_target_start:
     fullStubProlog
-    
+
     copyArgs _argStart$ , _argSize$
 	push dword [ebp + _argStart$]
 	call free
 	add  esp, 4
     push 0                                   ; // a NULL to root the pseudo-frame stack
     call prtGetTaskHandle
-    push eax                      
+    push eax
 	           ; // task handle is the first arg to all managed methods
     call dword [ebp + _managedFunc$]         ; // managedFunc should remove all the args
-    
+
     fullStubEpilog
     ret  12
 pillar2c_pcall_target_end:
@@ -173,7 +173,7 @@ _pillar2c_continuation_target:
 
 ; =========================================================================
 
-%else ; // __X86_64__
+%else ; // __x86_64__
 
 ; =========================================================================
 
@@ -317,7 +317,7 @@ pillar2c_pcall_target_start:
     mov  r12, r14
 
     mov  r13, r12                               ;; // r13 = number of 8-byte params
-    shl  r13, 3                                 ;; // r13 = size of params in bytes 
+    shl  r13, 3                                 ;; // r13 = size of params in bytes
     mov  r14, rsp                               ;; // r14 = current stack pointer
     sub  r14, r13                               ;; // r14 = minimum required stack space
     mov  rax, 0FFffFFffFFffFFf0h                ;; // and then and'ing by 16 for alignment
@@ -349,7 +349,7 @@ pillar2c_pcall_target_start:
     mov  r9, qword [rsp+24]
     movq xmm5, r9
 
-    mov  r11, r13                               ;; // r11 = space subtracted from stack  
+    mov  r11, r13                               ;; // r11 = space subtracted from stack
     mov  r12, r13       ; 8, 16, 56, 64         ;; // r12 = space subtracted from stack
     mov  r15, r13       ; 8, 16, 56, 64         ;; // r15 = space subtracted from stack
     and  r13, rax       ; 0, 16, 48, 64         ;; // r13 = space subtracted on 16-byte align
@@ -373,12 +373,12 @@ pillar2c_pcall_target_start:
 
     add  rsp, r12
 
-    pop  r15    
+    pop  r15
     pop  r14
-    pop  r13    
-    pop  r12    
-    pop  rbx    
-    pop  rbp    
+    pop  r13
+    pop  r12
+    pop  rbx
+    pop  rbp
     ret
 pillar2c_pcall_target_end:
 
@@ -403,4 +403,4 @@ _pillar2c_get_next_rip_addr:
     mov  rax, rsp
     ret
 
-%endif ; // __X86_64__
+%endif ; // __x86_64__

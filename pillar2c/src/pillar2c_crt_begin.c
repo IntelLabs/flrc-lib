@@ -19,15 +19,15 @@
 EXTERN_C void __prt_code_start(void);
 EXTERN_C void __prt_code_end(void);
 
-#ifdef __X86_64__
+#ifdef __x86_64__
 #define PILLAR2C_RT_STDCALL
-#else  // __X86_64__
+#else  // __x86_64__
 #ifdef __GNUC__
 #define PILLAR2C_RT_STDCALL __attribute__((stdcall))
 #else  // __GNUC__
 #define PILLAR2C_RT_STDCALL __stdcall
 #endif // __GNUC__
-#endif // __X86_64__
+#endif // __x86_64__
 
 #ifdef NO_P2C_TH
 EXTERN_C void PILLAR2C_RT_STDCALL pillar_main(void *frame,int,char**);
@@ -101,9 +101,9 @@ typedef struct {
     pillar2c_gen_ref_info refs[];
 } pillar2c_generic_gen_ref;
 
-//#ifndef __X86_64__
+//#ifndef __x86_64__
 //#define PREV_OPT
-//#endif // __X86_64__
+//#endif // __x86_64__
 
 typedef struct _pillar2c_pseudo_stack_entry {
 #ifndef PREV_OPT
@@ -130,7 +130,7 @@ typedef struct {
 } write_barrier_stack_structure;
 #endif
 
-#ifdef __X86_64__
+#ifdef __x86_64__
 
 typedef struct {
     void * for_alignment; // this just keeps the stack 16-byte aligned, shouldn't ever have to look at this value
@@ -146,7 +146,7 @@ typedef struct {
     PrtCodeAddress return_eip;
 } yield_stack_structure;
 
-#else  // __X86_64__
+#else  // __x86_64__
 
 typedef struct {
     void * unmanagedFunc;
@@ -181,7 +181,7 @@ typedef struct {
 #endif
     void * prevPseudoFrame;
 } yield_stack_structure;
-#endif // __X86_64__
+#endif // __x86_64__
 
 typedef struct {
     char prt_reserved[PILLAR_VSE_SIZE];
@@ -194,7 +194,7 @@ void pillar2c_m2u_unwinder(struct PrtStackIterator *si, void *lvse) {
     p2c_runtime_vse *prv = (p2c_runtime_vse*)lvse;
 
     // Note: the callee-save register values are incorrect, but they will be fixed after the M2U unwind.
-#ifdef __X86_64__
+#ifdef __x86_64__
     pillar2c_pseudo_stack_entry *prev_pseudo;
     prev_pseudo = (pillar2c_pseudo_stack_entry*)prv->latest_pseudo_frame;
 //    PrtCodeAddress *new_rip = NULL;
@@ -202,7 +202,7 @@ void pillar2c_m2u_unwinder(struct PrtStackIterator *si, void *lvse) {
 
 // The problem is that we need the rip of the current call site, not the one from the pseudo-frame.
 
-    prtSetStackIteratorFields(si, 
+    prtSetStackIteratorFields(si,
                               prv->rip_estimate,
                               /*esp*/    (PrtRegister)prv->latest_pseudo_frame,
                               /*rbxPtr*/ si->rbxPtr,
@@ -213,8 +213,8 @@ void pillar2c_m2u_unwinder(struct PrtStackIterator *si, void *lvse) {
                               /*r15Ptr*/ si->r15Ptr,
                               /*vsh*/    (PrtVseHandle)lvse,
                               /*virtualFrameNumber*/ 0);
-#else  // __X86_64__
-    prtSetStackIteratorFields(si, 
+#else  // __x86_64__
+    prtSetStackIteratorFields(si,
                               prv->rip_estimate,
                               /*esp*/    (PrtRegister)prv->latest_pseudo_frame,
                               /*ebxPtr*/ si->ebxPtr,
@@ -223,16 +223,16 @@ void pillar2c_m2u_unwinder(struct PrtStackIterator *si, void *lvse) {
                               /*ediPtr*/ si->ediPtr,
                               /*vsh*/    (PrtVseHandle)lvse,
                               /*virtualFrameNumber*/ 0);
-#endif // __X86_64__
+#endif // __x86_64__
 }
 
-#ifdef __X86_64__
+#ifdef __x86_64__
 
 #ifdef PREV_OPT
-#error __X86_64__ mode does not support the prev optimization.
+#error __x86_64__ mode does not support the prev optimization.
 #endif // PREV_OPT
 
-#else // __X86_64__
+#else // __x86_64__
 
 #ifdef NO_P2C_TH
 #define PREV_OFFSET_FROM_RIP_ADDR 4
@@ -240,14 +240,14 @@ void pillar2c_m2u_unwinder(struct PrtStackIterator *si, void *lvse) {
 #define PREV_OFFSET_FROM_RIP_ADDR 8
 #endif // NO_P2C_TH
 
-#endif // __X86_64
+#endif // __x86_64
 
 static void pillar2c_get_prev_frame(struct PrtStackIterator * si,
                                     PrtCimSpecificDataType opaque) {
     pillar2c_pseudo_stack_entry *cur_pseudo, *prev_pseudo;
     PrtCodeAddress *new_rip = NULL;
 
-#ifdef __X86_64__
+#ifdef __x86_64__
 
     cur_pseudo  = (pillar2c_pseudo_stack_entry*)si->rsp;
     new_rip     = (unsigned char**)(cur_pseudo->fake_eip_target);
@@ -257,32 +257,32 @@ static void pillar2c_get_prev_frame(struct PrtStackIterator * si,
         exit(-1);
     }
     if(!prev_pseudo) {
-        prtSetStackIteratorFields(si, 
-              /*ripPtr*/ NULL, 
+        prtSetStackIteratorFields(si,
+              /*ripPtr*/ NULL,
               /*rsp*/    NULL,
-              /*rbxPtr*/ NULL, 
-              /*rbpPtr*/ NULL,  
-              /*r12Ptr*/ NULL,  
-              /*r13Ptr*/ NULL,  
-              /*r14Ptr*/ NULL,  
-              /*r15Ptr*/ NULL,  
-              /*vsh*/    si->vsh, 
+              /*rbxPtr*/ NULL,
+              /*rbpPtr*/ NULL,
+              /*r12Ptr*/ NULL,
+              /*r13Ptr*/ NULL,
+              /*r14Ptr*/ NULL,
+              /*r15Ptr*/ NULL,
+              /*vsh*/    si->vsh,
               /*virtualFrameNumber*/ 0);
         return;
     }
-    prtSetStackIteratorFields(si, 
-                  /*ripPtr*/ (unsigned char**)new_rip, 
+    prtSetStackIteratorFields(si,
+                  /*ripPtr*/ (unsigned char**)new_rip,
                   /*rsp*/    (char*)prev_pseudo,
-                  /*rbxPtr*/ NULL, 
-                  /*rbpPtr*/ NULL,  
-                  /*r12Ptr*/ NULL,  
-                  /*r13Ptr*/ NULL,  
-                  /*r14Ptr*/ NULL,  
-                  /*r15Ptr*/ NULL,  
-                  /*vsh*/    si->vsh, 
+                  /*rbxPtr*/ NULL,
+                  /*rbpPtr*/ NULL,
+                  /*r12Ptr*/ NULL,
+                  /*r13Ptr*/ NULL,
+                  /*r14Ptr*/ NULL,
+                  /*r15Ptr*/ NULL,
+                  /*vsh*/    si->vsh,
                   /*virtualFrameNumber*/ 0);
 
-#else  // __X86_64__
+#else  // __x86_64__
 
     cur_pseudo  = (pillar2c_pseudo_stack_entry*)si->esp;
     new_rip     = (unsigned char**)(cur_pseudo->fake_eip_target);
@@ -296,36 +296,36 @@ static void pillar2c_get_prev_frame(struct PrtStackIterator * si,
         exit(-1);
     }
     if(!prev_pseudo) {
-        prtSetStackIteratorFields(si, 
-              /*eipPtr*/ NULL, 
+        prtSetStackIteratorFields(si,
+              /*eipPtr*/ NULL,
               /*esp*/    NULL,
-              /*ebxPtr*/ NULL, 
-              /*ebpPtr*/ NULL,  
-              /*esiPtr*/ NULL,  
-              /*ediPtr*/ NULL,  
-              /*vsh*/    si->vsh, 
+              /*ebxPtr*/ NULL,
+              /*ebpPtr*/ NULL,
+              /*esiPtr*/ NULL,
+              /*ediPtr*/ NULL,
+              /*vsh*/    si->vsh,
               /*virtualFrameNumber*/ 0);
         return;
     }
-    prtSetStackIteratorFields(si, 
-                  /*eipPtr*/ (unsigned char**)new_rip, 
+    prtSetStackIteratorFields(si,
+                  /*eipPtr*/ (unsigned char**)new_rip,
                   /*esp*/    (char*)prev_pseudo,
-                  /*ebxPtr*/ NULL, 
-                  /*ebpPtr*/ NULL,  
-                  /*esiPtr*/ NULL,  
-                  /*ediPtr*/ NULL,  
-                  /*vsh*/    si->vsh, 
+                  /*ebxPtr*/ NULL,
+                  /*ebpPtr*/ NULL,
+                  /*esiPtr*/ NULL,
+                  /*ediPtr*/ NULL,
+                  /*vsh*/    si->vsh,
                   /*virtualFrameNumber*/ 0);
-#endif // __X86_64__
+#endif // __x86_64__
 } // pillar2c_get_prev_frame
 
-static void pillar2c_enumerate_roots(struct PrtStackIterator *si, 
-                                     struct PrtRseInfo *rootSetInfo, 
+static void pillar2c_enumerate_roots(struct PrtStackIterator *si,
+                                     struct PrtRseInfo *rootSetInfo,
                                      PrtCimSpecificDataType opaqueData) {
     unsigned ref_index;
 
     pillar2c_pseudo_stack_entry *pseudo;
-#ifdef __X86_64__
+#ifdef __x86_64__
     pseudo = (pillar2c_pseudo_stack_entry*)si->rsp;
     if(pseudo->ref_mask_ptr) {
         unsigned ref_len = pseudo->ref_mask_ptr->length;
@@ -336,12 +336,12 @@ static void pillar2c_enumerate_roots(struct PrtStackIterator *si,
 	                pseudo->ref_mask_ptr->refs[ref_index].tag,
                     pseudo->ref_mask_ptr->refs[ref_index].id);
             } else if(pseudo->ref_mask_ptr->refs[ref_index].active != 0) {
-                printf("Root enumeration of refs on the stack is not supported in __X86_64__.\n");
+                printf("Root enumeration of refs on the stack is not supported in __x86_64__.\n");
                 exit(-1);
             }
         }
     }
-#else  // __X86_64__
+#else  // __x86_64__
     pseudo = (pillar2c_pseudo_stack_entry*)si->esp;
     if(pseudo->ref_mask_ptr) {
         unsigned ref_len = pseudo->ref_mask_ptr->length;
@@ -361,7 +361,7 @@ static void pillar2c_enumerate_roots(struct PrtStackIterator *si,
             }
         }
     }
-#endif // __X86_64__
+#endif // __x86_64__
 } // pillar2c_enumerate_roots
 
 // ===============================================================================
@@ -373,46 +373,46 @@ pillar2c_pseudo_stack_entry * pillar2c_get_last_pseudo(void) {
 
     prtYoungestActivationFromUnmanagedInTask(si,prtGetTaskHandle());
 
-#ifdef __X86_64__
+#ifdef __x86_64__
     m2uss = (m2u_stack_structure*)(((char *)si->rsp));
     return m2uss->prevPseudoFrame;
-#else  // __X86_64__
+#else  // __x86_64__
     m2uss = (m2u_stack_structure*)(((char *)si->esp) - sizeof(m2u_part));
     return m2uss->prevPseudoFrame;
-#endif // __X86_64__
+#endif // __x86_64__
 } // pillar2c_get_last_pseudo
 
 static void pillar2c_m2u_get_prev_frame(struct PrtStackIterator * si,
                                        PrtCimSpecificDataType opaque) {
-#ifdef __X86_64__
+#ifdef __x86_64__
     m2u_stack_structure *m2uss = (m2u_stack_structure*)(((char *)si->rsp));
-    prtSetStackIteratorFields(si, 
-                  /*ripPtr*/ (unsigned char**)&(m2uss->return_eip), 
+    prtSetStackIteratorFields(si,
+                  /*ripPtr*/ (unsigned char**)&(m2uss->return_eip),
                   /*rsp*/    (char*)m2uss->prevPseudoFrame,
-                  /*rbxPtr*/ NULL, 
-                  /*rbpPtr*/ NULL,  
-                  /*r12Ptr*/ NULL,  
-                  /*r13Ptr*/ NULL,  
-                  /*r14Ptr*/ NULL,  
-                  /*r15Ptr*/ NULL,  
-                  /*vsh*/    si->vsh, 
+                  /*rbxPtr*/ NULL,
+                  /*rbpPtr*/ NULL,
+                  /*r12Ptr*/ NULL,
+                  /*r13Ptr*/ NULL,
+                  /*r14Ptr*/ NULL,
+                  /*r15Ptr*/ NULL,
+                  /*vsh*/    si->vsh,
                   /*virtualFrameNumber*/ 0);
-#else  // __X86_64__
+#else  // __x86_64__
     m2u_stack_structure *m2uss = (m2u_stack_structure*)(((char *)si->esp) - sizeof(m2u_part));
-    prtSetStackIteratorFields(si, 
-                  /*eipPtr*/ (unsigned char**)&(m2uss->return_eip), 
+    prtSetStackIteratorFields(si,
+                  /*eipPtr*/ (unsigned char**)&(m2uss->return_eip),
                   /*esp*/    (char*)m2uss->prevPseudoFrame,
-                  /*ebxPtr*/ NULL, 
-                  /*ebpPtr*/ NULL,  
-                  /*esiPtr*/ NULL,  
-                  /*ediPtr*/ NULL,  
-                  /*vsh*/    si->vsh, 
+                  /*ebxPtr*/ NULL,
+                  /*ebpPtr*/ NULL,
+                  /*esiPtr*/ NULL,
+                  /*ediPtr*/ NULL,
+                  /*vsh*/    si->vsh,
                   /*virtualFrameNumber*/ 0);
-#endif // __X86_64__
+#endif // __x86_64__
 } // pillar2c_m2u_get_prev_frame
 
-static void pillar2c_m2u_enumerate_roots(struct PrtStackIterator *si, 
-                                         struct PrtRseInfo *rootSetInfo, 
+static void pillar2c_m2u_enumerate_roots(struct PrtStackIterator *si,
+                                         struct PrtRseInfo *rootSetInfo,
                                          PrtCimSpecificDataType opaqueData) {
     return;
 } // pillar2c_m2u_enumerate_roots
@@ -421,35 +421,35 @@ static void pillar2c_m2u_enumerate_roots(struct PrtStackIterator *si,
 
 static void pillar2c_yield_get_prev_frame(struct PrtStackIterator * si,
                                        PrtCimSpecificDataType opaque) {
-#ifdef __X86_64__
+#ifdef __x86_64__
     yield_stack_structure *yss = (yield_stack_structure*)(((char *)si->rsp));
-    prtSetStackIteratorFields(si, 
-                  /*ripPtr*/ (unsigned char**)&(yss->return_eip), 
+    prtSetStackIteratorFields(si,
+                  /*ripPtr*/ (unsigned char**)&(yss->return_eip),
                   /*rsp*/    (char*)yss->prevPseudoFrame,
-                  /*rbxPtr*/ NULL, 
-                  /*rbpPtr*/ NULL,  
-                  /*r12Ptr*/ NULL,  
-                  /*r13Ptr*/ NULL,  
-                  /*r14Ptr*/ NULL,  
-                  /*r15Ptr*/ NULL,  
-                  /*vsh*/    si->vsh, 
+                  /*rbxPtr*/ NULL,
+                  /*rbpPtr*/ NULL,
+                  /*r12Ptr*/ NULL,
+                  /*r13Ptr*/ NULL,
+                  /*r14Ptr*/ NULL,
+                  /*r15Ptr*/ NULL,
+                  /*vsh*/    si->vsh,
                   /*virtualFrameNumber*/ 0);
-#else  // __X86_64__
+#else  // __x86_64__
     yield_stack_structure *yss = (yield_stack_structure*)(((char *)si->esp) - sizeof(y_part));
-    prtSetStackIteratorFields(si, 
-                  /*eipPtr*/ (unsigned char**)&(yss->return_eip), 
+    prtSetStackIteratorFields(si,
+                  /*eipPtr*/ (unsigned char**)&(yss->return_eip),
                   /*esp*/    (char*)yss->prevPseudoFrame,
-                  /*ebxPtr*/ NULL, 
-                  /*ebpPtr*/ NULL,  
-                  /*esiPtr*/ NULL,  
-                  /*ediPtr*/ NULL,  
-                  /*vsh*/    si->vsh, 
+                  /*ebxPtr*/ NULL,
+                  /*ebpPtr*/ NULL,
+                  /*esiPtr*/ NULL,
+                  /*ediPtr*/ NULL,
+                  /*vsh*/    si->vsh,
                   /*virtualFrameNumber*/ 0);
-#endif // __X86_64__
+#endif // __x86_64__
 } // pillar2c_yield_get_prev_frame
 
-static void pillar2c_yield_enumerate_roots(struct PrtStackIterator *si, 
-                                         struct PrtRseInfo *rootSetInfo, 
+static void pillar2c_yield_enumerate_roots(struct PrtStackIterator *si,
+                                         struct PrtRseInfo *rootSetInfo,
                                          PrtCimSpecificDataType opaqueData) {
     return;
 } // pillar2c_yield_enumerate_roots
@@ -460,19 +460,19 @@ static void pillar2c_yield_enumerate_roots(struct PrtStackIterator *si,
 static void pillar2c_wb_get_prev_frame(struct PrtStackIterator * si,
                                        PrtCimSpecificDataType opaque) {
     write_barrier_stack_structure *wbss = (write_barrier_stack_structure*)(((char*)si->esp) - sizeof(wb_part));
-    prtSetStackIteratorFields(si, 
-                  /*eipPtr*/ (unsigned char**)&(wbss->return_eip), 
+    prtSetStackIteratorFields(si,
+                  /*eipPtr*/ (unsigned char**)&(wbss->return_eip),
                   /*esp*/    (char*)wbss->prevPseudoFrame,
-                  /*ebxPtr*/ NULL, 
-                  /*ebpPtr*/ NULL,  
-                  /*esiPtr*/ NULL,  
-                  /*ediPtr*/ NULL,  
-                  /*vsh*/    si->vsh, 
+                  /*ebxPtr*/ NULL,
+                  /*ebpPtr*/ NULL,
+                  /*esiPtr*/ NULL,
+                  /*ediPtr*/ NULL,
+                  /*vsh*/    si->vsh,
                   /*virtualFrameNumber*/ 0);
 } // pillar2c_wb_get_prev_frame
 
-static void pillar2c_wb_enumerate_roots(struct PrtStackIterator *si, 
-                                        struct PrtRseInfo *rootSetInfo, 
+static void pillar2c_wb_enumerate_roots(struct PrtStackIterator *si,
+                                        struct PrtRseInfo *rootSetInfo,
                                         PrtCimSpecificDataType opaqueData) {
     // intentionally empty
 } // pillar2c_wb_enumerate_roots
@@ -482,19 +482,19 @@ static void pillar2c_wb_enumerate_roots(struct PrtStackIterator *si,
 static void pillar2c_wbi_get_prev_frame(struct PrtStackIterator * si,
                                         PrtCimSpecificDataType opaque) {
     write_barrier_stack_structure *wbss = (write_barrier_stack_structure*)(((char*)si->esp) - sizeof(wb_part));
-    prtSetStackIteratorFields(si, 
-                  /*eipPtr*/ (unsigned char**)&(wbss->return_eip), 
+    prtSetStackIteratorFields(si,
+                  /*eipPtr*/ (unsigned char**)&(wbss->return_eip),
                   /*esp*/    (char*)wbss->prevPseudoFrame,
-                  /*ebxPtr*/ NULL, 
-                  /*ebpPtr*/ NULL,  
-                  /*esiPtr*/ NULL,  
-                  /*ediPtr*/ NULL,  
-                  /*vsh*/    si->vsh, 
+                  /*ebxPtr*/ NULL,
+                  /*ebpPtr*/ NULL,
+                  /*esiPtr*/ NULL,
+                  /*ediPtr*/ NULL,
+                  /*vsh*/    si->vsh,
                   /*virtualFrameNumber*/ 0);
 } // pillar2c_wbi_get_prev_frame
 
-static void pillar2c_wbi_enumerate_roots(struct PrtStackIterator *si, 
-                                         struct PrtRseInfo *rootSetInfo, 
+static void pillar2c_wbi_enumerate_roots(struct PrtStackIterator *si,
+                                         struct PrtRseInfo *rootSetInfo,
                                          PrtCimSpecificDataType opaqueData) {
     // intentionally empty
 } // pillar2c_wbi_enumerate_roots
@@ -557,8 +557,8 @@ int main(int argc, char ** argv) {
     cimfuncs.cimEnumerateRoots   = pillar2c_enumerate_roots;
 
     manager = prtRegisterCodeInfoManager("pillar2c_translator", cimfuncs);
-    prtAddCodeRegion(manager, 
-                    (PrtCodeAddress)__prt_code_start, 
+    prtAddCodeRegion(manager,
+                    (PrtCodeAddress)__prt_code_start,
                     (PrtCodeAddress)__prt_code_end, 0);
 
     // ===============================================================
@@ -568,8 +568,8 @@ int main(int argc, char ** argv) {
     cim_m2u_funcs.cimEnumerateRoots   = pillar2c_m2u_enumerate_roots;
 
     m2u_manager = prtRegisterCodeInfoManager("pillar2c_m2u", cim_m2u_funcs);
-    prtAddCodeRegion(m2u_manager, 
-                    (PrtCodeAddress)&pillar2cInvokeUnmanagedStart, 
+    prtAddCodeRegion(m2u_manager,
+                    (PrtCodeAddress)&pillar2cInvokeUnmanagedStart,
                     (PrtCodeAddress)((char*)&pillar2cInvokeUnmanagedDestructor - 1), 0);
 
     // ===============================================================
@@ -579,8 +579,8 @@ int main(int argc, char ** argv) {
     cim_yield_funcs.cimEnumerateRoots   = pillar2c_yield_enumerate_roots;
 
     yield_manager = prtRegisterCodeInfoManager("pillar2c_yield", cim_yield_funcs);
-    prtAddCodeRegion(yield_manager, 
-                    (PrtCodeAddress)&pillar2cYieldStart, 
+    prtAddCodeRegion(yield_manager,
+                    (PrtCodeAddress)&pillar2cYieldStart,
                     (PrtCodeAddress)((char*)&pillar2cYieldDestructor - 1), 0);
 
     // ===============================================================
@@ -591,8 +591,8 @@ int main(int argc, char ** argv) {
     cim_wb_funcs.cimEnumerateRoots   = pillar2c_wb_enumerate_roots;
 
     wb_manager = prtRegisterCodeInfoManager("pillar2c_wb", cim_wb_funcs);
-    prtAddCodeRegion(wb_manager, 
-                    (PrtCodeAddress)&pillar2c_write_barrier_start, 
+    prtAddCodeRegion(wb_manager,
+                    (PrtCodeAddress)&pillar2c_write_barrier_start,
                     (PrtCodeAddress)((char*)&pillar2c_write_barrier_destructor - 1), 0);
 
     // ===============================================================
@@ -602,8 +602,8 @@ int main(int argc, char ** argv) {
     cim_wbi_funcs.cimEnumerateRoots   = pillar2c_wbi_enumerate_roots;
 
     wbi_manager = prtRegisterCodeInfoManager("pillar2c_wbi", cim_wbi_funcs);
-    prtAddCodeRegion(wbi_manager, 
-                    (PrtCodeAddress)&pillar2c_write_barrier_interior_start, 
+    prtAddCodeRegion(wbi_manager,
+                    (PrtCodeAddress)&pillar2c_write_barrier_interior_start,
                     (PrtCodeAddress)((char*)&pillar2c_write_barrier_interior_destructor - 1), 0);
 #endif
     // ===============================================================
@@ -625,4 +625,3 @@ void PILLAR2C_RT_STDCALL pillar2c_main(int argc, char **argv) {
     pillar_main(prtGetTaskHandle(),NULL,argc,argv);
 #endif
 }
-

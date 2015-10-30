@@ -1,0 +1,23 @@
+# /
+/autom4te.cache
+/aclocal.m4
+/compile
+/configure
+/config.h
+/config.log
+/config.status
+/depcomp
+/install-sh
+/Makefile
+/Makefile.in
+/missing
+/stamp-h
+/stamp-h1
+/ylwrap
+
+# /src
+/src/Makefile
+/src/Makefile.in
+/src/pillar2c_lex.cc
+/src/pillar2c_yacc.cc
+/src/pillar2c_yacc.h

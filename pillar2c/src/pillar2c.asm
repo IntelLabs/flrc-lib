@@ -1,6 +1,6 @@
 ;;; COPYRIGHT_NOTICE_1
 
-IFNDEF __X86_64__
+IFNDEF __x86_64__
 .586
 .xmm
 .model flat,c
@@ -178,7 +178,7 @@ ENDIF
     pop  ebx
 IFDEF NO_P2C_TH
     ret  4
-ELSE    
+ELSE
     ret  8
 ENDIF
 pillar2cYieldDestructor::
@@ -199,7 +199,7 @@ nextArg  _argSize$
 pillar2c_pcall_target@12 PROC EXPORT
 pillar2c_pcall_target_start::
     fullStubProlog
-    
+
     copyArgs _argStart$[ebp], _argSize$[ebp]
 	push _argStart$[ebp]
 	call free                                ; // argStart should be a malloc'ed copy of the arguments
@@ -210,7 +210,7 @@ IFNDEF NO_P2C_TH
     push eax                                 ; // task handle is the first arg to all managed methods
 ENDIF
     call DWORD PTR _managedFunc$[ebp]        ; // managedFunc should remove all the args
-    
+
     fullStubEpilog
     ret  12
 pillar2c_pcall_target_end::
@@ -246,7 +246,7 @@ _pillar2c_RaiseException_continuation_target ENDP
 
 _TEXT ENDS
 
-ELSE  ; // __X86_64__
+ELSE  ; // __x86_64__
 
 ; =========================================================================
 
@@ -256,6 +256,6 @@ REGISTER_SIZE = 8
 
 _TEXT ENDS
 
-ENDIF ; // __X86_64__
+ENDIF ; // __x86_64__
 
 end
