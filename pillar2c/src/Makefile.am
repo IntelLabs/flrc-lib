@@ -8,7 +8,9 @@ AM_YFLAGS = -d
 
 bin_PROGRAMS = pillar2c
 pillar2c_SOURCES = pillar2c_yacc.yy pillar2c.main.cpp
-pillar2c_DEPENDENCIES = $(EXTRA_OBJS) pillar2c_lex.cc
+pillar2c_DEPENDENCIES = $(EXTRA_OBJS) 
+
+pillar2c_yacc.$(OBJEXT): pillar2c_lex.cc
 
 pillar2c_lex.cc: pillar2c_lex.ll
 	$(LEX) -o $@ -s $<
