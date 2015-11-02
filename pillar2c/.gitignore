@@ -18,6 +18,7 @@
 # /src
 /src/Makefile
 /src/Makefile.in
+/src/pillar2c
 /src/pillar2c_lex.cc
 /src/pillar2c_yacc.cc
 /src/pillar2c_yacc.h
