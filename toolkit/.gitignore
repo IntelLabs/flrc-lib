@@ -1,0 +1,23 @@
+# /
+/autom4te.cache
+/aclocal.m4
+/compile
+/configure
+/config.h
+/config.log
+/config.status
+/depcomp
+/install-sh
+/Makefile
+/Makefile.in
+/missing
+/stamp-h
+/stamp-h1
+
+# /future
+/future/Makefile
+/future/Makefile.in
+/future/libptkfutures.a
+/future/ptkfuture.c.cpp.c
+/future/ptkfuture.c.forceinclude.c
+/future/ptkfuture.c.p2c.c
