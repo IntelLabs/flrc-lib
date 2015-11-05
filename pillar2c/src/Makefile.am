@@ -10,9 +10,6 @@ bin_PROGRAMS = pillar2c
 pillar2c_SOURCES = pillar2c_yacc.yy pillar2c.main.cpp
 pillar2c_DEPENDENCIES = $(EXTRA_OBJS)
 
-maintainer-clean-local:
-	-rm -f pillar2c_lex.cc
-
 pillar2c_yacc.$(OBJEXT): pillar2c_lex.cc
 
 pillar2c_lex.cc: pillar2c_lex.ll
