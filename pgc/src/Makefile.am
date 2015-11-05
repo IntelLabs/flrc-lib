@@ -1,6 +1,6 @@
 SOURCES = pgc.cpp
 
-INCLUDES = -I../include -I../../prt/include # -I../../tgc/include
+INCLUDES = -I.. -I../include -I../../prt/include
 
 EXTRA = -DPILLAR -D_LIB -DUSE_GC_STATIC -DORP_POSIX
 
