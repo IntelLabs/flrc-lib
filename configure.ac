@@ -68,4 +68,5 @@ AM_CONDITIONAL([OS_WIN32], [test "x$os" = "xwin32"])
 AM_CONDITIONAL([OS_LINUX], [test "x$os" = "xlinux"])
 
 AC_CONFIG_FILES([Makefile pgc/Makefile pgc/src/Makefile tgc/Makefile tgc/src/Makefile prt/Makefile prt/src/Makefile pillar2c/Makefile pillar2c/src/Makefile toolkit/Makefile toolkit/future/Makefile])
+AC_CONFIG_SUBDIRS([prt pgc tgc pillar2c toolkit])
 AC_OUTPUT
