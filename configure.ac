@@ -50,5 +50,22 @@ else AC_DEFINE(HAVE_NASM, 1, [Define if NASM, the netwide assembler, is availabl
 fi
 AM_CONDITIONAL(HAVE_NASM, test "x$HAVE_NASM" = "xyes")
 
+AC_CANONICAL_HOST
+
+case "$host" in
+    *-mingw*|*-*-cygwin*)
+        os=win32
+        ;;
+    *-*-linux*)
+        os=linux
+        ;;
+    *)
+        AC_MSG_ERROR([Unsupported host: $host])
+        ;;
+esac
+
+AM_CONDITIONAL([OS_WIN32], [test "x$os" = "xwin32"])
+AM_CONDITIONAL([OS_LINUX], [test "x$os" = "xlinux"])
+
 AC_CONFIG_FILES([Makefile pgc/Makefile pgc/src/Makefile tgc/Makefile tgc/src/Makefile prt/Makefile prt/src/Makefile pillar2c/Makefile pillar2c/src/Makefile toolkit/Makefile toolkit/future/Makefile])
 AC_OUTPUT
