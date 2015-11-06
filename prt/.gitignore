@@ -1,19 +1,5 @@
-# /
-/autom4te.cache
-/aclocal.m4
-/compile
-/configure
-/config.h
-/config.log
-/config.status
-/depcomp
-/install-sh
-/Makefile
-/Makefile.in
-/missing
-/stamp-h1
+# /include
+/include/prtconfig.h
 
 # /src
-/src/Makefile
-/src/Makefile.in
 /src/libprt.a

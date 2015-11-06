@@ -4,6 +4,8 @@
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+#include "tgcconfig.h"
+
 // System header files
 #include <iostream>
 
@@ -74,8 +76,8 @@ bool garbage_collector_is_initialized = false;
 volatile unsigned orp_initialized = 0;
 
 
-// 
-// This is the table holding all the interior pointers used in any given execution 
+//
+// This is the table holding all the interior pointers used in any given execution
 // of a GC. It is reused each time a GC is done.
 
 ExpandInPlaceArray<slot_offset_entry> *interior_pointer_table = NULL;
@@ -88,12 +90,12 @@ unsigned long enumeration_time;
 GC_Thread_Info *active_thread_gc_info_list = NULL;
 #ifdef USE_LOCKCMPEX_FOR_THREAD_LOCK
 long volatile active_thread_gc_info_list_lock = 0;
-#else 
-#ifdef USE_PTHREADS
+#else
+#ifdef HAVE_PTHREAD_H
 pthread_mutex_t *active_thread_gc_info_list_lock = NULL;
-#else  // USE_PTHREADS
+#else  // HAVE_PTHREAD_H
 McrtTicketLock  *active_thread_gc_info_list_lock = NULL;
-#endif // USE_PTHREADS
+#endif // HAVE_PTHREAD_H
 #endif
 
 // end file gc\gc_globals.cpp

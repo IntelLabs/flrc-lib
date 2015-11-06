@@ -93,11 +93,11 @@ GC_Thread::GC_Thread(Garbage_Collector *p_gc, unsigned int gc_thread_id) {
                                     (unsigned int *) &(_thread_id));
 
     while(!started) {
-#ifdef USE_PTHREADS
+#ifdef HAVE_PTHREAD_H
         sched_yield();
-#else  // USE_PTHREADS
+#else  // HAVE_PTHREAD_H
         mcrtThreadYield();
-#endif // USE_PTHREADS
+#endif // HAVE_PTHREAD_H
     }
 
 	if (_thread_handle == NULL) {

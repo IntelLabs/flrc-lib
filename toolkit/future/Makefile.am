@@ -1,5 +1,5 @@
 CC=../../scripts/linux/pilicl
-INCLUDES = -I../include -I../../prt/include
+INCLUDES = -I.. -I../include -I../../prt/include
 AM_CFLAGS = $(INCLUDES) -p2c -c -Zi -nologo -I. -std=c99
 
 all-local: ptkfutures_p2c_sequential.o ptkfutures_p2c_parallel.o

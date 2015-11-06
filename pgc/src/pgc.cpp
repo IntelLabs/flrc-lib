@@ -2,7 +2,7 @@
  * COPYRIGHT_NOTICE_1
  */
 
-#include "config.h"
+#include "pgcconfig.h"
 
 #ifndef __GNUC__
 #include <windows.h>

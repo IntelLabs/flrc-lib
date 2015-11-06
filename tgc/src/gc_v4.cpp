@@ -2,6 +2,8 @@
  * COPYRIGHT_NOTICE_1
  */
 
+#include "tgcconfig.h"
+
 // System header files
 #include <iostream>
 
@@ -691,10 +693,10 @@ void get_chunk_lock(struct GC_Thread_Info *gc_info) {
             fflush(stdout);
 #endif //0
 
-#ifdef USE_PTHREADS
+#ifdef HAVE_PTHREAD_H
             orp_synch_enter_critical_section(g_chunk_lock);
             return;
-#else // USE_PTHREADS
+#else // HAVE_PTHREAD_H
             if(local_collector && local_collector->m_original_task) {
                 while(1) {
                     if(active_gc_thread) {
@@ -708,7 +710,7 @@ void get_chunk_lock(struct GC_Thread_Info *gc_info) {
                     if(res == Success) return;
                 }
             }
-#endif // USE_PTHREADS
+#endif // HAVE_PTHREAD_H
         }
     }
     orp_synch_enter_critical_section(g_chunk_lock);
@@ -1267,16 +1269,16 @@ void Garbage_Collector::reclamation_func(void) {
                 return;
             }
             if(orp_initialized == 0) {
-#ifndef USE_PTHREADS
+#ifndef HAVE_PTHREAD_H
                 mcrtThreadYieldUntil(mcrtPredicateNotEqualUint32,&orp_initialized,0,InfiniteWaitCycles64);
-#endif // USE_PTHREADS
+#endif // HAVE_PTHREAD_H
                 continue;
             }
 
             reclaim_full_heap_concurrent(&copy_to);
-#ifndef USE_PTHREADS
+#ifndef HAVE_PTHREAD_H
             mcrtThreadYield();
-#endif // USE_PTHREADS
+#endif // HAVE_PTHREAD_H
         }
     } else {
         TIME_STRUCT concurrent_start_time, concurrent_end_time;
@@ -1290,17 +1292,17 @@ void Garbage_Collector::reclamation_func(void) {
                 return;
             }
 #if 1
-#ifdef USE_PTHREADS
+#ifdef HAVE_PTHREAD_H
             while(!concurrentPred(NULL, NULL));
-#else  // USE_PTHREADS
+#else  // HAVE_PTHREAD_H
             mcrtThreadYieldUntil((McrtPredicate)concurrentPred, NULL, NULL, InfiniteWaitCycles64);
-#endif // USE_PTHREADS
+#endif // HAVE_PTHREAD_H
 #else // 1
-#ifdef USE_PTHREADS
+#ifdef HAVE_PTHREAD_H
             prtYieldUntil((PrtPredicate)concurrentPred, NULL, NULL, PrtInfiniteWait64);
-#else  // USE_PTHREADS
+#else  // HAVE_PTHREAD_H
             prtYieldUntil((PrtPredicate)concurrentPred, NULL, NULL, InfiniteWaitCycles64);
-#endif // USE_PTHREADS
+#endif // HAVE_PTHREAD_H
 #endif
 
 #if 1
@@ -2864,11 +2866,11 @@ void cheney_roots(GC_Small_Nursery_Info *private_nursery,
     // First enumerate each frame on the task's stack.
     PrtStackIterator _si;
     PrtStackIterator *si = &_si;
-#ifdef USE_PTHREADS
+#ifdef HAVE_PTHREAD_H
     prtYoungestActivationFromUnmanagedInTask(si, (PrtTaskHandle)(struct PrtTaskStruct*)thread_handle);
-#else  // USE_PTHREADS
+#else  // HAVE_PTHREAD_H
     prtYoungestActivationFromUnmanagedInTask(si, (PrtTaskHandle)(struct PrtTaskStruct*)thread_handle, PrtTrue);
-#endif // USE_PTHREADS
+#endif // HAVE_PTHREAD_H
     while (!prtIsActivationPastEnd(si)) {
 
         if (use_pillar_watermarks /* global version */ && use_watermarks /* local version */) {
@@ -3013,11 +3015,11 @@ void local_nursery_roots_and_mark(GC_Small_Nursery_Info *private_nursery,
     // First enumerate each frame on the task's stack.
     PrtStackIterator _si;
     PrtStackIterator *si = &_si;
-#ifdef USE_PTHREADS
+#ifdef HAVE_PTHREAD_H
     prtYoungestActivationFromUnmanagedInTask(si, (PrtTaskHandle)(struct PrtTaskStruct*)thread_handle);
-#else  // USE_PTHREADS
+#else  // HAVE_PTHREAD_H
     prtYoungestActivationFromUnmanagedInTask(si, (PrtTaskHandle)(struct PrtTaskStruct*)thread_handle, PrtTrue);
-#endif // USE_PTHREADS
+#endif // HAVE_PTHREAD_H
     while (!prtIsActivationPastEnd(si)) {
 
 #if defined _DEBUG
@@ -6012,11 +6014,11 @@ void concurrent_scan_one_object(Partial_Reveal_Object *p_obj,
 
 void Garbage_Collector::wait_for_marks_concurrent(void) {
     if(g_concurrent_transition_wait_time > 0) {
-#ifdef USE_PTHREADS
+#ifdef HAVE_PTHREAD_H
         assert(0);
         printf("No implementation for non-zero wait time for pthreads in wait_for_marks_concurrent.\n");
         exit(-1);
-#else  // USE_PTHREADS
+#else  // HAVE_PTHREAD_H
         McrtTimeCycles64 end_time = mcrtGetTimeStampCounterFast();
         McrtTimeMsecs64 end_time_ms = mcrtConvertCyclesToMsecs(end_time);
         end_time_ms += g_concurrent_transition_wait_time;
@@ -6037,7 +6039,7 @@ void Garbage_Collector::wait_for_marks_concurrent(void) {
             }
         }
 
-#endif // USE_PTHREADS
+#endif // HAVE_PTHREAD_H
     }
 
     // This is super-complicated.  num_threads_remaining_until_next_phase is only an approximation
@@ -6147,11 +6149,11 @@ void Garbage_Collector::wait_for_marks_concurrent(void) {
                         // First enumerate each frame on the task's stack.
                         PrtStackIterator _si;
                         PrtStackIterator *si = &_si;
-#ifdef USE_PTHREADS
+#ifdef HAVE_PTHREAD_H
                         prtYoungestActivationFromUnmanagedInTask(si, (PrtTaskHandle)(struct PrtTaskStruct*)cur_thread_node->thread_handle);
-#else  // USE_PTHREADS
+#else  // HAVE_PTHREAD_H
                         prtYoungestActivationFromUnmanagedInTask(si, (PrtTaskHandle)(struct PrtTaskStruct*)cur_thread_node->thread_handle, PrtTrue);
-#endif // USE_PTHREADS
+#endif // HAVE_PTHREAD_H
                         while (!prtIsActivationPastEnd(si)) {
                             prtEnumerateRootsOfActivation(si, &rse);
                             prtNextActivation(si);
@@ -6221,9 +6223,9 @@ void Garbage_Collector::wait_for_marks_concurrent(void) {
         }
 
         if(all_in_right_mode) break;
-#ifndef USE_PTHREADS
+#ifndef HAVE_PTHREAD_H
         mcrtThreadYield();
-#endif // !USE_PTHREADS
+#endif // !HAVE_PTHREAD_H
     }
 
     release_active_thread_gc_info_list_lock(); // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -6231,11 +6233,11 @@ void Garbage_Collector::wait_for_marks_concurrent(void) {
 
 void Garbage_Collector::wait_for_sweep_or_idle_concurrent(CONCURRENT_GC_STATE new_gc_state) {
     if(g_concurrent_transition_wait_time > 0) {
-#ifdef USE_PTHREADS
+#ifdef HAVE_PTHREAD_H
         assert(0);
         printf("No implementation for non-zero wait time for pthreads in wait_for_sweep_or_idle_concurrent.\n");
         exit(-1);
-#else  // USE_PTHREADS
+#else  // HAVE_PTHREAD_H
         McrtTimeCycles64 end_time = mcrtGetTimeStampCounterFast();
         McrtTimeMsecs64 end_time_ms = mcrtConvertCyclesToMsecs(end_time);
         end_time_ms += g_concurrent_transition_wait_time;
@@ -6257,7 +6259,7 @@ void Garbage_Collector::wait_for_sweep_or_idle_concurrent(CONCURRENT_GC_STATE ne
                 assert(0);
             }
         }
-#endif // USE_PTHREADS
+#endif // HAVE_PTHREAD_H
     }
 
     gc_time_end_hook("wait_for_sweep_or_idle_concurrent first while loop...", &_start_time, &_end_time, stats_gc ? true : false);
@@ -6351,9 +6353,9 @@ void Garbage_Collector::wait_for_sweep_or_idle_concurrent(CONCURRENT_GC_STATE ne
         }
 
         if(all_in_right_mode) break;
-#ifndef USE_PTHREADS
+#ifndef HAVE_PTHREAD_H
         mcrtThreadYield();
-#endif // !USE_PTHREADS
+#endif // !HAVE_PTHREAD_H
     }
 
     release_active_thread_gc_info_list_lock(); // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -6604,11 +6606,11 @@ void verify_no_objects_marked(void) {
                 // First enumerate each frame on the task's stack.
                 PrtStackIterator _si;
                 PrtStackIterator *si = &_si;
-#ifdef USE_PTHREADS
+#ifdef HAVE_PTHREAD_H
                 prtYoungestActivationFromUnmanagedInTask(si, (PrtTaskHandle)(struct PrtTaskStruct*)cur_thread_node->thread_handle);
-#else  // USE_PTHREADS
+#else  // HAVE_PTHREAD_H
                 prtYoungestActivationFromUnmanagedInTask(si, (PrtTaskHandle)(struct PrtTaskStruct*)cur_thread_node->thread_handle, PrtTrue);
-#endif // USE_PTHREADS
+#endif // HAVE_PTHREAD_H
                 while (!prtIsActivationPastEnd(si)) {
                     prtEnumerateRootsOfActivation(si, &rse);
                     prtNextActivation(si);
@@ -7483,11 +7485,11 @@ void Garbage_Collector::reset_thread_nurseries(void) {
     }
 } // Garbage_Collector::reset_thread_nurseries
 
-#ifdef USE_PTHREADS
+#ifdef HAVE_PTHREAD_H
 PrtBool PRT_CDECL tgcPredicateNotEqualUint32(volatile uint32 *location, uint32 data) {
     return (*location != data) ? PrtTrue : PrtFalse;
 }
-#endif // USE_PTHREADS
+#endif // HAVE_PTHREAD_H
 
 void global_gc_pn_mark_loop_process_obj_slot(Slot p_slot, Partial_Reveal_Object *p_obj, void *env, bool is_weak) {
     pn_info *local_collector = (pn_info*)env;
@@ -7582,11 +7584,11 @@ void Garbage_Collector::reclaim_full_heap_from_gc_thread(unsigned int size_faile
     local_collector->gc_state = LOCAL_PAUSED_DURING_MOVE;
 
     unsigned temp_gc_num = _gc_num;
-#ifdef USE_PTHREADS
+#ifdef HAVE_PTHREAD_H
     prtYieldUntil((PrtPredicate)tgcPredicateNotEqualUint32, &_gc_num, (void *)temp_gc_num, PrtInfiniteWait64);
-#else  // USE_PTHREADS
+#else  // HAVE_PTHREAD_H
     prtYieldUntil((PrtPredicate)mcrtPredicateNotEqualUint32, &_gc_num, (void *)temp_gc_num, InfiniteWaitCycles64);
-#endif // USE_PTHREADS
+#endif // HAVE_PTHREAD_H
 
     local_collector->gc_state = old_state;
 
@@ -7612,9 +7614,9 @@ void Garbage_Collector::reclaim_full_heap_from_gc_thread(unsigned int size_faile
     }
 
 	//    pgc_local_nursery_collection_start();
-#ifndef USE_PTHREADS
+#ifndef HAVE_PTHREAD_H
     mcrtThreadNotSuspendable(mcrtThreadGet());
-#endif // !USE_PTHREADS
+#endif // !HAVE_PTHREAD_H
 
     active_gc_thread = prtGetTaskHandle();
 
@@ -7746,11 +7748,11 @@ void Garbage_Collector::reclaim_full_heap_from_gc_thread(unsigned int size_faile
                 // First enumerate each frame on the task's stack.
                 PrtStackIterator _si;
                 PrtStackIterator *si = &_si;
-#ifdef USE_PTHREADS
+#ifdef HAVE_PTHREAD_H
                 prtYoungestActivationFromUnmanagedInTask(si, (PrtTaskHandle)(struct PrtTaskStruct*)cur_thread_node->thread_handle);
-#else  // USE_PTHREADS
+#else  // HAVE_PTHREAD_H
                 prtYoungestActivationFromUnmanagedInTask(si, (PrtTaskHandle)(struct PrtTaskStruct*)cur_thread_node->thread_handle, PrtTrue);
-#endif // USE_PTHREADS
+#endif // HAVE_PTHREAD_H
                 while (!prtIsActivationPastEnd(si)) {
                     prtEnumerateRootsOfActivation(si, &rse);
                     prtNextActivation(si);
@@ -8581,9 +8583,9 @@ void Garbage_Collector::reclaim_full_heap_from_gc_thread(unsigned int size_faile
     }
 #endif
 
-#ifndef USE_PTHREADS
+#ifndef HAVE_PTHREAD_H
     mcrtThreadSuspendable(mcrtThreadGet());
-#endif // !USE_PTHREADS
+#endif // !HAVE_PTHREAD_H
 //    pgc_local_nursery_collection_finish();
 } // ::Garbage_Collector::reclaim_full_heap_from_gc_thread
 

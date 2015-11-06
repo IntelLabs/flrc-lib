@@ -5,7 +5,6 @@ AC_PREREQ([2.60])
 AC_INIT([iflc-lib], [0.1], [BUG-REPORT-ADDRESS])
 AM_INIT_AUTOMAKE([0.1])
 AC_CONFIG_SRCDIR([pillar2c/src/pillar2c_crt_begin.c])
-AC_CONFIG_HEADERS([config.h])
 
 # Checks for programs.
 AC_PROG_YACC

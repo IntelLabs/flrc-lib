@@ -4,6 +4,8 @@
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+#include "tgcconfig.h"
+
 // System header files
 #include <iostream>
 #include <fstream>
@@ -23,7 +25,7 @@
 #include "descendents.h"
 #include "gcv4_synch.h"
 
-#ifdef USE_PTHREADS
+#ifdef HAVE_PTHREAD_H
 #include "pthread.h"
 #endif
 
@@ -2555,7 +2557,7 @@ extern "C" void frame_contains_intra_root(void *env, void **rootAddr, PrtGcTag t
 	}
 }
 
-#ifndef USE_PTHREADS
+#ifndef HAVE_PTHREAD_H
 void __cdecl privateNurseryTaskSplitCallback(struct PrtStackIterator *si,
 						  				     PrtTaskHandle original_task,
 										     PrtTaskHandle new_task)
@@ -2600,13 +2602,13 @@ void __cdecl privateNurseryTaskSplitCallback(struct PrtStackIterator *si,
 	gc_thread_tls->get_private_nursery()->local_gc_info->m_original_task = NULL;
 #endif // CLIENT_CALLBACK_BEFORE_SPLIT
 } // privateNurseryTaskSplitCallback
-#endif // !USE_PTHREADS
+#endif // !HAVE_PTHREAD_H
 
 unsigned g_tls_offset = 0;
 //unsigned g_tls_offset_bytes;   // now in c_export.c
 extern "C" unsigned g_tls_offset_bytes;
 
-#if defined USE_PTHREADS && !defined __GNUC__
+#if defined HAVE_PTHREAD_H && !defined __GNUC__
 extern "C" int ptw32_processInitialize();
 #endif
 
@@ -2724,15 +2726,15 @@ GCEXPORT(void, gc_init)() {
     assert(p_global_gc);
 
 #ifndef USE_LOCKCMPEX_FOR_THREAD_LOCK
-#ifdef USE_PTHREADS
+#ifdef HAVE_PTHREAD_H
 #ifndef __GNUC__
     ptw32_processInitialize();
 #endif // __GNUC__
 	active_thread_gc_info_list_lock = (pthread_mutex_t*)malloc(sizeof(pthread_mutex_t));
     pthread_mutex_init(active_thread_gc_info_list_lock,NULL);
-#else  // USE_PTHREADS
+#else  // HAVE_PTHREAD_H
 	active_thread_gc_info_list_lock = mcrtTicketLockNew();
-#endif // USE_PTHREADS
+#endif // HAVE_PTHREAD_H
 #endif
 
     g_chunk_lock = orp_synch_create_critical_section();
@@ -2850,11 +2852,11 @@ GCEXPORT(void, gc_init)() {
         gc_cas_write_interior_indirect_prt       = gc_cas_write_interior_ref_p_prt_null;
     }
 
-#ifndef USE_PTHREADS
+#ifndef HAVE_PTHREAD_H
 	if(local_nursery_size) {
 		prtRegisterTaskSplitCallback(privateNurseryTaskSplitCallback);
 	}
-#endif // !USE_PTHREADS
+#endif // !HAVE_PTHREAD_H
 
 #ifdef CONCURRENT_DEBUG_2
     cgcdump = fopen("cgc_lives.txt","w");
@@ -3136,11 +3138,11 @@ GCEXPORT(void, gc_wrapup)() {
 	start_concurrent_gc = 1; // this gets the concurrent GC thread to start and recognize it needs to stop
 	p_global_gc->num_threads_remaining_until_next_phase = 0;
     while(concurrent_gc_thread_id) {
-#ifdef USE_PTHREADS
+#ifdef HAVE_PTHREAD_H
         sched_yield();
-#else  // USE_PTHREADS
+#else  // HAVE_PTHREAD_H
         mcrtThreadYield();
-#endif // USE_PTHREADS
+#endif // HAVE_PTHREAD_H
 	}
 #endif // CONCURRENT
 
