@@ -3,7 +3,7 @@
 
 AC_PREREQ([2.60])
 AC_INIT([iflc-lib], [0.1], [BUG-REPORT-ADDRESS])
-AM_INIT_AUTOMAKE([0.1])
+AM_INIT_AUTOMAKE([0.1 foreign])
 AC_CONFIG_SRCDIR([pillar2c/src/pillar2c_crt_begin.c])
 
 # Checks for programs.
