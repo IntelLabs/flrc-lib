@@ -11,11 +11,11 @@
 #include <assert.h>
 
 // GC header files
-#include "gcv4_synch.h"
-#include "gc_cout.h"
-#include "gc_header.h"
-#include "gc_v4.h"
-#include "descendents.h"
+#include "tgc/gcv4_synch.h"
+#include "tgc/gc_cout.h"
+#include "tgc/gc_header.h"
+#include "tgc/gc_v4.h"
+#include "tgc/descendents.h"
 
 GCEXPORT(Boolean, object_has_gc_slots)(Managed_Object_Handle obj)
 {
@@ -48,7 +48,7 @@ GCEXPORT(Boolean, object_is_array_of_primitives)(Managed_Object_Handle obj)
 // This will be decremented with each p_next_ref call.
 //
 
-GCEXPORT(unsigned, object_init_array_scanner) (Managed_Object_Handle array) 
+GCEXPORT(unsigned, object_init_array_scanner) (Managed_Object_Handle array)
 {
     Partial_Reveal_Object *p_array = (Partial_Reveal_Object *)array;
     return init_array_scanner(p_array);
@@ -57,17 +57,17 @@ GCEXPORT(unsigned, object_init_array_scanner) (Managed_Object_Handle array)
 //
 // Move the scanner to the next ref.
 //
-GCEXPORT(unsigned, object_next_array_ref) (unsigned offset) 
+GCEXPORT(unsigned, object_next_array_ref) (unsigned offset)
 {
     return next_array_ref(offset);
 }
 
 //
-// Take the offset returned from init_array_scanner and 
+// Take the offset returned from init_array_scanner and
 // return the reference it referes to. Decrement the offset
 // since we go through array backwards.
 //
-GCEXPORT(Managed_Object_Handle*, object_get_array_ref)(Managed_Object_Handle obj, unsigned offset) 
+GCEXPORT(Managed_Object_Handle*, object_get_array_ref)(Managed_Object_Handle obj, unsigned offset)
 {
     Partial_Reveal_Object *p_obj = (Partial_Reveal_Object *)obj;
     return (Managed_Object_Handle*)p_get_array_ref(p_obj, offset);

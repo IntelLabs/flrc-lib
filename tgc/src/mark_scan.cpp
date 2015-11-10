@@ -7,14 +7,14 @@
 #include <fstream>
 
 // GC header files
-#include "gc_v4.h"
-#include "remembered_set.h"
-#include "garbage_collector.h"
-#include "gc_thread.h"
-#include "mark.h"
-#include "descendents.h"
-#include "mark_stack.h"
-#include "micro_nursery.h"
+#include "tgc/gc_v4.h"
+#include "tgc/remembered_set.h"
+#include "tgc/garbage_collector.h"
+#include "tgc/gc_thread.h"
+#include "tgc/mark.h"
+#include "tgc/descendents.h"
+#include "tgc/mark_stack.h"
+#include "tgc/micro_nursery.h"
 
 #ifdef IGNORE_SOME_ROOTS
 extern unsigned num_roots_ignored;

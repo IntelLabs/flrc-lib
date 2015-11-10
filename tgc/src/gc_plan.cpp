@@ -6,10 +6,10 @@
 #include <iostream>
 
 // GC header files
-#include "gc_cout.h"
-#include "gc_header.h"
-#include "gc_plan.h"
-#include "gcv4_synch.h"
+#include "tgc/gc_cout.h"
+#include "tgc/gc_header.h"
+#include "tgc/gc_plan.h"
+#include "tgc/gcv4_synch.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -32,7 +32,7 @@ int get_page_size ()
 }
 
 
-void 
+void
 Gc_Plan::_set_defaults()
 {
      // Set some defaults.
@@ -41,8 +41,7 @@ Gc_Plan::_set_defaults()
 
 	// Final heap size set to be same as initial heap size
      plan_final_heap_size_bytes = plan_initial_heap_size_bytes;
-	
+
 	 // 64K block ??
 	 plan_sub_block_size_bytes = GC_BLOCK_SIZE_BYTES;
 }
-

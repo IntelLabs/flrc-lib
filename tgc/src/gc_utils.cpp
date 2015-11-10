@@ -6,10 +6,10 @@
 #include <iostream>
 
 // GC header files
-#include "gc_cout.h"
-#include "gc_header.h"
-#include "gc_v4.h"
-#include "gcv4_synch.h"
+#include "tgc/gc_cout.h"
+#include "tgc/gc_header.h"
+#include "tgc/gc_v4.h"
+#include "tgc/gcv4_synch.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

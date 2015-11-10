@@ -4,29 +4,29 @@
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#include "tgcconfig.h"
+#include "iflclibconfig.h"
 
 // System header files
 #include <iostream>
 #include <fstream>
 
 // GC header files
-#include "gc_cout.h"
-#include "gc_header.h"
-#include "gc_v4.h"
-#include "remembered_set.h"
-#include "block_store.h"
-#include "object_list.h"
-#include "work_packet_manager.h"
-#include "garbage_collector.h"
-#include "gc_plan.h"
-#include "gc_globals.h"
-#include "micro_nursery.h"
-#include "descendents.h"
-#include "gcv4_synch.h"
+#include "tgc/gc_cout.h"
+#include "tgc/gc_header.h"
+#include "tgc/gc_v4.h"
+#include "tgc/remembered_set.h"
+#include "tgc/block_store.h"
+#include "tgc/object_list.h"
+#include "tgc/work_packet_manager.h"
+#include "tgc/garbage_collector.h"
+#include "tgc/gc_plan.h"
+#include "tgc/gc_globals.h"
+#include "tgc/micro_nursery.h"
+#include "tgc/descendents.h"
+#include "tgc/gcv4_synch.h"
 
 #ifdef HAVE_PTHREAD_H
-#include "pthread.h"
+#include <pthread.h>
 #endif
 
 #ifdef CONCURRENT
@@ -35,7 +35,7 @@ extern volatile unsigned concurrent_gc_thread_id;
 extern volatile bool stop_concurrent;
 extern volatile void *g_sweep_ptr;
 unsigned start_concurrent_gc = 0;
-#include "mark.h"
+#include "tgc/mark.h"
 #endif // CONCURRENT
 
 SynchCriticalSectionHandle g_chunk_lock;
@@ -2935,7 +2935,7 @@ public:
 extern std::map<void *,ip_info> g_record_ips;
 #endif // RECORD_IPS
 
-#include "pgc.h"
+#include "pgc/pgc.h"
 #include <fstream>
 
 #ifdef TRACK_IPS

@@ -1,6 +1,3 @@
-# /include
-/include/ptkconfig.h
-
 # /future
 /future/libptkfutures.a
 /future/ptkfuture.c.cpp.c

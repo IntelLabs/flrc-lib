@@ -8,13 +8,13 @@
  * Pillar Runtime TLS (thread-local storage) functions.
  */
 
-#include "prtcodegenerator.h"
+#include "prt/prtcodegenerator.h"
 
-#include "prtvse.h"
-#include "prttls.h"
-#include "prtcims.h"
-#include "prtcodeinfo.h"
-#include "prtglobals.h"
+#include "prt/prtvse.h"
+#include "prt/prttls.h"
+#include "prt/prtcims.h"
+#include "prt/prtcodeinfo.h"
+#include "prt/prtglobals.h"
 #ifdef _WINDOWS
 #include <windows.h>
 #endif // _WINDOWS

@@ -6,19 +6,19 @@
 #include <iostream>
 
 // GC header files
-#include "gc_cout.h"
-#include "gc_header.h"
-#include "gc_v4.h"
-#include "remembered_set.h"
-#include "block_store.h"
-#include "object_list.h"
-#include "work_packet_manager.h"
-#include "garbage_collector.h"
-#include "gc_plan.h"
-#include "gc_globals.h"
-#include "gc_thread.h"
-#include "mark.h"
-#include "gcv4_synch.h"
+#include "tgc/gc_cout.h"
+#include "tgc/gc_header.h"
+#include "tgc/gc_v4.h"
+#include "tgc/remembered_set.h"
+#include "tgc/block_store.h"
+#include "tgc/object_list.h"
+#include "tgc/work_packet_manager.h"
+#include "tgc/garbage_collector.h"
+#include "tgc/gc_plan.h"
+#include "tgc/gc_globals.h"
+#include "tgc/gc_thread.h"
+#include "tgc/mark.h"
+#include "tgc/gcv4_synch.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -41,7 +41,7 @@ void Garbage_Collector::prepare_to_sweep_heap() {
 	for (unsigned int i = 0, chunks_sweep_offset = 0; i < g_num_cpus; i++) {
 		assert(_gc_threads[i]->get_sweep_start_index() == -1);
 		assert(_gc_threads[i]->get_num_chunks_to_sweep() == -1);
-			
+
 		_gc_threads[i]->set_sweep_start_index(chunks_sweep_offset);
 		_gc_threads[i]->set_num_chunks_to_sweep(num_chunks_per_thread);
 
@@ -83,16 +83,16 @@ unsigned int Garbage_Collector::sweep_heap(GC_Thread *gc_thread, sweep_stats &st
 			assert(_gc_chunks[chunk_index].free_chunk == NULL);
 			num_active_chunks++;
 		}
-		
+
 		bool free_chunk = (block->get_nursery_status() == free_nursery);
 		if (free_chunk) {
 			assert(_gc_chunks[chunk_index].chunk == _gc_chunks[chunk_index].free_chunk);
 		}
-		
+
 		// I dont need to sweep a free chunk, DO I??! --- TO DO
 		while (block) {
 			num_blocks_in_chunk++;
- 
+
             if(g_gen && g_gen_all == false && block->generation) {
     			block = block->next_free_block;
                 continue;
@@ -105,7 +105,7 @@ unsigned int Garbage_Collector::sweep_heap(GC_Thread *gc_thread, sweep_stats &st
 			} else {
 				num_bytes_recovered_for_allocation += sweep_one_block(block, stats);
 			}
-		
+
 			num_free_areas_in_chunk += block->num_free_areas_in_block;
 			num_free_bytes_in_chunk += block->block_free_bytes;
 
@@ -123,7 +123,7 @@ unsigned int Garbage_Collector::sweep_heap(GC_Thread *gc_thread, sweep_stats &st
 			}
 
 			num_blocks_swept++;
-		
+
 			// Move to next block in current chunk
 			block = block->next_free_block;
 		}
@@ -140,7 +140,6 @@ unsigned int Garbage_Collector::sweep_heap(GC_Thread *gc_thread, sweep_stats &st
 
 	} // for
 
-	
+
 	return num_bytes_recovered_for_allocation;
 } // sweep_heap
-

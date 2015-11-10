@@ -6,18 +6,18 @@
 #include <iostream>
 
 // GC header files
-#include "gc_cout.h"
-#include "gc_header.h"
-#include "gc_v4.h"
-#include "remembered_set.h"
-#include "block_store.h"
-#include "object_list.h"
-#include "work_packet_manager.h"
-#include "garbage_collector.h"
-#include "gc_plan.h"
-#include "gc_globals.h"
-#include "mark.h"
-#include "gcv4_synch.h"
+#include "tgc/gc_cout.h"
+#include "tgc/gc_header.h"
+#include "tgc/gc_v4.h"
+#include "tgc/remembered_set.h"
+#include "tgc/block_store.h"
+#include "tgc/object_list.h"
+#include "tgc/work_packet_manager.h"
+#include "tgc/garbage_collector.h"
+#include "tgc/gc_plan.h"
+#include "tgc/gc_globals.h"
+#include "tgc/mark.h"
+#include "tgc/gcv4_synch.h"
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -50,7 +50,7 @@ unsigned int Garbage_Collector::sweep_single_object_blocks(block_info *blocks, s
 	unsigned int reclaimed = 0;
 
     // ***SOB LOOKUP*** We clear the _blocks_in_block_store[mumble].is_single_object_block field in the link_free_blocks routine..
-    
+
     while (block != NULL) {
         this_block = block;
         block = block->next_free_block;   // Get the next block before we destroy this block.
@@ -129,7 +129,7 @@ void Garbage_Collector::prepare_chunks_for_sweeps_during_allocation(bool compact
 */
 			while (block) {
 
-				// Each block in a chunk should have the same status 
+				// Each block in a chunk should have the same status
    				assert(block->get_nursery_status() == chunk_state);
 
 #if 0
@@ -172,7 +172,7 @@ void Garbage_Collector::prepare_chunks_for_sweeps_during_allocation(bool compact
 		} else {
 			assert(_gc_chunks[chunk_index].free_chunk == NULL);
 		}
-		
+
 	} // for
 
 #ifdef _DEBUG
@@ -214,7 +214,7 @@ void Garbage_Collector::parallel_clear_mark_bit_vectors(unsigned thread_id) {
 				}
 				block = block->next_free_block;
 			}
-		} 
+		}
 	} // for
 
 	if(thread_id == 0) {
@@ -266,7 +266,7 @@ void Garbage_Collector::clear_all_mark_bit_vectors_of_unswept_blocks() {
 				}
 				block = block->next_free_block;
 			}
-		} 
+		}
 	} // for
 
 	if (_los_blocks) {
@@ -317,21 +317,21 @@ get_live_object_size_bytes_at_mark_byte_and_bit_index(block_info *block, const u
 extern volatile void * g_sweep_ptr;
 #endif // CONCURRENT
 
-inline void adjust_free_bits_for_live_object(block_info *block, 
-									  unsigned &num_free_bits, 
+inline void adjust_free_bits_for_live_object(block_info *block,
+									  unsigned &num_free_bits,
 									  const uint8 * const p_last_live_byte,
 									  const unsigned last_live_byte_bit_index,
 									  uint8 *& p_byte,
 									  unsigned &bit_index) {
-	// Get the size of the last live object (the one preceding the current free area) and jump 
+	// Get the size of the last live object (the one preceding the current free area) and jump
 	// ahead by that many bytes to get to the REAL start of this free region
 	unsigned int sz = get_live_object_size_bytes_at_mark_byte_and_bit_index(block, p_last_live_byte, last_live_byte_bit_index);
 	assert(sz >= 4);
 	unsigned int rem_obj_sz_bits = sz / GC_LIVE_OBJECT_CARD_SIZE_IN_BYTES - 1;	// 1 bit already included...
 	// adjust the free area size
-	num_free_bits -= rem_obj_sz_bits ;						
+	num_free_bits -= rem_obj_sz_bits ;
 	// roll ahead the byte and bit index beyond the live object..
-	p_byte    += (rem_obj_sz_bits / GC_NUM_BITS_PER_BYTE);		
+	p_byte    += (rem_obj_sz_bits / GC_NUM_BITS_PER_BYTE);
 	bit_index += (rem_obj_sz_bits % GC_NUM_BITS_PER_BYTE);
 	if (bit_index >= GC_NUM_BITS_PER_BYTE) {
 		p_byte++;
@@ -393,13 +393,13 @@ unsigned int Garbage_Collector::sweep_one_block(block_info *block, sweep_stats &
         // weren't before so just diable this verification step in concurrent mode.
 		if (verify_gc) {
 			verify_get_next_set_bit_code(&info);
-		}  
+		}
 #endif // !CONCURRENT
 		uint8 *p_byte_with_some_bit_set = info.p_non_zero_byte;
 		unsigned int set_bit_index = info.bit_set_index;
 		assert(set_bit_index < GC_NUM_BITS_PER_BYTE);
 		// if we found a set bit in some byte downstream, it better be within range and really "set".
-		assert((p_byte_with_some_bit_set == NULL) || 
+		assert((p_byte_with_some_bit_set == NULL) ||
 			((p_byte_with_some_bit_set >= p_byte)) && (p_byte_with_some_bit_set < p_ceiling) && ((*p_byte_with_some_bit_set & (1 << set_bit_index)) != 0));
 
 		unsigned num_free_bits = 0;
@@ -427,7 +427,7 @@ unsigned int Garbage_Collector::sweep_one_block(block_info *block, sweep_stats &
 		}
 
 #ifdef CONCURRENT
-        // Skip creating free areas for active nurseries 
+        // Skip creating free areas for active nurseries
         if(block->get_nursery_status() == concurrent_sweeper_nursery) {
 #endif // CONCURRENT
 		if (num_free_bits >= num_min_free_bits_for_free_area) {
@@ -435,7 +435,7 @@ unsigned int Garbage_Collector::sweep_one_block(block_info *block, sweep_stats &
 			if (p_last_live_byte != NULL) {
 				adjust_free_bits_for_live_object(block,num_free_bits,p_last_live_byte,last_live_byte_bit_index,p_byte,bit_index);
 			}
-	
+
 			if (num_free_bits >= num_min_free_bits_for_free_area) {
 				// FREE region found -- it begins at (p_byte, bit_index)......
 				assert((*p_byte & (1 << bit_index)) == 0);
@@ -478,13 +478,13 @@ unsigned int Garbage_Collector::sweep_one_block(block_info *block, sweep_stats &
                 void *p1 = get_pointer_from_mark_byte_and_bit_index(block, p_last_live_byte, last_live_byte_bit_index);
                 void *p2 = get_pointer_from_mark_byte_and_bit_index(block, p_byte_with_some_bit_set, set_bit_index);
 
-                // Get the size of the last live object (the one preceding the current free area) and jump 
+                // Get the size of the last live object (the one preceding the current free area) and jump
 				// ahead by that many bytes to get to the REAL start of this free region
 				unsigned int sz = get_live_object_size_bytes_at_mark_byte_and_bit_index(block, p_last_live_byte, last_live_byte_bit_index);
 				assert(sz >= 4);
 				unsigned int rem_obj_sz_bits = sz / GC_LIVE_OBJECT_CARD_SIZE_IN_BYTES - 1;	// 1 bit already included...
 				// adjust the free area size
-				num_free_bits -= rem_obj_sz_bits ;		
+				num_free_bits -= rem_obj_sz_bits ;
 			}
             if(num_free_bits) {
     			block_fragment_too_small_to_use += num_free_bits * GC_LIVE_OBJECT_CARD_SIZE_IN_BYTES;
@@ -515,9 +515,9 @@ unsigned int Garbage_Collector::sweep_one_block(block_info *block, sweep_stats &
 			if (bit_index == GC_NUM_BITS_PER_BYTE) {
 				bit_index = 0;
 				p_byte++;
-			} 
+			}
 		} else {
-			// we went off the edge 
+			// we went off the edge
 			break;	// DONE
 		}
 
@@ -627,7 +627,7 @@ void gc_copy_to_immutable_nursery(Partial_Reveal_Object *p_obj,
 	    Partial_Reveal_Object *frontier = (Partial_Reveal_Object *)copy_nursery->tls_current_free;
 		adjust_frontier_to_alignment(frontier,(Partial_Reveal_VTable*)p_obj->vt());
 	    POINTER_SIZE_INT new_free = (get_object_size_bytes(p_obj) + (POINTER_SIZE_INT)frontier);
-    
+
 	    if (new_free <= (POINTER_SIZE_INT) copy_nursery->tls_current_ceiling) {
 		    copy_nursery->tls_current_free = (void *) new_free;
 			p_return_object = frontier;
@@ -636,11 +636,11 @@ void gc_copy_to_immutable_nursery(Partial_Reveal_Object *p_obj,
 	    if (!p_return_object) {
 		    // We need a new allocation area. Get the current alloc_block
 			block_info *alloc_block = (block_info *)copy_nursery->curr_alloc_block;
-    
+
 		    // Loop through the alloc blocks to see if we can find another allocation area.
 		    while (alloc_block) {
 		        // We will sweep blocks only right before we start using it. This seems to have good cache benefits
-        
+
 				if (!sweeps_during_gc) {
 					// Sweep the block
 					if (alloc_block->block_has_been_swept == false) {
@@ -651,7 +651,7 @@ void gc_copy_to_immutable_nursery(Partial_Reveal_Object *p_obj,
 					}
 				}
 
-		        // current_alloc_area will be -1 if the first area has not been used and if it exists is available. 
+		        // current_alloc_area will be -1 if the first area has not been used and if it exists is available.
 				if ( (alloc_block->num_free_areas_in_block == 0) || ((alloc_block->current_alloc_area + 1) == alloc_block->num_free_areas_in_block) ) {
 		            // No areas left in this block get the next one.
 				    alloc_block = alloc_block->next_free_block; // Get the next block and loop
@@ -660,7 +660,7 @@ void gc_copy_to_immutable_nursery(Partial_Reveal_Object *p_obj,
 		            break; // This block has been swept and has an untouched alloc block.
 				}
 			} // end while (alloc_block)
-    
+
 		    if (alloc_block == NULL) {
 				// ran through the end of the list of blocks in the chunk
 		        copy_nursery->tls_current_ceiling = NULL;
@@ -668,9 +668,9 @@ void gc_copy_to_immutable_nursery(Partial_Reveal_Object *p_obj,
 				copy_nursery->curr_alloc_block = NULL; // Indicating that we are at the end of the alloc blocks for this chunk.
 			} else {
     		    alloc_block->current_alloc_area++; // Get the next currenct area. If it is the first one it will be 0.
-    
+
 			    unsigned int curr_area = alloc_block->current_alloc_area;
-        
+
 				if (alloc_block->block_free_areas[curr_area].has_been_zeroed == false) {
 				    gc_trace_block(alloc_block, " Clearing the curr_area in this block.");
 					if(!do_not_zero) {
@@ -679,7 +679,7 @@ void gc_copy_to_immutable_nursery(Partial_Reveal_Object *p_obj,
 					}
 					alloc_block->block_free_areas[curr_area].has_been_zeroed = true;
 				}
-    
+
 			    copy_nursery->tls_current_free = alloc_block->block_free_areas[curr_area].area_base;
 				copy_nursery->tls_current_ceiling = alloc_block->block_free_areas[curr_area].area_ceiling;
 				copy_nursery->curr_alloc_block = alloc_block;
@@ -689,8 +689,8 @@ void gc_copy_to_immutable_nursery(Partial_Reveal_Object *p_obj,
 				block_info *p_old_chunk = (block_info*)copy_nursery->chunk;
 
 				copy_nursery->chunk = NULL;
-    
-				// Allocate a new chunk for this thread's use. 
+
+				// Allocate a new chunk for this thread's use.
 				block_info *p_new_chunk = p_global_gc->p_cycle_chunk(p_old_chunk, true, true, p_old_chunk->thread_owner, (struct GC_Thread_Info*)p_old_chunk->thread_owner);
 
 				if(p_new_chunk) {
@@ -762,7 +762,7 @@ Garbage_Collector::sweep_one_block_concurrent(block_info *block,
     if(block->get_nursery_status() == concurrent_sweeper_nursery) {
 		clear_block_free_areas(block);
 
-		if(is_block_concurrent_compaction(block) && 
+		if(is_block_concurrent_compaction(block) &&
 		   copy_to->chunk &&
 		   copy_to->chunk != block) {
 		   do_compaction = true;
@@ -810,7 +810,7 @@ Garbage_Collector::sweep_one_block_concurrent(block_info *block,
 		unsigned int set_bit_index = info.bit_set_index;
 		assert(set_bit_index < GC_NUM_BITS_PER_BYTE);
 		// if we found a set bit in some byte downstream, it better be within range and really "set".
-		assert((p_byte_with_some_bit_set == NULL) || 
+		assert((p_byte_with_some_bit_set == NULL) ||
 			((p_byte_with_some_bit_set >= p_byte)) && (p_byte_with_some_bit_set < p_ceiling) && ((*p_byte_with_some_bit_set & (1 << set_bit_index)) != 0));
 
 		unsigned int num_free_bits = 0;
@@ -854,7 +854,7 @@ Garbage_Collector::sweep_one_block_concurrent(block_info *block,
 			block->last_sweep_num_holes++;
 		}
 
-		// Skip creating free areas for active nurseries 
+		// Skip creating free areas for active nurseries
 		if(block->get_nursery_status() == concurrent_sweeper_nursery) {
 				// We have chanced upon a fairly large free area
 				if (num_free_bits >= num_min_free_bits_for_free_area) {
@@ -894,15 +894,15 @@ Garbage_Collector::sweep_one_block_concurrent(block_info *block,
 #if 0
 			if (p_last_live_byte != NULL) {
 				// roll ahead the byte and bit index beyond the live object..
-				p_byte += (last_object_size / GC_NUM_BITS_PER_BYTE);		
+				p_byte += (last_object_size / GC_NUM_BITS_PER_BYTE);
 				bit_index += (last_object_size % GC_NUM_BITS_PER_BYTE);
 				if (bit_index >= GC_NUM_BITS_PER_BYTE) {
 					p_byte++;
 					bit_index -= GC_NUM_BITS_PER_BYTE;
-				} 
+				}
 			}
 #endif
-		
+
 		if (p_byte_with_some_bit_set) {
 //			Partial_Reveal_Object *cur_obj = (Partial_Reveal_Object*)GC_BLOCK_ADDR_FROM_MARK_BIT_INDEX(block,(unsigned int) ((p_byte_with_some_bit_set - mark_vector_base) * GC_NUM_BITS_PER_BYTE + set_bit_index));
 			unsigned last_object_size = get_live_object_size_bytes_at_mark_byte_and_bit_index(block, p_byte_with_some_bit_set, set_bit_index);
@@ -915,9 +915,9 @@ Garbage_Collector::sweep_one_block_concurrent(block_info *block,
 			while (bit_index >= GC_NUM_BITS_PER_BYTE) {
 				bit_index -= GC_NUM_BITS_PER_BYTE;
 				p_byte++;
-			} 
+			}
 		} else {
-			// we went off the edge 
+			// we went off the edge
 			break;	// DONE
 		}
 
@@ -997,7 +997,7 @@ Garbage_Collector::clear_and_unmark(block_info *block,bool check_only) {
 
 		assert(set_bit_index < GC_NUM_BITS_PER_BYTE);
 		// if we found a set bit in some byte downstream, it better be within range and really "set".
-		assert((p_byte_with_some_bit_set == NULL) || 
+		assert((p_byte_with_some_bit_set == NULL) ||
 			((p_byte_with_some_bit_set >= p_byte)) && (p_byte_with_some_bit_set < p_ceiling) && ((*p_byte_with_some_bit_set & (1 << set_bit_index)) != 0));
 
 		if (p_byte_with_some_bit_set) {
@@ -1016,7 +1016,7 @@ Garbage_Collector::clear_and_unmark(block_info *block,bool check_only) {
 			while (bit_index >= GC_NUM_BITS_PER_BYTE) {
 				bit_index -= GC_NUM_BITS_PER_BYTE;
 				p_byte++;
-			} 
+			}
 		} else {
             break;
         }

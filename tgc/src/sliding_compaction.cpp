@@ -7,21 +7,21 @@
 #include <fstream>
 
 // GC header files
-#include "gc_cout.h"
-#include "gc_header.h"
-#include "gc_v4.h"
-#include "remembered_set.h"
-#include "block_store.h"
-#include "object_list.h"
-#include "work_packet_manager.h"
-#include "garbage_collector.h"
-#include "gc_plan.h"
-#include "gc_globals.h"
-#include "gc_thread.h"
-#include "mark.h"
-#include "descendents.h"
-#include "gcv4_synch.h"
-#include "gc_debug.h"
+#include "tgc/gc_cout.h"
+#include "tgc/gc_header.h"
+#include "tgc/gc_v4.h"
+#include "tgc/remembered_set.h"
+#include "tgc/block_store.h"
+#include "tgc/object_list.h"
+#include "tgc/work_packet_manager.h"
+#include "tgc/garbage_collector.h"
+#include "tgc/gc_plan.h"
+#include "tgc/gc_globals.h"
+#include "tgc/gc_thread.h"
+#include "tgc/mark.h"
+#include "tgc/descendents.h"
+#include "tgc/gcv4_synch.h"
+#include "tgc/gc_debug.h"
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 extern bool verify_live_heap;
@@ -40,7 +40,7 @@ extern std::ofstream * live_dump;
 #ifdef IGNORE_SOME_ROOTS
 extern std::set<Partial_Reveal_Object**> g_barrier_roots;
 #endif // IGNORE_SOME_ROOTS
-  
+
 void fix_slots_to_compaction_live_objects(GC_Thread *gc_thread) {
 	block_info *p_compaction_block = NULL;
 	unsigned int num_slots_fixed = 0;
@@ -122,14 +122,14 @@ void fix_slots_to_compaction_live_objects(GC_Thread *gc_thread) {
                 one_slot.update(p_new_obj);
 				num_slots_fixed++;
 
-//				gc_trace(p_new_obj, 
+//				gc_trace(p_new_obj,
 //					" fix_slots_to_compaction_live_objects(): a slot is being repointed to this object...\n");
 
 				assert(GC_BLOCK_INFO(p_obj)->in_nursery_p == true);
 				assert(GC_BLOCK_INFO(p_new_obj)->in_nursery_p == true);
     			// the block this moves into better have been flagged for compaction..
 				assert(GC_BLOCK_INFO(p_new_obj)->is_compaction_block);
-	
+
 			} // while (one_slot)
 #endif // REMEMBERED_SET_ARRAY
 
@@ -137,7 +137,7 @@ void fix_slots_to_compaction_live_objects(GC_Thread *gc_thread) {
 			delete some_slots;
 
 		} // while (true)
-	} // while 
+	} // while
 
 	if (stats_gc) {
         printf ("%u: fixed %u slots\n",  gc_thread->get_id(), num_slots_fixed );
@@ -164,7 +164,7 @@ POINTER_SIZE_INT sweep_slide_compacted_block(block_info *p_compaction_block, voi
 		p_compaction_block->num_free_areas_in_block = 1;
 
 
-        p_compaction_block->current_alloc_area = -1;	
+        p_compaction_block->current_alloc_area = -1;
 
         p_compaction_block->curr_free = p_compaction_block->block_free_areas[0].area_base = first_free_byte_in_this_block;
 		p_compaction_block->curr_ceiling = p_compaction_block->block_free_areas[0].area_ceiling = GC_BLOCK_CEILING(p_compaction_block);
@@ -178,7 +178,7 @@ POINTER_SIZE_INT sweep_slide_compacted_block(block_info *p_compaction_block, voi
 #endif
         p_compaction_block->num_free_areas_in_block = 0;
 
-        p_compaction_block->current_alloc_area = -1;	
+        p_compaction_block->current_alloc_area = -1;
 
 		bytes_freed_by_compaction_in_this_block = 0;
         p_compaction_block->curr_free = NULL;
@@ -196,7 +196,7 @@ POINTER_SIZE_INT sweep_slide_compacted_block(block_info *p_compaction_block, voi
 
 	// These blocks dont get swept during allocation after mutators are restarted.
 	// Means we need to explicitly clear their mark bit vectors, since they are fully useless until they get
-	// repopulated with bits in the next GC cycle	
+	// repopulated with bits in the next GC cycle
 	GC_CLEAR_BLOCK_MARK_BIT_VECTOR(p_compaction_block);
 
 	return bytes_freed_by_compaction_in_this_block;
@@ -208,7 +208,7 @@ POINTER_SIZE_INT sweep_free_block(block_info * p_compaction_block) {
     assert (!p_compaction_block->is_to_block);
 //    orp_cout << "-sc- sweep_free_block." << std::endl;
 	// Clear all the free areas computed during the previous GC
-    
+
     gc_trace_block (p_compaction_block, " calling clear_block_free_areas in sweep_free_block.");
 	clear_block_free_areas(p_compaction_block);
 
@@ -217,9 +217,9 @@ POINTER_SIZE_INT sweep_free_block(block_info * p_compaction_block) {
 	p_compaction_block->num_free_areas_in_block = 1;
 
 #ifndef GC_SLOW_ALLOC
-    p_compaction_block->current_alloc_area = -1;	
+    p_compaction_block->current_alloc_area = -1;
 #else
-    p_compaction_block->current_alloc_area = 0;	
+    p_compaction_block->current_alloc_area = 0;
 #endif
 
 	p_compaction_block->curr_free = p_compaction_block->block_free_areas[0].area_base = GC_BLOCK_ALLOC_START(p_compaction_block);
@@ -240,7 +240,7 @@ POINTER_SIZE_INT sweep_free_block(block_info * p_compaction_block) {
 
 	// These blocks dont get swept during allocation after mutators are restarted.
 	// Means we need to explicitly clear their mark bit vectors, since they are fully useless until they get
-	// repopulated with bits in the next GC cycle	
+	// repopulated with bits in the next GC cycle
 	GC_CLEAR_BLOCK_MARK_BIT_VECTOR(p_compaction_block);
 
 	return GC_BLOCK_ALLOC_SIZE;
@@ -267,7 +267,7 @@ void allocate_forwarding_pointers_for_compaction_live_objects(GC_Thread *gc_thre
 #ifdef PUB_PRIV
     std::map<void *,saved_to_block_info> owner_map;
 #endif // PUB_PRIV
-    
+
 	gc_thread->m_forwards.reset();
 
     // Initialize the first block into which live objects will start sliding into
@@ -280,7 +280,7 @@ void allocate_forwarding_pointers_for_compaction_live_objects(GC_Thread *gc_thre
     p_destination_block->is_to_block = true;
     gc_trace_block (p_destination_block, "is_to_block set to true.");
     next_obj_start = (Partial_Reveal_Object*)GC_BLOCK_ALLOC_START(p_destination_block);
-    
+
     while ((p_compaction_block = gc_thread->_p_gc->get_block_for_sliding_compaction_allocation_pointer_computation(gc_thread->get_id(), p_compaction_block ))) {
         unsigned int num_forwarded_in_this_block = 0;
         assert(p_compaction_block->in_nursery_p == true);
@@ -301,7 +301,7 @@ void allocate_forwarding_pointers_for_compaction_live_objects(GC_Thread *gc_thre
                     assert(0);
                     exit(-1);
                 }
-                p_destination_block->is_to_block = true;        
+                p_destination_block->is_to_block = true;
                 gc_trace_block (p_destination_block, "is_to_block set to true.");
                 assert(p_destination_block);
                 next_obj_start = (Partial_Reveal_Object*)GC_BLOCK_ALLOC_START(p_destination_block);
@@ -313,7 +313,7 @@ void allocate_forwarding_pointers_for_compaction_live_objects(GC_Thread *gc_thre
         Partial_Reveal_Object *p_prev_obj = NULL;
         gc_thread->_p_gc->init_live_object_iterator_for_block(p_compaction_block);
         Partial_Reveal_Object *p_obj = gc_thread->_p_gc->get_next_live_object_in_block(p_compaction_block);
-        
+
         while (p_obj) {
             assert(!p_compaction_block->from_block_has_been_evacuated); // This block has not been evacuated yet.
 
@@ -325,7 +325,7 @@ void allocate_forwarding_pointers_for_compaction_live_objects(GC_Thread *gc_thre
             assert(p_obj > p_prev_obj);
             unsigned int p_obj_size = get_object_size_bytes(p_obj);
 //            total_live_bytes += p_obj_size;
-            
+
 			adjust_frontier_to_alignment(next_obj_start,(Partial_Reveal_VTable*)p_obj->vt());
 
             // Check for possible overflow in destination block where p_obj could go...
@@ -340,19 +340,19 @@ void allocate_forwarding_pointers_for_compaction_live_objects(GC_Thread *gc_thre
 #else  // PUB_PRIV
                 p_destination_block = gc_thread->_p_gc->iter_get_next_compaction_block_for_gc_thread(gc_thread->get_id(), p_destination_block, p_destination_block->thread_owner);
 #endif // PUB_PRIV
-                p_destination_block->is_to_block = true;        
+                p_destination_block->is_to_block = true;
                 gc_trace_block (p_destination_block, "is_to_block set to true.");
                 assert(p_destination_block);
                 next_obj_start = (Partial_Reveal_Object*)GC_BLOCK_ALLOC_START(p_destination_block);
-            } 
+            }
             // next_obj_start is where p_obj will go and it surely belongs in p_destination_block
             assert(GC_BLOCK_INFO(next_obj_start) == p_destination_block);
-            
+
             // clobber the header with the new address.
             // This needs to be done atomically since some other thread may try to steal it to do colocation.!!!
             bool success = false;
             assert ((POINTER_SIZE_INT)next_obj_start + p_obj_size < (POINTER_SIZE_INT)(GC_BLOCK_CEILING(next_obj_start))); // Check overflow.
-            
+
             gc_thread->m_forwards.add_entry(ForwardedObject(p_obj->vt(),next_obj_start));
 
 #ifdef _DEBUG
@@ -363,7 +363,7 @@ void allocate_forwarding_pointers_for_compaction_live_objects(GC_Thread *gc_thre
                 *live_dump << p_global_gc->get_gc_num() << " 2 " << p_obj << " " << next_obj_start << "\n";
             }
 #endif
-            
+
             p_obj->set_forwarding_pointer(gc_thread->m_forwards.get_last_addr());
             success = true; // We always succeed if we are not colocating objects.
             gc_trace (next_obj_start, " In allocate_forwarding_pointers_for_compaction_live_objects forwarding *to* this location. (vtable not yet legal)");
@@ -380,13 +380,13 @@ void allocate_forwarding_pointers_for_compaction_live_objects(GC_Thread *gc_thre
             p_prev_obj = p_obj;
             p_obj = gc_thread->_p_gc->get_next_live_object_in_block(p_compaction_block);
         } // end of while that gets the next object in a block, some could have been colocated.
-        
-    } // while 
-    
+
+    } // while
+
     if (stats_gc) {
         printf ("%u: allocated forwarding pointers for %u objects\n",  gc_thread->get_id(), num_forwarded);
     }
-    
+
 } // allocate_forwarding_pointers_for_compaction_live_objects
 
 void slide_cross_compact_live_objects_in_compaction_blocks(GC_Thread *gc_thread) {
@@ -413,7 +413,7 @@ void slide_cross_compact_live_objects_in_compaction_blocks(GC_Thread *gc_thread)
 
 		while (p_obj) {
 			assert(GC_BLOCK_INFO(p_obj) == p_compaction_block);
-           
+
 			gc_trace(p_obj, " slide_compact_live_objects_in_compaction_blocks(): this object will be slided up...\n");
 			// Grab the eventual location of p_obj
 			Partial_Reveal_Object *p_new_obj = p_obj->get_forwarding_pointer();
@@ -423,10 +423,10 @@ void slide_cross_compact_live_objects_in_compaction_blocks(GC_Thread *gc_thread)
 				new_obj_block->age = 1;
 			}
 //			new_obj_block->age = new_obj_block->age>=(p_compaction_block->age+1) ? new_obj_block->age:(p_compaction_block->age+1);
-			
+
 			Partial_Reveal_VTable *p_orig_vtable = p_obj->vt();
 			gc_trace(p_new_obj, " some object is being slid into this spot: slide_compact_live_objects_in_compaction_blocks():...\n");
-            
+
             // We move the object to the forwarding pointer location *not* to the next available location....
             if (p_obj != p_new_obj) {
                 if ( !(GC_BLOCK_INFO(p_new_obj))->from_block_has_been_evacuated ) {
@@ -435,7 +435,7 @@ void slide_cross_compact_live_objects_in_compaction_blocks(GC_Thread *gc_thread)
                     // Make sure we are sliding downward.
                     assert ((POINTER_SIZE_INT)p_new_obj < (POINTER_SIZE_INT)p_obj);
                 }
-                assert( (GC_BLOCK_INFO(p_new_obj))->is_to_block);              
+                assert( (GC_BLOCK_INFO(p_new_obj))->is_to_block);
                 memmove(p_new_obj, p_obj, get_object_size_bytes(p_obj));
                 gc_trace(p_new_obj, "This new object just memmoved into place.");
                 num_actually_slided++;
@@ -449,7 +449,7 @@ void slide_cross_compact_live_objects_in_compaction_blocks(GC_Thread *gc_thread)
             assert (p_obj != p_prev_obj);
 		} // while
 
-//		dump_object_layouts_in_compacted_block(p_compaction_block, num_slided_in_block); 		// 0x17470000 == item, 
+//		dump_object_layouts_in_compacted_block(p_compaction_block, num_slided_in_block); 		// 0x17470000 == item,
         // Signify that it is save to move objects into this block without concern.
         p_compaction_block->from_block_has_been_evacuated = true;
         gc_trace_block (p_compaction_block, "from_block_has_been_evacuated now set to true, block empty.");

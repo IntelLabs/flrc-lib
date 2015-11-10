@@ -3,7 +3,7 @@
  */
 
 #include <assert.h>
-#include "hash_table.h"
+#include "tgc/hash_table.h"
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -12,14 +12,14 @@
 // This naturally limits the size of hash tables to sizes that will fit in 32 bits.
 //
 unsigned primes [] = {2017,
-                      5501, 
-                      10091, 
-                      20021, 
-                      40009, 
-                      80021, 
-                      160001, 
-                      320009, 
-                      640007, 
+                      5501,
+                      10091,
+                      20021,
+                      40009,
+                      80021,
+                      160001,
+                      320009,
+                      640007,
                       1280023,
                       2560049,
                       5120051,
@@ -42,7 +42,7 @@ Hash_Table::Hash_Table() {
     _size_in_entries = primes[_prime_index++];
 
     double threshold = HASH_TABLE_THRESHOLD;
- 
+
     _resident_count       = 0;
     _size_in_bytes        = _size_in_entries * (sizeof(void *));
     _threshold_entries    = (unsigned int)(_size_in_entries * threshold);
@@ -147,7 +147,7 @@ bool Hash_Table::add_entry_if_required(void *address) {
             _table[hash_code] = address;
             _resident_count++;
             return true;
-#endif 
+#endif
         }
     }
 }
@@ -169,7 +169,7 @@ unsigned Hash_Table::add_entry(void *address) {
     }
 	//
 	// Adding a null entry is illegal, since we can't distinguish
-	// it from an empty slot. 
+	// it from an empty slot.
 	//
     assert(address != NULL);
 	//
@@ -230,7 +230,7 @@ unsigned Hash_Table::add_entry(void *address) {
             _table[hash_code] = address;
             _resident_count++;
             return hash_code;
-#endif 
+#endif
         }
     }
 }
@@ -258,7 +258,7 @@ void Hash_Table::_rehash(unsigned int hash_code) {
     // Hitting a zero at the next entry indicates that
     // we have scanned far enough. This is guaranteed to
     // terminate since we rehash only , and immediately
-    // after, a deletion. (Beyond that, our residency 
+    // after, a deletion. (Beyond that, our residency
     // rate is never near 100% anyway.)
     //
     unsigned int next_entry = (hash_code + 1) % _size_in_entries;
@@ -333,7 +333,7 @@ unsigned int Hash_Table::_do_rs_hash(POINTER_SIZE_INT address, unsigned int tabl
 
 /* The residency in our remembered set has exceeded a pre-defined
    threshold. Therefore we create a larger remembered set and re-
-   hash. 
+   hash.
    Always rehash after doing an extend. */
 void Hash_Table::_extend() {
     volatile void **p_save_table       = _table;
@@ -376,14 +376,14 @@ void Hash_Table::_extend() {
    that is significant to the space associated with this
    remembered set. */
 bool Hash_Table::is_present(void *address) {
-    if (address == NULL) 
+    if (address == NULL)
         return false;
 #if 0
-    move add_entry to avoid readers causing writes if we extend.... 
+    move add_entry to avoid readers causing writes if we extend....
     if (_resident_count > _threshold_entries) {
         _extend();
     }
-#endif 
+#endif
     // Always rehash after doing an extend.
     unsigned int hash_code = _do_rs_hash((POINTER_SIZE_INT)address,
                                          _size_in_entries);
@@ -409,9 +409,9 @@ bool Hash_Table::is_present(void *address) {
         // rate is guaranteed to be less than 90%
         hash_code = (hash_code + 1) % _size_in_entries;
 
-        if (_table[hash_code] == NULL) 
+        if (_table[hash_code] == NULL)
             return false;
-       
+
         if (address == _table[hash_code])  // hit
             return true;
 
@@ -430,12 +430,12 @@ bool Hash_Table::is_present(void *address) {
    that is significant to the space associated with this
    remembered set. */
 int Hash_Table::_get_offset(void *address) {
-    if (address == NULL) 
+    if (address == NULL)
         return -1;
 
-#if 0 
+#if 0
     // Count on add_entry to do the extend. Otherwise to_from_table logic
-    // doesn't have the appropriate locks. 
+    // doesn't have the appropriate locks.
     if (_resident_count > _threshold_entries) {
         orp_cout << "Extending" << std::endl;
         _extend();
@@ -467,9 +467,9 @@ int Hash_Table::_get_offset(void *address) {
         // rate is guaranteed to be less than 90%
         hash_code = (hash_code + 1) % _size_in_entries;
 
-        if (_table[hash_code] == NULL) 
+        if (_table[hash_code] == NULL)
             return -1;
-        
+
         if (address == _table[hash_code])  // hit
             return hash_code;
 
@@ -526,14 +526,14 @@ void Hash_Table::rewind() {
 // The key val hash table code which looks a lot like the code above.
 //
 //
-/////////////////////////////////////////////////////////////////////////////// 
+///////////////////////////////////////////////////////////////////////////////
 Count_Hash_Table::Count_Hash_Table() {
     _prime_index = 0;
 
     _size_in_entries = primes[_prime_index++];
 
     double threshold = HASH_TABLE_THRESHOLD;
- 
+
     _resident_count       = 0;
     _size_in_bytes        = _size_in_entries * (sizeof(void *));
     _threshold_entries    = (unsigned int)(_size_in_entries * threshold);
@@ -596,7 +596,7 @@ unsigned Count_Hash_Table::add_entry(void *address) {
     }
 	//
 	// Adding a null entry is illegal, since we can't distinguish
-	// it from an empty slot. 
+	// it from an empty slot.
 	//
     assert(address != NULL);
 	//
@@ -657,7 +657,7 @@ unsigned Count_Hash_Table::add_entry(void *address) {
             _key_table[hash_code] = address;
             _resident_count++;
             return hash_code;
-#endif 
+#endif
         }
     }
 }
@@ -722,7 +722,7 @@ unsigned int Count_Hash_Table::_do_rs_hash(POINTER_SIZE_INT address, unsigned in
 
 /* The residency in our remembered set has exceeded a pre-defined
    threshold. Therefore we create a larger remembered set and re-
-   hash. 
+   hash.
    Always rehash after doing an extend. */
 void Count_Hash_Table::_extend() {
     volatile void **p_save_key_table       = _key_table;
@@ -806,9 +806,9 @@ bool Count_Hash_Table::is_present(void *address) {
         // rate is guaranteed to be less than 90%
         hash_code = (hash_code + 1) % _size_in_entries;
 
-        if (_key_table[hash_code] == NULL) 
+        if (_key_table[hash_code] == NULL)
             return false;
-       
+
         if (address == _key_table[hash_code])  // hit
             return true;
 
@@ -856,9 +856,9 @@ int Count_Hash_Table::_get_offset(void *address) {
         // rate is guaranteed to be less than 90%
         hash_code = (hash_code + 1) % _size_in_entries;
 
-        if (_key_table[hash_code] == NULL) 
+        if (_key_table[hash_code] == NULL)
             return -1;
-        
+
         if (address == _key_table[hash_code])  // hit
             return hash_code;
 
@@ -910,7 +910,3 @@ void Count_Hash_Table::rewind() {
 }
 
 // end file gc\hash_table.cpp
-
-
-
-

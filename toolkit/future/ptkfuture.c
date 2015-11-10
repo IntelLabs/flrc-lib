@@ -16,8 +16,8 @@
 
 typedef unsigned int uint32;
 
-#include "ptkfuture.h"
-#include "ptkfutureinternal.h"
+#include "toolkit/ptkfuture.h"
+#include "toolkit/ptkfutureinternal.h"
 
 #ifdef __pillar__
 #pragma pillar_managed(off)
@@ -41,11 +41,11 @@ typedef unsigned int uint32;
 
 #ifdef __pillar__
 #pragma pillar_managed(on)
-#include "prtcodegenerator.h"
+#include "prt/prtcodegenerator.h"
 #endif /* __pillar__ */
 
 #ifdef PTKFUTURE_USE_BDW_MALLOC
-# include "gc.h"
+# include "toolkit/gc.h"
 #endif
 
 #undef ptkFutureInit
@@ -203,7 +203,7 @@ static void ptk_YieldUntil(futurePredicate predicate,
 #define CALLING_CONVENTION __pdecl
 #define SUFFIX Managed
 #define ARG_TYPE ref
-#include "ptkfuture_common.c"
+#include "toolkit/ptkfuture_common.c"
 #undef CALLING_CONVENTION
 #undef SUFFIX
 #undef ARG_TYPE
@@ -215,7 +215,7 @@ static void ptk_YieldUntil(futurePredicate predicate,
 #define CALLING_CONVENTION __cdecl
 #define SUFFIX Unmanaged
 #define ARG_TYPE void *
-#include "ptkfuture_common.c"
+#include "toolkit/ptkfuture_common.c"
 #undef CALLING_CONVENTION
 #undef SUFFIX
 #undef ARG_TYPE
@@ -311,7 +311,7 @@ static void addFuture(ref arg, int futureOffset, unsigned record_time)
     assert(GetFuture(arg, futureOffset)->status == PtkFutureStatusSpawning);
 
     myQueue->spawn_count++;
-    
+
 #if 1
 	if(nextQueue == 0 && autobatch) {
 		if(myQueue->auto_mode == pfamIncreasing) {
@@ -365,7 +365,7 @@ static void addFuture(ref arg, int futureOffset, unsigned record_time)
     myQueue->dummy.prev->next = node;
     myQueue->dummy.prev = node;
     GetFuture(arg, futureOffset)->qnode = node;
-    
+
 #if 1
 	if(nextQueue == 0 && autobatch) {
 		if(myQueue->auto_mode == pfamIncreasing) {
@@ -1017,7 +1017,7 @@ void ptkFutureSystemStart(int numThreads)
 #ifdef CONCURRENCY
 #ifndef USE_PRSCALL
     unsigned i;
-    int j; 
+    int j;
     numQueues = 0;
     if(optionNumThreadsSpecified) {
         if(optionNumThreads >= 0) {
@@ -1099,7 +1099,7 @@ void ptkFutureSystemStart(int numThreads)
         if(future_thread_stack_size) {
             pthread_attr_setstacksize(&create_attr,future_thread_stack_size);
         }
-    
+
         pthread_t new_thread;
         pthread_create_err = pthread_create(&new_thread, &create_attr ,futureLoop, (void *)j);
         pthread_attr_destroy(&create_attr);
@@ -1183,13 +1183,13 @@ PtkFutureStatus ptkFutureCancel(ref arg, int futureOffset)
             /* nothing can be done to delete once it has started */
         case PtkFutureStatusCancelled:
         default:
-            /* some user-specified state means the future is completed and 
+            /* some user-specified state means the future is completed and
                nothing can be done to cancel it */
             done = 1;
             break;
         }
     }
-    
+
     return result;
 } // ptkFutureCancel
 
@@ -1229,8 +1229,8 @@ static futureBool __cdecl isWorkAvailable(volatile void *location, void *data)
         if (queues[i].dummy.next != &queues[i].dummy) {
             sync_res = try_lock(&queues[i].lock);
             if(sync_res == 0) {
-                for (node  = queues[i].dummy.next; 
-		             node != &queues[i].dummy; 
+                for (node  = queues[i].dummy.next;
+		             node != &queues[i].dummy;
 	                 node = node->next) {
 		           if(node->future->status == PtkFutureStatusSpawned) {
 			           release(&queues[i].lock);
@@ -1247,4 +1247,3 @@ static futureBool __cdecl isWorkAvailable(volatile void *location, void *data)
 } // isWorkAvailable
 
 #endif // CONCURRENCY
-

@@ -6,16 +6,16 @@
 #include <iostream>
 
 // GC header files
-#include "gc_cout.h"
-#include "gc_header.h"
-#include "gc_v4.h"
-#include "remembered_set.h"
-#include "block_store.h"
-#include "object_list.h"
-#include "work_packet_manager.h"
-#include "garbage_collector.h"
-#include "slot_offset_list.h"
-#include "gcv4_synch.h"
+#include "tgc/gc_cout.h"
+#include "tgc/gc_header.h"
+#include "tgc/gc_v4.h"
+#include "tgc/remembered_set.h"
+#include "tgc/block_store.h"
+#include "tgc/object_list.h"
+#include "tgc/work_packet_manager.h"
+#include "tgc/garbage_collector.h"
+#include "tgc/slot_offset_list.h"
+#include "tgc/gcv4_synch.h"
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -26,7 +26,7 @@
 // This code is used to support interior pointers.
 //
 
-slot_offset_list::slot_offset_list() 
+slot_offset_list::slot_offset_list()
 {
     _size_in_entries = DEFAULT_OBJECT_SIZE_IN_ENTRIES;
 
@@ -40,7 +40,7 @@ slot_offset_list::slot_offset_list()
 
     start_node = _store;
 
-    _store->_store = (slot_offset_entry *)malloc(DEFAULT_OBJECT_SIZE_IN_ENTRIES * 
+    _store->_store = (slot_offset_entry *)malloc(DEFAULT_OBJECT_SIZE_IN_ENTRIES *
                                           sizeof(slot_offset_entry));
     _store->next = NULL;
 
@@ -98,7 +98,7 @@ slot_offset_list::_extend()
         _store = _store->next;
         _resident_count = 0;
 
-        _store->_store = (slot_offset_entry *)malloc(DEFAULT_OBJECT_SIZE_IN_ENTRIES * 
+        _store->_store = (slot_offset_entry *)malloc(DEFAULT_OBJECT_SIZE_IN_ENTRIES *
                                             sizeof(slot_offset_entry));
         _store->next = NULL;
 
@@ -118,7 +118,7 @@ slot_offset_list::_extend()
     //
     _size_in_entries = _size_in_entries * 2;
 
-    _store = (slot_offset_list::slot_offset_entry *)malloc(_size_in_entries * 
+    _store = (slot_offset_list::slot_offset_entry *)malloc(_size_in_entries *
                                           sizeof (slot_offset_entry));
 
     if (_store==NULL) {
@@ -127,8 +127,8 @@ slot_offset_list::_extend()
         orp_exit(17039);
     }
 
-    memcpy((void *)_store, 
-           (void *)old_store, 
+    memcpy((void *)_store,
+           (void *)old_store,
            _resident_count * sizeof(Partial_Reveal_Object *));
 
 	free(old_store);
@@ -166,14 +166,14 @@ POINTER_SIZE_INT slot_offset_list::get_offset ()
 }
 
 Partial_Reveal_Object **slot_offset_list::get_last_base_slot ()
-{   
-	// REVIEW vsm 10-May-2002 -- Made this change to fix a crash when called from 
+{
+	// REVIEW vsm 10-May-2002 -- Made this change to fix a crash when called from
 	// gc_add_root_set_entry_interior_pointer.
     //return &_store[_current_pointer - 1].base;
     return &(_store->_store[_resident_count - 1].base);
 }
 
-void 
+void
 slot_offset_list::debug_dump_list()
 {
 #if 0
@@ -218,4 +218,3 @@ slot_offset_list::size()
 }
 
 #endif
-

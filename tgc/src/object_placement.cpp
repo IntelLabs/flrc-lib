@@ -7,21 +7,21 @@
 #include "stdio.h"
 
 // GC header files
-#include "gc_cout.h"
-#include "gc_header.h"
-#include "gc_v4.h"
-#include "remembered_set.h"
-#include "block_store.h"
-#include "object_list.h"
-#include "work_packet_manager.h"
-#include "garbage_collector.h"
-#include "gc_plan.h"
-#include "gc_globals.h"
-#include "gc_thread.h"
-#include "mark.h"
-#include "descendents.h"
-#include "gc_debug.h"
-#include "gcv4_synch.h"
+#include "tgc/gc_cout.h"
+#include "tgc/gc_header.h"
+#include "tgc/gc_v4.h"
+#include "tgc/remembered_set.h"
+#include "tgc/block_store.h"
+#include "tgc/object_list.h"
+#include "tgc/work_packet_manager.h"
+#include "tgc/garbage_collector.h"
+#include "tgc/gc_plan.h"
+#include "tgc/gc_globals.h"
+#include "tgc/gc_thread.h"
+#include "tgc/mark.h"
+#include "tgc/descendents.h"
+#include "tgc/gc_debug.h"
+#include "tgc/gcv4_synch.h"
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -67,12 +67,12 @@ void insert_object_location(GC_Thread *gc_thread, void *dest, Partial_Reveal_Obj
 	    gc_thread->insert_object_header_info_during_sliding_compaction(obj_info);
 	    // problem_locks++; // placement code does not deal with this.
         gc_trace (p_obj, "Object being compacted or colocated needs obj_info perserved.");
-    } 
+    }
 
     assert ((p_obj->get_obj_info() & FORWARDING_BIT_MASK) == FORWARDING_BIT_MASK); // Make sure we have the forwarding bit.
     // clobber the header with the new address.
     assert (dest);
-    assert (((POINTER_SIZE_INT)dest | FORWARDING_BIT_MASK) != (POINTER_SIZE_INT)dest); 
+    assert (((POINTER_SIZE_INT)dest | FORWARDING_BIT_MASK) != (POINTER_SIZE_INT)dest);
     // This might break on Linux if the heap is in the upper 2 gig of memory. (high bit set)
     // If it does we need to change to the low bit.
 
@@ -84,7 +84,7 @@ void insert_object_location(GC_Thread *gc_thread, void *dest, Partial_Reveal_Obj
 
 
 //
-// This code breaks down into 3 pieces. 
+// This code breaks down into 3 pieces.
 // First we build a queue of all objects that need to be colocated
 //    For each object we grab the forwarding pointer using a lock instruction. This means we own it.
 //    If we can't gain ownership to the base object we just return.
@@ -98,12 +98,12 @@ void insert_object_location(GC_Thread *gc_thread, void *dest, Partial_Reveal_Obj
 // Sliding compaction presents some problems when moving the objects. First the invariant that
 // if we slide objects to the left we will always have room is no longer obvious since colocated
 // objects are also interspersed. If I have dead A B C dead D E and I am colocating D and E after A
-// Then I slide                               A  D E 
+// Then I slide                               A  D E
 // and I have overwritten B before I can move it into place.
 // One way to deal with this is to move D and E to a seperate area until the entire block has been slid
 //                                            A  x  x B                stash    D  E
 // But this overwwrites C with A. So we need to stash B also.
-//                                            A  x  x x C              stash    D E B 
+//                                            A  x  x x C              stash    D E B
 // Now we can move D E and B
 //                                            A  D  E  B C
 // This means that each block has a stash of up to an additional single block. This would seem to
@@ -123,9 +123,9 @@ void insert_object_location(GC_Thread *gc_thread, void *dest, Partial_Reveal_Obj
 // A x x C x x D E        B                Stash B
 // A x x x x x D E        B C              Stash C
 // A D x x x x x E        B C              Move D
-// A D E x x x x x        B C              Move E 
+// A D E x x x x x        B C              Move E
 // later we will move the stashed objects into place so we end up with
-// A D E B C x x x 
+// A D E B C x x x
 //
 
 //
@@ -133,17 +133,17 @@ void insert_object_location(GC_Thread *gc_thread, void *dest, Partial_Reveal_Obj
 // Each gc thread makes available its scanning pointer. If the target is to the left of the scan pointer
 // then the object gets copied directly into its destination. If it is to the right it goes
 // into the stash block. If there is not room in the stash block and we are out of stash blocks then
-// 
+//
 
 //
 // If all objects that remain in a GCs area are always moved into another block then we don't have to worry
 // about stashing these objects. If we also limit the number of cross thread objects to the amount of stash
 // blocks available then we will never end up with the situation where we are out of stash blocks.
-//  
+//
 
 //
 // What if we stash the collocaing objects at pointer creating time and then ignore them during sliding time.
-// Finally we move them into place after the sliding. 
+// Finally we move them into place after the sliding.
 //
 
 //
@@ -156,8 +156,8 @@ void insert_object_location(GC_Thread *gc_thread, void *dest, Partial_Reveal_Obj
 // *******************************************************
 //
 // Objects can be colocated or slid. An object that is to be colocated within the same area and colocation
-// is to a lower address is considered a "sliding colocation." All other colocation are considered stash 
-// colocation. 
+// is to a lower address is considered a "sliding colocation." All other colocation are considered stash
+// colocation.
 //
 // So we colocate up to the number of object we have stash blocks for.
 // We colocate only if it does not cause an object to be slid to a "high" address.
@@ -203,15 +203,15 @@ bool fuse_objects (GC_Thread *gc_thread,
     // If we can fuse an object we do and return it.
     assert (p_obj->vt()->get_gcvt()->gc_fuse_info);
     gc_trace (p_obj, "This object is a candidate for fusing with next object.");
-    
+
     Partial_Reveal_Object   *scan_stack[MAX_FUSABLE_OBJECT_SCAN_STACK];
     unsigned                top = 0;
-    
+
     Partial_Reveal_Object   *fuse_queue[MAX_FUSED_OBJECT_COUNT];
     unsigned                last = 0;
-    
+
     bool                    all_fused = true;
-    
+
     scan_stack[top++] = p_obj;
     unsigned int fused_size = get_object_size_bytes(p_obj);
     unsigned int base_obj_size = fused_size;
@@ -228,7 +228,7 @@ bool fuse_objects (GC_Thread *gc_thread,
     // This object might have already been colocated. If so just return false. If not grab the forwarding bit
     // and claim the right and *obligation* to colocate this object. If this fails don't worry since it will be moved during sliding to the
     // correct place, just remember to release the fowarding bit.
-    
+
     // Claim the Forwading bit if you can. If you loose the race you can't fuse since someone else is.
     Obj_Info_Type old_base_value = p_obj->get_obj_info();
     Obj_Info_Type new_base_value = old_base_value;
@@ -237,13 +237,13 @@ bool fuse_objects (GC_Thread *gc_thread,
     }
 
     new_base_value = old_base_value | FORWARDING_BIT_MASK;
-    
+
     if (p_obj->compare_exchange(new_base_value, old_base_value) != old_base_value) {
         // We did not get the forwarding pointer successfully, some other thread got it.
         // Since this is the base object we can just return false.
         return false;
     }
-    
+
     // Build a queue of objects to colocate but do not grab the FORWARDING_BIT until the queue is built.
     while (top > 0) {
         Partial_Reveal_Object *p_cur_obj = scan_stack[--top];
@@ -256,7 +256,7 @@ bool fuse_objects (GC_Thread *gc_thread,
             // This object is to be fused with the object located at the gc_fuse_info so calculate the required size.
             Partial_Reveal_Object *p_next_from_obj = pp_next_object.dereference();
             gc_trace (p_next_from_obj, "This object is a candidate to be fused with previous object.");
-            
+
             if (p_next_from_obj) {
                 // Check NULL.
                 block_info *fuse_block_info = GC_BLOCK_INFO(p_next_from_obj);
@@ -265,12 +265,12 @@ bool fuse_objects (GC_Thread *gc_thread,
                 Obj_Info_Type old_value = new_value;
                 bool is_colocation_natural = (next_natural_obj == (void *)p_next_from_obj);
                 bool overflow = (((POINTER_SIZE_INT)to_obj + fused_size + get_object_size_bytes(p_next_from_obj)) > (POINTER_SIZE_INT)(GC_BLOCK_CEILING(to_obj)));
-                    
+
                 bool already_forwarded = ((new_value & FORWARDING_BIT_MASK) == FORWARDING_BIT_MASK);
                 bool in_compaction_block = gc_thread->_p_gc->is_compaction_block(fuse_block_info);
                 // Don't colocate if both objects are in the same block.
                 bool both_in_same_page = ( ((POINTER_SIZE_INT)p_next_from_obj >> SAME_AREA_SHIFT) == ((POINTER_SIZE_INT)p_cur_obj >> SAME_AREA_SHIFT) );
-                
+
                 bool can_fuse = ((!already_forwarded)
                     && (!is_colocation_natural)
                     && (!overflow)
@@ -278,19 +278,19 @@ bool fuse_objects (GC_Thread *gc_thread,
                     // && !both_in_same_page
                     );
 
-                if (can_fuse){                
+                if (can_fuse){
                     if (p_next_from_obj->vt()->get_gcvt()->gc_fuse_info) {
                         scan_stack[top++] = p_next_from_obj;
                     }
-                
+
                     fuse_queue[last] = p_next_from_obj;
-                
+
                     fused_size += get_object_size_bytes(p_next_from_obj);
                     last++;
                 } else {
                     p_obj->set_obj_info(old_base_value); // Release the forwarding bit and don't colocate this object.
 #if 0
-                    // No objects to relocate.  
+                    // No objects to relocate.
                     if (already_forwarded) {
                         printf ("F");
                     }else if (is_colocation_natural) {
@@ -303,20 +303,20 @@ bool fuse_objects (GC_Thread *gc_thread,
                         printf ("             xxxxxxxxxxxxxxxxxxx              ");
                     }
 
-#endif             
+#endif
                      return false;
-                }  
+                }
             }
         }
     }
 
     unsigned i;
-    // Grab the forwarding bits for the other object in the queue.. If you can't get a bit 
+    // Grab the forwarding bits for the other object in the queue.. If you can't get a bit
     // remove the object from the queue.
     for (i = 0; i < last; i++) {
         Partial_Reveal_Object *p_fuse_obj = fuse_queue[i];
         Obj_Info_Type new_value = p_fuse_obj->get_obj_info();
-        Obj_Info_Type old_value = new_value; 
+        Obj_Info_Type old_value = new_value;
         bool already_forwarded = ((new_value & FORWARDING_BIT_MASK) == FORWARDING_BIT_MASK);
         new_value = old_value | FORWARDING_BIT_MASK; // Create the value with a the forwarding bit set.
         if (!already_forwarded) {
@@ -345,7 +345,7 @@ bool fuse_objects (GC_Thread *gc_thread,
     // We don't fuse more than a single block worth of objects.
     assert (fused_size <= GC_BLOCK_ALLOC_SIZE);
     // We own all the forwarding bits in all the objects in the fuse_queue.
-    
+
     // If we only have the base object and no other object to colocate with it just return.
     if (last == 0) {
         p_obj->set_obj_info(old_base_value); // Release the forwarding bit and don't colocate this object.
@@ -353,15 +353,15 @@ bool fuse_objects (GC_Thread *gc_thread,
 //        printf("3");
         return false;
     }
-    
-    // At this point all objects in the queue will be fused, we have the forwarding bits 
+
+    // At this point all objects in the queue will be fused, we have the forwarding bits
     // so we now figure out where they will be colocated.
-    
+
     gc_trace (p_obj, "Fusing this object with offspring.");
     Partial_Reveal_Object *p_old_start = p_obj;
     assert ((POINTER_SIZE_INT)(GC_BLOCK_INFO (to_obj + get_object_size_bytes(p_obj) - 1)) <= (POINTER_SIZE_INT)(GC_BLOCK_CEILING(to_obj)));
     assert ((p_obj->get_obj_info() & FORWARDING_BIT_MASK) == FORWARDING_BIT_MASK);
- 
+
     if (object_header_is_non_zero(p_obj)) {
             if ((p_obj->get_obj_info() & ~FORWARDING_BIT_MASK) != 0) {
                 object_lock_save_info *obj_info = (object_lock_save_info *) malloc(sizeof(object_lock_save_info));
@@ -393,16 +393,16 @@ bool fuse_objects (GC_Thread *gc_thread,
     }
     assert (base_obj_size == get_object_size_bytes(p_obj));
     to_obj = (void *) ((POINTER_SIZE_INT) to_obj + base_obj_size);
-    
+
     // Now figure out where the referent objects belong and set up their forwarding pointers.
-    
+
     for (i = 0; i < last; i++) {
         Partial_Reveal_Object *p_fuse_obj = fuse_queue[i];
-        unsigned int fused_obj_size = get_object_size_bytes(p_fuse_obj); 
+        unsigned int fused_obj_size = get_object_size_bytes(p_fuse_obj);
         gc_trace (p_fuse_obj, "Fusing this object with parent.");
         // Finally deal with this colocations.
         assert (p_fuse_obj != p_obj); // Nulls should have been filtered out up above.
-        
+
         if (object_header_is_non_zero(p_fuse_obj)) {
             if ((p_fuse_obj->get_obj_info() & ~FORWARDING_BIT_MASK) != 0) {
                 object_lock_save_info *obj_info = (object_lock_save_info *) malloc(sizeof(object_lock_save_info));
@@ -419,7 +419,7 @@ bool fuse_objects (GC_Thread *gc_thread,
                 printf ("preserving fused object header\n");
             }
         }
-        
+
         // Counts are not thread safe but it is just an approximation....
         delta_force_objects_colocated++;
         moved_count++;
@@ -436,7 +436,7 @@ bool fuse_objects (GC_Thread *gc_thread,
         if (verify_live_heap) {
             add_repointed_info_for_thread(p_fuse_obj, (Partial_Reveal_Object *) to_obj, gc_thread->get_id());
         }
- 
+
         if (delta_dynopt && mississippi_delta->object_is_delinquent_instance(p_fuse_obj)) {
             // register with delta that delinquent instance is being moved.
             // Needs to be done before object header is clobbered with the forwarding pointer
@@ -457,7 +457,7 @@ bool fuse_objects (GC_Thread *gc_thread,
     }
 #endif
     return true;
-}       
+}
 
 
 #ifdef GC_PREFETCH_CHAIN
@@ -580,7 +580,7 @@ void print_type_path_chain (type_node *chain, unsigned int depth)
     if (!chain) {
         return;
     }
-    
+
     if (chain->path_field_name) {
         printf ("    using field %s\n", chain->path_field_name);
     }
@@ -595,7 +595,7 @@ void print_type_path_chain (type_node *chain, unsigned int depth)
 // I don't think this is used for now, since I use the type_graph_member code instead. RLH.
 //
 
-boolean type_list_member (type_node *types, Partial_Reveal_VTable *vt) 
+boolean type_list_member (type_node *types, Partial_Reveal_VTable *vt)
 {
     if (!types) {
         return false;
@@ -614,7 +614,7 @@ boolean chain_all_delinquent (type_node *a_chain, type_node *all_nodes)
 
     if (!type_list_member (all_nodes, a_chain->vt)) {
         // We have a node that is not a delinquent type return false.
-        return false; 
+        return false;
     }
     // Check the rest of the list.
 
@@ -622,7 +622,7 @@ boolean chain_all_delinquent (type_node *a_chain, type_node *all_nodes)
 }
 
 //
-// Given the type structure see if this vt is in that type structure up to a 
+// Given the type structure see if this vt is in that type structure up to a
 // depth of depth. If it is return the path to the type specified by vt.
 
 
@@ -668,7 +668,7 @@ type_node *type_graph_member_path (Partial_Reveal_VTable *vt, type_node *node, u
 }
 
 //
-// Given the type structure see if this vt is in that type structure up to a 
+// Given the type structure see if this vt is in that type structure up to a
 // depth of depth. This is a simple depth first traveral.
 // If the type is not present it returns 0;
 // Otherwise it returns the number of links away the type is.
@@ -694,7 +694,7 @@ unsigned int type_graph_member_depth (Partial_Reveal_VTable *vt, type_node *node
     return 0;
 }
 
-unsigned int type_node_length (type_node *nodes) 
+unsigned int type_node_length (type_node *nodes)
 {
     unsigned int length = 0;
     while (nodes) {
@@ -708,7 +708,7 @@ unsigned int type_node_length (type_node *nodes)
 }
 
 
-unsigned int d_chain_length (type_node *nodes) 
+unsigned int d_chain_length (type_node *nodes)
 {
     unsigned int length = 0;
     while (nodes) {
@@ -770,7 +770,7 @@ unsigned int member_count (Partial_Reveal_VTable *vt, type_node *interesting_typ
 // has the largest number of subtypes.
 //
 
-type_node *max_count (type_node *interesting_types) 
+type_node *max_count (type_node *interesting_types)
 {
 //    orp_cout << "Max count length is " << type_node_length(interesting_types) << std::endl;
     type_node *bubble = interesting_types;
@@ -805,7 +805,7 @@ type_node *remove_node (type_node *node, type_node *list)
 //
 // Boring n**2 bubble sort for types based upon other reachable types.
 //
-type_node *sort_interesting_types (type_node *interesting_types) 
+type_node *sort_interesting_types (type_node *interesting_types)
 {
     if (!interesting_types) {
 //        orp_cout << "Result length from sort is " << 0 << std::endl;
@@ -844,7 +844,7 @@ type_node *build_class_graph(Partial_Reveal_VTable *formal_vt, unsigned int dept
         Field_Handle field = class_get_instance_field_recursive(cl, i);
         if (field_is_reference(field)) {
 //            orp_cout << "We have a reference field at depth " << depth << std::endl;
-            type_node *offspring = 
+            type_node *offspring =
                 build_class_graph ((Partial_Reveal_VTable *)class_get_vtable(field_get_class_of_field_value(field)), (depth+1));
             if (offspring) {
 //                orp_cout << "offspring is class " << offspring->class_name << std::endl;
@@ -853,7 +853,7 @@ type_node *build_class_graph(Partial_Reveal_VTable *formal_vt, unsigned int dept
                 offspring->parent = result;
                 offspring->field_offset = field_get_offset(field);
                 offspring->field_name = (char *)field_get_name(field);
-//                printf ("Parent %s has field named %s at offset %u \n", offspring->parent->class_name, offspring->field_name, offspring->field_offset); 
+//                printf ("Parent %s has field named %s at offset %u \n", offspring->parent->class_name, offspring->field_name, offspring->field_offset);
             }
         }
     }
@@ -874,11 +874,11 @@ void free_class_graph (type_node *node)
 // I think these are the magnificent 7. Figure out how to get their vtables.
 // Call build_class_graph on each of them and then link them into a list
 // using the ->next field.
-// Sort this list. The first item on the list should be the most interesting 
+// Sort this list. The first item on the list should be the most interesting
 // base type.
-// This list will include several different delinquent chains. We need 
-// to distinguish which type participate in which chains. 
-// 
+// This list will include several different delinquent chains. We need
+// to distinguish which type participate in which chains.
+//
 
 type_node *fake_delinquent_types_input ()
 {
@@ -898,10 +898,10 @@ type_node *fake_delinquent_types_input ()
         */
 
     orp_cout << "Fake delinquent types input is beginning." << std::endl;
-    
+
     Loader_Exception lexc;
     void *class_handle;
-    
+
     char *class_str = "java/lang/String";
     class_handle = class_load_class_by_name_using_system_class_loader(
                    "java/lang/String", &lexc);
@@ -910,7 +910,7 @@ type_node *fake_delinquent_types_input ()
     }else {
         printf ("No class loaded %s", class_str);
     }
-    
+
     class_str = "spec/jbb/Stock";
     class_handle = class_load_class_by_name_using_system_class_loader(
                    "spec/jbb/Stock", &lexc);
@@ -930,7 +930,7 @@ type_node *fake_delinquent_types_input ()
     }else {
         printf ("No class loaded %s", class_str);
     }
-    
+
     class_str = "spec/jbb/infra/Collections/longBTreeNode";
     class_handle = class_load_class_by_name_using_system_class_loader(
                    "spec/jbb/infra/Collections/longBTreeNode", &lexc);
@@ -944,7 +944,7 @@ type_node *fake_delinquent_types_input ()
     class_str = "[C";
     class_handle = class_load_class_by_name_using_system_class_loader(
                    "[C", &lexc);
-    
+
     if (class_handle) {
         printf ("6 class loaded %s\n", class_str);
     }else {
@@ -954,14 +954,14 @@ type_node *fake_delinquent_types_input ()
     class_str = "spec/jbb/Orderline";
     class_handle = class_load_class_by_name_using_system_class_loader(
                    "spec/jbb/Orderline", &lexc);
-    
+
     if (class_handle) {
         printf ("7 class loaded %s\n", class_str);
     }else {
         printf ("No class loaded %s\n", class_str);
     }
 
-    class_str = "spec/infra/Util/DisplayScreen";    
+    class_str = "spec/infra/Util/DisplayScreen";
     class_handle = class_load_class_by_name_using_system_class_loader(
                    "spec/infra/Util/DisplayScreen", &lexc);
 
@@ -970,14 +970,14 @@ type_node *fake_delinquent_types_input ()
     } else {
         printf ("No class loaded %s\n", class_str);
     }
-    
+
 
 
     class_str = "[J";
 //    printf ("-------- Trying [J ----------");
     class_handle = class_load_class_by_name_using_system_class_loader(
                    "[J", &lexc);
-    
+
     if (class_handle) {
         printf ("8 class loaded %s\n", class_str);
     }else {
@@ -988,7 +988,7 @@ type_node *fake_delinquent_types_input ()
     class_str = "[java/lang/Object";
     class_handle = class_load_class_by_name_using_system_class_loader(
                    "[Ljava/lang/Object", &lexc);
-    
+
     if (class_handle) {
         printf ("9 class loaded %s\n", class_str);
     }else {
@@ -1048,7 +1048,7 @@ type_node *fake_delinquent_types_input ()
     head = temp;
     print_type_graph (head, 0);
 #endif
-    
+
 //    orp_cout << "-------------------------5" << std::endl;
     class_handle = class_load_class_by_name_using_system_class_loader(
                    "java/lang/String", &lexc);
@@ -1060,7 +1060,7 @@ type_node *fake_delinquent_types_input ()
 //    print_type_graph (head);
 
 //    orp_cout << "--------------------------------6" << std::endl;
-#if 0 
+#if 0
     class_handle = class_load_class_by_name_using_system_class_loader(
                    "[C", &lexc);
     assert (class_handle);
@@ -1080,7 +1080,7 @@ type_node *fake_delinquent_types_input ()
     head = temp;
 //    print_type_graph (head);
 
-    
+
 //    orp_cout << "--------------------------------6" << std::endl;
     class_handle = class_load_class_by_name_using_system_class_loader(
                    "[Ljava/lang/Object", &lexc);
@@ -1115,7 +1115,7 @@ void prefetch_chain_driver ()
         d_types_sorted = d_types_sorted->next;
         printf ("---\n");
     }
-   
+
     d_types_sorted = all_nodes;
 #endif
 
@@ -1132,20 +1132,20 @@ void prefetch_chain_driver ()
         while (this_node) {
             printf ("--- %s <-(from)- %s \n", d_types_sorted->class_name, this_node->class_name);
             d_types_sorted->path = NULL; // Clear the chain from previous iterations. THIS NEEDS TO BE MORE ROBUST...
-            d_types_sorted->path_field_name = NULL;        
+            d_types_sorted->path_field_name = NULL;
             boolean more_chains;
             more_chains = true;
             chain_skip_count = 0;
-            while (more_chains) {            
+            while (more_chains) {
                 temp_skip_count = chain_skip_count; // Skip this many paths and return the following path
                 type_node *a_chain = type_graph_member_path (d_types_sorted->vt, this_node, 0, &temp_skip_count);
                 if (a_chain) {
                     if (a_chain->path){
-                        
+
                             printf ("-v- \n");
                             print_type_path_chain (a_chain, 1);
-                            
-                            if (!chain_all_delinquent (a_chain, all_nodes)) { 
+
+                            if (!chain_all_delinquent (a_chain, all_nodes)) {
                                 printf ("------------ Pruned chain has non-delinquent member. ------------");
                                 pruned_paths++;
                             }

@@ -10,14 +10,14 @@
  * is responsible for a specified code address.
  */
 
-#include "prtcodegenerator.h"
+#include "prt/prtcodegenerator.h"
 
-#include "prtcodeinfo.h"
-#include "prtcodeinfointernal.h"
-#include "prtvse.h"
-#include "prttls.h"
-#include "prtglobals.h"
-#include "prtcims.h"
+#include "prt/prtcodeinfo.h"
+#include "prt/prtcodeinfointernal.h"
+#include "prt/prtvse.h"
+#include "prt/prttls.h"
+#include "prt/prtglobals.h"
+#include "prt/prtcims.h"
 #include <stdlib.h>
 
 // Registers a set of callback functions for a component that is responsible for understanding one or more regions of code

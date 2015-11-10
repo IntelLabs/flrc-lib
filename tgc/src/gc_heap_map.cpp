@@ -5,8 +5,8 @@
 // This code generates heap maps and allows querying of the maps.
 
 /**************
-	As a first cut, we would like to map GC metadata information to memory addresses.  
-    Amongst other things this would then be used by a cache simulator in conjunction with SoftSDV to figure 
+	As a first cut, we would like to map GC metadata information to memory addresses.
+    Amongst other things this would then be used by a cache simulator in conjunction with SoftSDV to figure
     out high-level information about cache contents.
 
 Overview
@@ -14,14 +14,14 @@ Overview
     The cache simulator will execute some annotated Java code starting in functional mode. Annotations
     will consist of a distinguished method call that will change from functional mode to simulated mode.
     As part of turning on the cache simulator a second distinguished method will be called that will
-    inform the GC that cache simulation has started. The simulated mode will run for a relatively small 
-    amount of time and generate information a cache activity report. (the term trace is overloaded so I 
+    inform the GC that cache simulation has started. The simulated mode will run for a relatively small
+    amount of time and generate information a cache activity report. (the term trace is overloaded so I
     am avoiding it here.) This cache activity report will contain heap addresses. The Java code will
     execute a method to turn the cache simulator off. It will also execute a method that informs the GC
     that the next time it is executed it is to generate a heap map. Generation of this heap map is what
-    the code in this file is responsible for. Given a cache activity report and a heap map one has 
+    the code in this file is responsible for. Given a cache activity report and a heap map one has
     sufficient information to generate an cache activity report that includes type information.
-   
+
 Contents of heap map
 This is a binary file that can be read and written using C stdio.h fwrite/fread and the associated struct defs.
 
@@ -34,10 +34,10 @@ Heap part
 ****************/
 
 #include <stdio.h>
-#include "gc_v4.h"
-#include "garbage_collector.h"
-#include "gc_header.h"
-#include "gc_heap_map.h"
+#include "tgc/gc_v4.h"
+#include "tgc/garbage_collector.h"
+#include "tgc/gc_header.h"
+#include "tgc/gc_heap_map.h"
 
 //
 // This is the handle passed back and forth between the GC and SoftSVD and indicates the heap map to inspect.
@@ -48,14 +48,14 @@ const char *heap_map_file_name = "heap_map_test.hmp";
 
 metadata_tuple *get_object_metadata_id (void *addr) {
     // For testing open the file, print out the version and close the file.
-    
+
     FILE *map_file = fopen(heap_map_file_name, "rb"); // Open a binary file.
     if (!map_file) {
         printf ("Internal bug - Error creating map file, no map file created.\n");
     }
 
     heap_map_header header;
-    
+
     size_t bytes_read = fread (&header, 1, sizeof(heap_map_header), map_file);
 
     printf ("Read %d bytes into header with version %s\n", bytes_read, &(header.version[0]));
@@ -88,13 +88,13 @@ unsigned int dump_metadata_info (FILE *map_file) {
         char *the_class_name = (char *)this_vt->get_gcvt()->gc_class_name;
         strcpy ((char *)&this_tuple.class_name, the_class_name);
 #if 0
-        printf ("vt = %p, this_tuple.vt = %p, the_class_name = %s this_tuple.class_name = %s\n", 
+        printf ("vt = %p, this_tuple.vt = %p, the_class_name = %s this_tuple.class_name = %s\n",
             this_vt, this_tuple.vt, the_class_name, (char *)&this_tuple.class_name);
 #endif
         fwrite (&this_tuple, 1, sizeof(metadata_tuple), map_file);
-        tuple_index++;   
+        tuple_index++;
     }
-    
+
     tuple_index--;
 //    printf("dumped %d\n", tuple_index);
     return tuple_index;
@@ -122,7 +122,7 @@ unsigned int dump_object_info (FILE *map_file) {
         assert(0);
         exit(-1);
 #if 0
-        while (current_block->get_next_heap_map_object_tuple(&local_tuple)) { 
+        while (current_block->get_next_heap_map_object_tuple(&local_tuple)) {
             fwrite_status =  fwrite ((const void *)&local_tuple, 1L, sizeof(heap_map_object_tuple), map_file);
             if (local_tuple.id == FREE_SPACE_ID) {
                 free_space_count++;
@@ -140,7 +140,7 @@ unsigned int dump_object_info (FILE *map_file) {
         if (size_check == GC_BLOCK_SIZE_BYTES) {
             // printf ("Size Check OK\n");
         } else if (size_check < GC_BLOCK_SIZE_BYTES) {
-            printf (" --------------------------------------- Bummer too small Size %d count %d free areas %d does not check \n", 
+            printf (" --------------------------------------- Bummer too small Size %d count %d free areas %d does not check \n",
                 size_check, block_object_count, block_free_space_count);
         } else if (block_object_count <= 1) {
             // printf ("Size is larger than block and we have one object which is fine and of size = %d\n", size_check);
@@ -161,19 +161,19 @@ void create_heap_map(const char *filename) {
     char version[64] ="Heap Map Strawman 0.0 Hello World";
     void *base = gc_heap_base_address();
     void *ceiling = gc_heap_ceiling_address();
-    
+
     //
-    
+
     unsigned int map_start = 0;
     unsigned int object_tuple_count = 0;
-    unsigned int metadata_tuple_count = 0; 
+    unsigned int metadata_tuple_count = 0;
     unsigned int tuple_grouping_count = 0;
-    
+
     FILE *map_file = fopen(heap_map_file_name, "wb");
     if (!map_file) {
         printf ("Internal bug - Error creating map file, no map file created.\n");
     }
-    
+
     heap_map_header header;
 
     strcpy((char *)(header.version), (const char *)version);
@@ -184,7 +184,7 @@ void create_heap_map(const char *filename) {
     header.metadata_tuple_count = metadata_tuple_count;
     header.tuple_grouping_count = tuple_grouping_count;
 
-        // Skip over header information, this is written once the heap has been dumped and 
+        // Skip over header information, this is written once the heap has been dumped and
     // we have all the information we need.
     fseek (map_file, sizeof(heap_map_header), SEEK_SET);
 
@@ -223,8 +223,8 @@ unsigned int read_and_print_metadata_info (FILE *map_file, heap_map_header heade
     unsigned int i;
     for (i=0; i< header.metadata_tuple_count; i++) {
         fread (&this_tuple, 1, sizeof(metadata_tuple), map_file);
-        // TBD   Need to use ferror and feof to determine if this works. 
-        printf ("this_tuple.vt = %p, this_tuple.class_name = %s\n", 
+        // TBD   Need to use ferror and feof to determine if this works.
+        printf ("this_tuple.vt = %p, this_tuple.class_name = %s\n",
                  this_tuple.vt, (char *)&this_tuple.class_name);
 
     }
@@ -236,8 +236,8 @@ unsigned int read_and_print_tuple_info (FILE *map_file, heap_map_header header) 
     unsigned int i;
     for (i=0; i< header.object_tuple_count; i++) {
         fread (&this_tuple, 1, sizeof(heap_map_object_tuple), map_file);
-        // TBD   Need to use ferror and feof to determine if this works. 
-        printf ("this_tuple.size = %d, this_tuple.id = %x\n", 
+        // TBD   Need to use ferror and feof to determine if this works.
+        printf ("this_tuple.size = %d, this_tuple.id = %x\n",
                  this_tuple.size, this_tuple.id);
 
     }
@@ -247,19 +247,19 @@ unsigned int read_and_print_tuple_info (FILE *map_file, heap_map_header header) 
 #if 0
 void sample_code_to_read_map_file (const char *heap_map_file_name) {
     printf (" Now read it back in and take a look at it.\n");
-    
+
     FILE *read_map_file = fopen(heap_map_file_name, "rb"); // Open a binary file.
 
     heap_map_header metadata_read_header;
-    
+
     fread (&metadata_read_header, 1, sizeof(heap_map_header), read_map_file);
 
     unsigned int metadata_number_read = read_and_print_metadata_info (read_map_file, metadata_read_header);
 
     // Now readt he tuples.
-        
+
     unsigned int tuples_number_read = read_and_print_tuple_info(read_map_file, metadata_read_header);
-    
+
     // Close the file and exit.
 
     fclose(read_map_file);
@@ -267,4 +267,3 @@ void sample_code_to_read_map_file (const char *heap_map_file_name) {
     printf ("Read in %d metadata tuples and %d heap tuples.\n", metadata_number_read, tuples_number_read);
 }
 #endif
-

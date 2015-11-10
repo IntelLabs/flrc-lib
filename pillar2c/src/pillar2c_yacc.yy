@@ -3,7 +3,7 @@
  * COPYRIGHT_NOTICE_1
  */
 
-#include "pillar2c.ast.h"
+#include "pillar2c/pillar2c.ast.h"
 
 #if 0
 #ifndef LEX_CPP
@@ -401,7 +401,7 @@ call_expression
                   dprintf("__builtin_offsetof\n");
              }
         ;
-        
+
 postfix_expression
 	: primary_expression
              {
@@ -1593,144 +1593,144 @@ storage_class_specifier
 	;
 
 call_conv_specifier
-        : CDECL 
-             { 
-                  $$ = new call_conv_specifier_CDECL(); 
-                  dprintf("CDECL\n"); 
-             }
-        | UCDECL 
-             { 
-                  $$ = new call_conv_specifier_UCDECL(); 
-                  dprintf("UCDECL\n"); 
-             }
-        | STDCALL 
+        : CDECL
              {
-                  $$ = new call_conv_specifier_STDCALL(); 
-                  dprintf("STDCALL\n"); 
+                  $$ = new call_conv_specifier_CDECL();
+                  dprintf("CDECL\n");
+             }
+        | UCDECL
+             {
+                  $$ = new call_conv_specifier_UCDECL();
+                  dprintf("UCDECL\n");
+             }
+        | STDCALL
+             {
+                  $$ = new call_conv_specifier_STDCALL();
+                  dprintf("STDCALL\n");
              }
         | STDCALL STDCALL
              {
-                  $$ = new call_conv_specifier_STDCALL(); 
-                  dprintf("STDCALL\n"); 
+                  $$ = new call_conv_specifier_STDCALL();
+                  dprintf("STDCALL\n");
              }
-        | PASCAL     
-             { 
-                  $$ = new call_conv_specifier_PASCAL(); 
-                  dprintf("PASCAL\n"); 
+        | PASCAL
+             {
+                  $$ = new call_conv_specifier_PASCAL();
+                  dprintf("PASCAL\n");
              }
-        | PRT_PDECL 
-             { 
-                  $$ = new call_conv_specifier_PRT_PDECL(); 
-                  dprintf("PRT_PDECL\n"); 
+        | PRT_PDECL
+             {
+                  $$ = new call_conv_specifier_PRT_PDECL();
+                  dprintf("PRT_PDECL\n");
              }
-        | PRT_PCDECL 
-             { 
-                  $$ = new call_conv_specifier_PRT_PCDECL(); 
-                  dprintf("PRT_PCDECL\n"); 
+        | PRT_PCDECL
+             {
+                  $$ = new call_conv_specifier_PRT_PCDECL();
+                  dprintf("PRT_PCDECL\n");
              }
         ;
 
 type_specifier
-	: VOID 
-             { 
-                  $$ = new type_specifier_VOID(); 
-                  dprintf("VOID\n"); 
-                  set_type_into_identifier();
-             }
-	| CHAR 
-             { 
-                  $$ = new type_specifier_CHAR(); 
-                  dprintf("CHAR\n"); 
-                  set_type_into_identifier();
-             }
-	| SHORT 
-             { 
-                  $$ = new type_specifier_SHORT(); 
-                  dprintf("SHORT\n"); 
-                  set_type_into_identifier();
-             }
-	| INT 
-             { 
-                  $$ = new type_specifier_INT(); 
-                  dprintf("INT\n"); 
-                  set_type_into_identifier();
-             }
-	| INT64 
-             { 
-                  $$ = new type_specifier_INT64(); 
-                  dprintf("INT64\n"); 
-                  set_type_into_identifier();
-             }
-	| INT32 
-             { 
-                  $$ = new type_specifier_INT32(); 
-                  dprintf("INT32\n"); 
-                  set_type_into_identifier();
-             }
-	| INT16 
-             { 
-                  $$ = new type_specifier_INT16(); 
-                  dprintf("INT16\n"); 
-                  set_type_into_identifier();
-             }
-	| INT8 
-             { 
-                  $$ = new type_specifier_INT8(); 
-                  dprintf("INT8\n"); 
-                  set_type_into_identifier();
-             }
-	| LONG 
+	: VOID
              {
-                  $$ = new type_specifier_LONG(); 
-                  dprintf("LONG\n"); 
+                  $$ = new type_specifier_VOID();
+                  dprintf("VOID\n");
                   set_type_into_identifier();
              }
-	| FLOAT 
-             { 
-                  $$ = new type_specifier_FLOAT(); 
+	| CHAR
+             {
+                  $$ = new type_specifier_CHAR();
+                  dprintf("CHAR\n");
+                  set_type_into_identifier();
+             }
+	| SHORT
+             {
+                  $$ = new type_specifier_SHORT();
+                  dprintf("SHORT\n");
+                  set_type_into_identifier();
+             }
+	| INT
+             {
+                  $$ = new type_specifier_INT();
+                  dprintf("INT\n");
+                  set_type_into_identifier();
+             }
+	| INT64
+             {
+                  $$ = new type_specifier_INT64();
+                  dprintf("INT64\n");
+                  set_type_into_identifier();
+             }
+	| INT32
+             {
+                  $$ = new type_specifier_INT32();
+                  dprintf("INT32\n");
+                  set_type_into_identifier();
+             }
+	| INT16
+             {
+                  $$ = new type_specifier_INT16();
+                  dprintf("INT16\n");
+                  set_type_into_identifier();
+             }
+	| INT8
+             {
+                  $$ = new type_specifier_INT8();
+                  dprintf("INT8\n");
+                  set_type_into_identifier();
+             }
+	| LONG
+             {
+                  $$ = new type_specifier_LONG();
+                  dprintf("LONG\n");
+                  set_type_into_identifier();
+             }
+	| FLOAT
+             {
+                  $$ = new type_specifier_FLOAT();
                   dprintf("FLOAT\n");
                   set_type_into_identifier();
              }
-	| DOUBLE 
-             { 
-                  $$ = new type_specifier_DOUBLE(); 
-                  dprintf("DOUBLE\n"); 
+	| DOUBLE
+             {
+                  $$ = new type_specifier_DOUBLE();
+                  dprintf("DOUBLE\n");
                   set_type_into_identifier();
              }
-	| SIGNED 
-             { 
-                  $$ = new type_specifier_SIGNED(); 
-                  dprintf("SIGNED\n"); 
+	| SIGNED
+             {
+                  $$ = new type_specifier_SIGNED();
+                  dprintf("SIGNED\n");
                   set_type_into_identifier();
              }
-	| UNSIGNED 
-             {  
-                  $$ = new type_specifier_UNSIGNED(); 
-                  dprintf("UNSIGNED\n"); 
+	| UNSIGNED
+             {
+                  $$ = new type_specifier_UNSIGNED();
+                  dprintf("UNSIGNED\n");
                   set_type_into_identifier();
              }
-    | BUILTIN_VA_LIST 
-             {  
-                  $$ = new type_specifier_BUILTIN_VA_LIST(); 
-                  dprintf("BUILTIN_VA_LIST\n"); 
+    | BUILTIN_VA_LIST
+             {
+                  $$ = new type_specifier_BUILTIN_VA_LIST();
+                  dprintf("BUILTIN_VA_LIST\n");
                   set_type_into_identifier();
              }
-	| BOOL 
-             {   
-                  $$ = new type_specifier_BOOL(); 
-                  dprintf("BOOL\n"); 
+	| BOOL
+             {
+                  $$ = new type_specifier_BOOL();
+                  dprintf("BOOL\n");
                   set_type_into_identifier();
              }
-	| COMPLEX 
-             { 
-                  $$ = new type_specifier_COMPLEX(); 
-                  dprintf("COMPLEX\n"); 
+	| COMPLEX
+             {
+                  $$ = new type_specifier_COMPLEX();
+                  dprintf("COMPLEX\n");
                   set_type_into_identifier();
              }
-	| IMAGINARY 
-             { 
-                  $$ = new type_specifier_IMAGINARY(); 
-                  dprintf("IMAGINARY\n"); 
+	| IMAGINARY
+             {
+                  $$ = new type_specifier_IMAGINARY();
+                  dprintf("IMAGINARY\n");
                   set_type_into_identifier();
              }
 	| struct_or_union_specifier
@@ -1757,22 +1757,22 @@ type_specifier
                   dprintf("TYPE_NAME=%s\n",$1->get_name());
                   set_type_into_identifier();
              }
-	| PRT_REF 
+	| PRT_REF
              {
-                  $$ = new type_specifier_PRT_REF(NULL,0); 
-                  dprintf("PRT_REF\n"); 
+                  $$ = new type_specifier_PRT_REF(NULL,0);
+                  dprintf("PRT_REF\n");
                   set_type_into_identifier();
              }
 	| PRT_REF '<' type_specifier '>'
              {
-                  $$ = new type_specifier_PRT_REF($3,0); 
-                  dprintf("PRT_REF (type)\n"); 
+                  $$ = new type_specifier_PRT_REF($3,0);
+                  dprintf("PRT_REF (type)\n");
                   set_type_into_identifier();
              }
 	| PRT_REF '<' type_specifier ',' CONSTANT_INT '>'
              {
-                  $$ = new type_specifier_PRT_REF($3,atoi($5)); 
-                  dprintf("PRT_REF (type)\n"); 
+                  $$ = new type_specifier_PRT_REF($3,atoi($5));
+                  dprintf("PRT_REF (type)\n");
                   set_type_into_identifier();
                   delete $5;
              }
@@ -2218,12 +2218,12 @@ declspec_specifier
         | RESTRICT
              {
                   $$ = new declspec_specifier_RESTRICT();
-                  dprintf("RESTRICT\n"); 
+                  dprintf("RESTRICT\n");
              }
         | UURESTRICT
              {
                   $$ = new declspec_specifier_UURESTRICT();
-                  dprintf("UURESTRICT\n"); 
+                  dprintf("UURESTRICT\n");
              }
         | DEPRECATED '(' STRING_LITERAL ')'
              {
@@ -2414,92 +2414,92 @@ direct_declarator
 
 pointer
 	: '*'
-             { 
-                  $$ = new pointer_star(); 
-                  dprintf("*\n"); 
+             {
+                  $$ = new pointer_star();
+                  dprintf("*\n");
              }
 	| '*' type_qualifier_list
-             { 
-                  $$ = new pointer_star_type_qualifier_list($2); 
-                  dprintf("* type_qualifier_list\n"); 
+             {
+                  $$ = new pointer_star_type_qualifier_list($2);
+                  dprintf("* type_qualifier_list\n");
              }
 	| '*' pointer
-             { 
-                  $$ = new pointer_star_pointer($2); 
-                  dprintf("* pointer\n"); 
+             {
+                  $$ = new pointer_star_pointer($2);
+                  dprintf("* pointer\n");
              }
 	| '*' type_qualifier_list pointer
-             { 
-                  $$ = new pointer_star_type_qualifier_list_pointer($2,$3); 
-                  dprintf("* type_qualifier_list pointer\n"); 
+             {
+                  $$ = new pointer_star_type_qualifier_list_pointer($2,$3);
+                  dprintf("* type_qualifier_list pointer\n");
              }
 	| '*' UUPTR64
-             { 
-                  $$ = new pointer_star(); 
-                  dprintf("*\n"); 
+             {
+                  $$ = new pointer_star();
+                  dprintf("*\n");
              }
 	| '*' UUPTR64 type_qualifier_list
-             { 
-                  $$ = new pointer_star_type_qualifier_list($3); 
-                  dprintf("* type_qualifier_list\n"); 
+             {
+                  $$ = new pointer_star_type_qualifier_list($3);
+                  dprintf("* type_qualifier_list\n");
              }
 	| '*' UUPTR64 pointer
-             { 
-                  $$ = new pointer_star_pointer($3); 
-                  dprintf("* pointer\n"); 
+             {
+                  $$ = new pointer_star_pointer($3);
+                  dprintf("* pointer\n");
              }
 	| '*' UUPTR64 type_qualifier_list pointer
-             { 
-                  $$ = new pointer_star_type_qualifier_list_pointer($3,$4); 
-                  dprintf("* type_qualifier_list pointer\n"); 
+             {
+                  $$ = new pointer_star_type_qualifier_list_pointer($3,$4);
+                  dprintf("* type_qualifier_list pointer\n");
              }
 	;
 
 type_qualifier_list
 	: type_qualifier
-             { 
-                  $$ = new type_qualifier_list_type_qualifier($1); 
-                  dprintf("type_qualifier\n"); 
+             {
+                  $$ = new type_qualifier_list_type_qualifier($1);
+                  dprintf("type_qualifier\n");
              }
 	| type_qualifier_list type_qualifier
-             { 
-                  $$ = new type_qualifier_list_type_qualifier_list_type_qualifier($1,$2); 
-                  dprintf("type_qualifier_list type_qualifier\n"); 
+             {
+                  $$ = new type_qualifier_list_type_qualifier_list_type_qualifier($1,$2);
+                  dprintf("type_qualifier_list type_qualifier\n");
              }
 	;
 
 
 parameter_type_list
 	: parameter_list
-             { 
-                  $$ = new parameter_type_list_parameter_list($1); 
-                  dprintf("parameter_list\n"); 
+             {
+                  $$ = new parameter_type_list_parameter_list($1);
+                  dprintf("parameter_list\n");
              }
 	| parameter_list ',' ELLIPSIS
-             { 
-                  $$ = new parameter_type_list_parameter_list_ellipsis($1); 
-                  dprintf("parameter_list, ELLIPSIS\n"); 
+             {
+                  $$ = new parameter_type_list_parameter_list_ellipsis($1);
+                  dprintf("parameter_list, ELLIPSIS\n");
              }
 	;
 
 parameter_list
 	: parameter_declaration
-             { 
-                  $$ = new parameter_list_parameter_declaration($1); 
-                  dprintf("parameter_list_parameter_declaration\n"); 
+             {
+                  $$ = new parameter_list_parameter_declaration($1);
+                  dprintf("parameter_list_parameter_declaration\n");
              }
 	| parameter_list ',' parameter_declaration
-             { 
-                  $$ = new parameter_list_parameter_list_parameter_declaration($1,$3); 
-                  dprintf("parameter_list_parameter_list_parameter_declaration\n"); 
+             {
+                  $$ = new parameter_list_parameter_list_parameter_declaration($1,$3);
+                  dprintf("parameter_list_parameter_list_parameter_declaration\n");
              }
 	;
 
 parameter_declaration
 	: declaration_specifiers declarator
-             { 
-                  $$ = new parameter_declaration_declaration_specifiers_declarator($1,$2); 
-                  dprintf("parameter_declaration_declaration_specifiers_declarator\n"); 
+             {
+                  $$ = new parameter_declaration_declaration_specifiers_declarator($1,$2);
+                  dprintf("parameter_declaration_declaration_specifiers_declarator\n");
                   unset_type_into_identifier();
                   ii_ptr ii = $2->add_to_symbol_table(IIT_PARAM);
                   $$->set_symbol_table(ii);
@@ -2510,224 +2510,224 @@ parameter_declaration
                   ii->set_declarator($2);
              }
 	| declaration_specifiers abstract_declarator
-             { 
-                  $$ = new parameter_declaration_declaration_specifiers_abstract_declarator($1,$2); 
-                  dprintf("parameter_declaration_declaration_specifiers_abstract_declarator\n"); 
+             {
+                  $$ = new parameter_declaration_declaration_specifiers_abstract_declarator($1,$2);
+                  dprintf("parameter_declaration_declaration_specifiers_abstract_declarator\n");
                   unset_type_into_identifier();
              }
 	| declaration_specifiers
-             { 
-                  $$ = new parameter_declaration_declaration_specifiers($1); 
-                  dprintf("parameter_declaration_declaration_specifiers\n"); 
+             {
+                  $$ = new parameter_declaration_declaration_specifiers($1);
+                  dprintf("parameter_declaration_declaration_specifiers\n");
                   unset_type_into_identifier();
              }
 	;
 
 identifier_list
 	: IDENTIFIER
-             { 
-                  $$ = new identifier_list_identifier($1); 
-                  dprintf("IDENTIFIER=%s\n",$1->get_name()); 
+             {
+                  $$ = new identifier_list_identifier($1);
+                  dprintf("IDENTIFIER=%s\n",$1->get_name());
              }
 	| identifier_list ',' IDENTIFIER
-             { 
-                  $$ = new identifier_list_identifier_list_identifier($1,$3); 
-                  dprintf("identifier_list , IDENTIFIER=%s\n",$3->get_name()); 
+             {
+                  $$ = new identifier_list_identifier_list_identifier($1,$3);
+                  dprintf("identifier_list , IDENTIFIER=%s\n",$3->get_name());
              }
 	;
 
 type_name
 	: specifier_qualifier_list
-             { 
-                  $$ = new type_name_specifier_qualifier_list($1); 
-                  dprintf("specifier_qualifier_list\n"); 
+             {
+                  $$ = new type_name_specifier_qualifier_list($1);
+                  dprintf("specifier_qualifier_list\n");
                   unset_type_into_identifier();
              }
 	| specifier_qualifier_list abstract_declarator
-             { 
-                  $$ = new type_name_specifier_qualifier_list_abstract_declarator($1,$2); 
-                  dprintf("specifier_qualifier_list abstract_declarator\n"); 
+             {
+                  $$ = new type_name_specifier_qualifier_list_abstract_declarator($1,$2);
+                  dprintf("specifier_qualifier_list abstract_declarator\n");
                   unset_type_into_identifier();
              }
 	;
 
 abstract_declarator
 	: pointer
-             { 
-                  $$ = new abstract_declarator_pointer($1); 
-                  dprintf("abstract_declarator_pointer\n"); 
+             {
+                  $$ = new abstract_declarator_pointer($1);
+                  dprintf("abstract_declarator_pointer\n");
              }
 	| direct_abstract_declarator
-             { 
-                  $$ = new abstract_declarator_direct_abstract_declarator($1); 
-                  dprintf("abstract_declarator_direct_abstract_declarator\n"); 
+             {
+                  $$ = new abstract_declarator_direct_abstract_declarator($1);
+                  dprintf("abstract_declarator_direct_abstract_declarator\n");
              }
 	| pointer direct_abstract_declarator
-             { 
-                  $$ = new abstract_declarator_pointer_direct_abstract_declarator($1,$2); 
-                  dprintf("abstract_declarator_pointer_direct_abstract_declarator\n"); 
+             {
+                  $$ = new abstract_declarator_pointer_direct_abstract_declarator($1,$2);
+                  dprintf("abstract_declarator_pointer_direct_abstract_declarator\n");
              }
 	| call_conv_specifier pointer
-             { 
-                  $$ = new abstract_declarator_call_conv_specifier_pointer($1,$2); 
-                  dprintf("abstract_declarator_call_conv_specifier_pointer\n"); 
+             {
+                  $$ = new abstract_declarator_call_conv_specifier_pointer($1,$2);
+                  dprintf("abstract_declarator_call_conv_specifier_pointer\n");
              }
 	| call_conv_specifier direct_abstract_declarator
-             { 
-                  $$ = new abstract_declarator_call_conv_specifier_direct_abstract_declarator($1,$2); 
-                  dprintf("abstract_declarator_call_conv_specifier_direct_abstract_declarator\n"); 
+             {
+                  $$ = new abstract_declarator_call_conv_specifier_direct_abstract_declarator($1,$2);
+                  dprintf("abstract_declarator_call_conv_specifier_direct_abstract_declarator\n");
              }
 	| call_conv_specifier pointer direct_abstract_declarator
-             { 
-                  $$ = new abstract_declarator_call_conv_specifier_pointer_direct_abstract_declarator($1,$2,$3); 
-                  dprintf("abstract_declarator_call_conv_specifier_pointer_direct_abstract_declarator\n"); 
+             {
+                  $$ = new abstract_declarator_call_conv_specifier_pointer_direct_abstract_declarator($1,$2,$3);
+                  dprintf("abstract_declarator_call_conv_specifier_pointer_direct_abstract_declarator\n");
              }
 	;
 
 direct_abstract_declarator
 	: '(' abstract_declarator ')'
-             { 
-                  $$ = new direct_abstract_declarator_abstract_declarator($2); 
-                  dprintf("direct_abstract_declarator_abstract_declarator\n"); 
+             {
+                  $$ = new direct_abstract_declarator_abstract_declarator($2);
+                  dprintf("direct_abstract_declarator_abstract_declarator\n");
                   unset_type_into_identifier();
              }
 	| '[' ']'
-             { 
-                  $$ = new direct_abstract_declarator_empty_braces(); 
-                  dprintf("direct_abstract_declarator_empty_braces\n"); 
+             {
+                  $$ = new direct_abstract_declarator_empty_braces();
+                  dprintf("direct_abstract_declarator_empty_braces\n");
              }
 	| '[' assignment_expression ']'
-             { 
-                  $$ = new direct_abstract_declarator_assignment_expression($2); 
-                  dprintf("direct_abstract_declarator_assignment_expression\n"); 
+             {
+                  $$ = new direct_abstract_declarator_assignment_expression($2);
+                  dprintf("direct_abstract_declarator_assignment_expression\n");
              }
 	| direct_abstract_declarator '[' ']'
-             { 
-                  $$ = new direct_abstract_declarator_direct_abstract_declarator_empty_braces($1); 
-                  dprintf("direct_abstract_declarator_direct_abstract_declarator_empty_braces\n"); 
+             {
+                  $$ = new direct_abstract_declarator_direct_abstract_declarator_empty_braces($1);
+                  dprintf("direct_abstract_declarator_direct_abstract_declarator_empty_braces\n");
              }
 	| direct_abstract_declarator '[' assignment_expression ']'
-             { 
-                  $$ = new direct_abstract_declarator_direct_abstract_declarator_assignment_expression($1,$3); 
-                  dprintf("direct_abstract_declarator_direct_abstract_declarator_assignment_expression\n"); 
+             {
+                  $$ = new direct_abstract_declarator_direct_abstract_declarator_assignment_expression($1,$3);
+                  dprintf("direct_abstract_declarator_direct_abstract_declarator_assignment_expression\n");
              }
 	| '[' '*' ']'
-             { 
-                  $$ = new direct_abstract_declarator_brace_star(); 
-                  dprintf("direct_abstract_declarator_brace_star\n"); 
+             {
+                  $$ = new direct_abstract_declarator_brace_star();
+                  dprintf("direct_abstract_declarator_brace_star\n");
              }
 	| direct_abstract_declarator '[' '*' ']'
-             { 
-                  $$ = new direct_abstract_declarator_direct_abstract_declarator_brace_star($1); 
-                  dprintf("direct_abstract_declarator_direct_abstract_declarator_brace_star\n"); 
+             {
+                  $$ = new direct_abstract_declarator_direct_abstract_declarator_brace_star($1);
+                  dprintf("direct_abstract_declarator_direct_abstract_declarator_brace_star\n");
              }
 	| '(' ')'
-             { 
-                  $$ = new direct_abstract_declarator_empty_paren(); 
-                  dprintf("direct_abstract_declarator_empty_paren\n"); 
+             {
+                  $$ = new direct_abstract_declarator_empty_paren();
+                  dprintf("direct_abstract_declarator_empty_paren\n");
              }
 	| '(' parameter_type_list ')'
-             { 
-                  $$ = new direct_abstract_declarator_paren_parameter_type_list($2); 
-                  dprintf("direct_abstract_declarator_paren_parameter_type_list\n"); 
+             {
+                  $$ = new direct_abstract_declarator_paren_parameter_type_list($2);
+                  dprintf("direct_abstract_declarator_paren_parameter_type_list\n");
              }
 	| direct_abstract_declarator '(' ')'
-             { 
-                  $$ = new direct_abstract_declarator_direct_abstract_declarator_empty_parens($1); 
-                  dprintf("direct_abstract_declarator_direct_abstract_declarator_empty_parens\n"); 
+             {
+                  $$ = new direct_abstract_declarator_direct_abstract_declarator_empty_parens($1);
+                  dprintf("direct_abstract_declarator_direct_abstract_declarator_empty_parens\n");
              }
 	| direct_abstract_declarator '(' parameter_type_list ')'
-             { 
-                  $$ = new direct_abstract_declarator_direct_abstract_declarator_paren_parameter_type_list($1,$3); 
-                  dprintf("direct_abstract_declarator_direct_abstract_declarator_paren_parameter_type_list\n"); 
+             {
+                  $$ = new direct_abstract_declarator_direct_abstract_declarator_paren_parameter_type_list($1,$3);
+                  dprintf("direct_abstract_declarator_direct_abstract_declarator_paren_parameter_type_list\n");
              }
 	;
 
 initializer
 	: assignment_expression
-             { 
-                  $$ = new initializer_assignment_expression($1); 
-                  dprintf("assignment_expression\n"); 
+             {
+                  $$ = new initializer_assignment_expression($1);
+                  dprintf("assignment_expression\n");
              }
 	| '{' initializer_list '}'
-             { 
-                  $$ = new initializer_initializer_list($2); 
-                  dprintf("{ initializer_list }\n"); 
+             {
+                  $$ = new initializer_initializer_list($2);
+                  dprintf("{ initializer_list }\n");
              }
 	| '{' initializer_list ',' '}'
-             { 
-                  $$ = new initializer_initializer_list_comma($2); 
-                  dprintf("{ initializer_list , }\n"); 
+             {
+                  $$ = new initializer_initializer_list_comma($2);
+                  dprintf("{ initializer_list , }\n");
              }
 	;
 
 initializer_list
 	: initializer
-             { 
-                  $$ = new initializer_list_initializer($1); 
-                  dprintf("initializer\n"); 
+             {
+                  $$ = new initializer_list_initializer($1);
+                  dprintf("initializer\n");
              }
 	| designation initializer
-             { 
-                  $$ = new initializer_list_designation_initializer($1,$2); 
-                  dprintf("designation initializer\n"); 
+             {
+                  $$ = new initializer_list_designation_initializer($1,$2);
+                  dprintf("designation initializer\n");
              }
 	| initializer_list ',' initializer
-             { 
-                  $$ = new initializer_list_initializer_list_initializer($1,$3); 
-                  dprintf("initializer_list , initializer\n"); 
+             {
+                  $$ = new initializer_list_initializer_list_initializer($1,$3);
+                  dprintf("initializer_list , initializer\n");
              }
 	| initializer_list ',' designation initializer
-             { 
-                  $$ = new initializer_list_initializer_list_designation_initializer($1,$3,$4); 
-                  dprintf("initializer_list , designation initializer\n"); 
+             {
+                  $$ = new initializer_list_initializer_list_designation_initializer($1,$3,$4);
+                  dprintf("initializer_list , designation initializer\n");
              }
 	;
 
 designation
 	: designator_list '='
-             { 
-                  $$ = new designation_designator_list($1); 
-                  dprintf("designator_list =\n"); 
+             {
+                  $$ = new designation_designator_list($1);
+                  dprintf("designator_list =\n");
              }
 	;
 
 designator_list
 	: designator
-             { 
-                  $$ = new designator_list_designator($1); 
-                  dprintf("designator\n"); 
+             {
+                  $$ = new designator_list_designator($1);
+                  dprintf("designator\n");
              }
 	| designator_list designator
-             { 
-                  $$ = new designator_list_designator_list_designator($1,$2); 
-                  dprintf("designator_list designator\n"); 
+             {
+                  $$ = new designator_list_designator_list_designator($1,$2);
+                  dprintf("designator_list designator\n");
              }
 	;
 
 designator
 	: '[' constant_expression ']'
-             { 
-                  $$ = new designator_braces_constant_expression($2); 
-                  dprintf("[ constant_expression ]\n"); 
+             {
+                  $$ = new designator_braces_constant_expression($2);
+                  dprintf("[ constant_expression ]\n");
              }
 	| '.' IDENTIFIER
-             { 
-                  $$ = new designator_dot_identifier($2->get_name()); 
-                  dprintf(". IDENTIFIER=%s\n",$2->get_name()); 
+             {
+                  $$ = new designator_dot_identifier($2->get_name());
+                  dprintf(". IDENTIFIER=%s\n",$2->get_name());
              }
 	;
 
 statement
 	: labeled_statement
-             { 
-                  $$ = new statement_labeled_statement($1); 
-                  dprintf("labeled_statement\n"); 
+             {
+                  $$ = new statement_labeled_statement($1);
+                  dprintf("labeled_statement\n");
              }
 	| {g_scope_stack.enter_scope();} compound_statement {$<scope>$ = g_scope_stack.leave_scope();}
-             { 
-                  $$ = new statement_compound_statement($2); 
-                  dprintf("compound_statement\n"); 
+             {
+                  $$ = new statement_compound_statement($2);
+                  dprintf("compound_statement\n");
                   Scope *cs_scope = $<scope>3;
                   if(!cs_scope) {
                       printf("Problem.\n");
@@ -2736,52 +2736,52 @@ statement
                   $$->set_scope(cs_scope);
              }
 	| expression_statement
-             { 
-                  $$ = new statement_expression_statement($1); 
-                  dprintf("expression_statement\n"); 
+             {
+                  $$ = new statement_expression_statement($1);
+                  dprintf("expression_statement\n");
              }
 	| selection_statement
-             { 
-                  $$ = new statement_selection_statement($1); 
-                  dprintf("selection_statement\n"); 
+             {
+                  $$ = new statement_selection_statement($1);
+                  dprintf("selection_statement\n");
              }
 	| iteration_statement
-             { 
-                  $$ = new statement_iteration_statement($1); 
-                  dprintf("iteration_statement\n"); 
+             {
+                  $$ = new statement_iteration_statement($1);
+                  dprintf("iteration_statement\n");
              }
 	| jump_statement
-             { 
-                  $$ = new statement_jump_statement($1); 
-                  dprintf("jump_statement\n"); 
+             {
+                  $$ = new statement_jump_statement($1);
+                  dprintf("jump_statement\n");
              }
 	| PRT_TAILCALL call_expression ';'
-             { 
-                  $$ = new statement_prt_tailcall($2); 
-                  dprintf("PRT_TAILCALL call_expression ;\n"); 
+             {
+                  $$ = new statement_prt_tailcall($2);
+                  dprintf("PRT_TAILCALL call_expression ;\n");
              }
 	| UUASM
-             { 
-                  $$ = new statement_UUASM($1); 
-                  dprintf("UUASM\n"); 
+             {
+                  $$ = new statement_UUASM($1);
+                  dprintf("UUASM\n");
 				  free($1);
              }
 	| UUASMUU
-             { 
-                  $$ = new statement_UUASMUU($1); 
-                  dprintf("UUASMUU\n"); 
+             {
+                  $$ = new statement_UUASMUU($1);
+                  dprintf("UUASMUU\n");
 				  free($1);
              }
 	| UASM
-             { 
-                  $$ = new statement_UASM($1); 
-                  dprintf("UASM\n"); 
+             {
+                  $$ = new statement_UASM($1);
+                  dprintf("UASM\n");
 				  free($1);
              }
 	| PRT_NOYIELD {g_scope_stack.enter_scope();} compound_statement {$<scope>$ = g_scope_stack.leave_scope();}
-             { 
-                  $$ = new statement_PRT_NOYIELD_compound_statement($3); 
-                  dprintf("PRT_NOYIELD compound_statement\n"); 
+             {
+                  $$ = new statement_PRT_NOYIELD_compound_statement($3);
+                  dprintf("PRT_NOYIELD compound_statement\n");
 
                   Scope *cs_scope = $<scope>4;
                   if(!cs_scope) {
@@ -2791,9 +2791,9 @@ statement
                   $$->set_scope(cs_scope);
              }
 	| PRT_VSE '(' IDENTIFIER ')' {g_scope_stack.enter_scope();} compound_statement {$<scope>$ = g_scope_stack.leave_scope();}
-             { 
-                  $$ = new statement_PRT_VSE_compound_statement($3,$6); 
-                  dprintf("PRT_VSE compound_statement\n"); 
+             {
+                  $$ = new statement_PRT_VSE_compound_statement($3,$6);
+                  dprintf("PRT_VSE compound_statement\n");
 
                   Scope *cs_scope = $<scope>7;
                   if(!cs_scope) {
@@ -2803,9 +2803,9 @@ statement
                   $$->set_scope(cs_scope);
              }
 	| PRT_PCALL call_expression ';'
-             { 
-                  $$ = new statement_pcall_call_expression($2); 
-                  dprintf("PCALL postfix_expression ( )\n"); 
+             {
+                  $$ = new statement_pcall_call_expression($2);
+                  dprintf("PCALL postfix_expression ( )\n");
              }
 	;
 
@@ -2819,7 +2819,7 @@ type_list
                 $$ = new type_list_type_list_type($1,$4);
             }
     ;
-    
+
 continuation_var_type
     : PRT_CONTINUATION_VAR
             {
@@ -2834,7 +2834,7 @@ continuation_var_type
                 $$ = new continuation_var_type($3);
             }
     ;
-    
+
 continuation_type
     : PRT_CONTINUATION
             {
@@ -2845,73 +2845,73 @@ continuation_type
                 $$ = new continuation_type($3);
             }
     ;
-    
+
 labeled_statement
 	: IDENTIFIER ':' {$1->add(IIT_LABEL);} statement
-             { 
-                  $$ = new labeled_statement_identifier($1->get_name(),$4); 
-                  dprintf("IDENTIFIER=%s : statement\n",$1->get_name()); 
+             {
+                  $$ = new labeled_statement_identifier($1->get_name(),$4);
+                  dprintf("IDENTIFIER=%s : statement\n",$1->get_name());
              }
 	| CASE constant_expression ':' statement
-             { 
-                  $$ = new labeled_statement_case($2,$4); 
-                  dprintf("case constant_expression : statement\n"); 
+             {
+                  $$ = new labeled_statement_case($2,$4);
+                  dprintf("case constant_expression : statement\n");
              }
 	| DEFAULT ':' statement
-             { 
-                  $$ = new labeled_statement_default($3); 
-                  dprintf("DEFAULT : statement\n"); 
+             {
+                  $$ = new labeled_statement_default($3);
+                  dprintf("DEFAULT : statement\n");
              }
     | continuation_type IDENTIFIER '(' identifier_list ')' ':' {$2->add(IIT_CONTINUATION);} statement
-             { 
-                  $$ = new labeled_statement_continuation($1,$2,$4,$8); 
-                  dprintf("continuation IDENTIFIER(param_list) : statement\n"); 
+             {
+                  $$ = new labeled_statement_continuation($1,$2,$4,$8);
+                  dprintf("continuation IDENTIFIER(param_list) : statement\n");
                   $2->set_type(new type_specifier_continuation($1->to_continuation_var()),true);
              }
     | continuation_type IDENTIFIER '(' ')' ':' {$2->add(IIT_CONTINUATION);} statement
-             { 
-                  $$ = new labeled_statement_continuation($1,$2,NULL,$7); 
-                  dprintf("continuation IDENTIFIER() : statement\n"); 
+             {
+                  $$ = new labeled_statement_continuation($1,$2,NULL,$7);
+                  dprintf("continuation IDENTIFIER() : statement\n");
                   $2->set_type(new type_specifier_continuation($1->to_continuation_var()),true);
              }
 	;
 
 compound_statement
 	: '{' '}'
-             { 
-                  $$ = new compound_statement_empty(); 
-                  dprintf("{ }\n"); 
+             {
+                  $$ = new compound_statement_empty();
+                  dprintf("{ }\n");
              }
 	| '{' block_item_list '}'
-             { 
-                  $$ = new compound_statement_block_item_list($2); 
-                  dprintf("{ block_item_list }\n"); 
+             {
+                  $$ = new compound_statement_block_item_list($2);
+                  dprintf("{ block_item_list }\n");
              }
 	;
 
 block_item_list
 	: block_item
-             { 
-                  $$ = new block_item_list_block_item($1); 
-                  dprintf("block_item\n"); 
+             {
+                  $$ = new block_item_list_block_item($1);
+                  dprintf("block_item\n");
              }
 	| block_item_list block_item
-             { 
-                  $$ = new block_item_list_block_item_list_block_item($1,$2); 
-                  dprintf("block_item_list block_item\n"); 
+             {
+                  $$ = new block_item_list_block_item_list_block_item($1,$2);
+                  dprintf("block_item_list block_item\n");
              }
 	;
 
 block_item
 	: declaration
-             { 
-                  $$ = new block_item_declaration($1,yylineno); 
-                  dprintf("declaration\n"); 
+             {
+                  $$ = new block_item_declaration($1,yylineno);
+                  dprintf("declaration\n");
              }
 	| statement
-             { 
-                  $$ = new block_item_statement($1,yylineno); 
-                  dprintf("statement\n"); 
+             {
+                  $$ = new block_item_statement($1,yylineno);
+                  dprintf("statement\n");
              }
     | POUND_LINE
              {
@@ -2921,89 +2921,89 @@ block_item
 
 expression_statement
 	: ';'
-             { 
-                  $$ = new expression_statement_empty(); 
-                  dprintf("empty expression\n"); 
+             {
+                  $$ = new expression_statement_empty();
+                  dprintf("empty expression\n");
              }
 	| expression ';'
-             { 
-                  $$ = new expression_statement_expression($1); 
-                  dprintf("expression\n"); 
+             {
+                  $$ = new expression_statement_expression($1);
+                  dprintf("expression\n");
              }
 	;
 
 selection_statement
 	: IF '(' expression ')' statement %prec LOWER_THAN_ELSE
-             { 
-                  $$ = new selection_statement_if($3,$5); 
-                  dprintf("IF\n"); 
+             {
+                  $$ = new selection_statement_if($3,$5);
+                  dprintf("IF\n");
              }
 	| IF '(' expression ')' statement ELSE statement
-             { 
-                  $$ = new selection_statement_if_else($3,$5,$7); 
-                  dprintf("IFELSE\n"); 
+             {
+                  $$ = new selection_statement_if_else($3,$5,$7);
+                  dprintf("IFELSE\n");
              }
 	| IF '(' BUILTIN_EXPECT '(' expression ',' CONSTANT_INT ')' ')' statement
-             { 
-                  $$ = new selection_statement_if_builtin($5,$7,$10,true); 
-                  dprintf("IF builtin_expect\n"); 
+             {
+                  $$ = new selection_statement_if_builtin($5,$7,$10,true);
+                  dprintf("IF builtin_expect\n");
              }
 /*
 	| IF '(' '!' BUILTIN_EXPECT '(' constant_expression ',' CONSTANT_INT ')' ')' statement
-             { 
-                  $$ = new selection_statement_if_builtin($6,$8,$11,false); 
-                  dprintf("IF !builtin_expect\n"); 
+             {
+                  $$ = new selection_statement_if_builtin($6,$8,$11,false);
+                  dprintf("IF !builtin_expect\n");
              }
 */
 	| IF '(' BUILTIN_EXPECT '(' expression ',' CONSTANT_INT ')' ')' statement ELSE statement
-             { 
-                  $$ = new selection_statement_if_else_builtin($5,$7,$10,$12,true); 
-                  dprintf("IF builtin_expect\n"); 
+             {
+                  $$ = new selection_statement_if_else_builtin($5,$7,$10,$12,true);
+                  dprintf("IF builtin_expect\n");
              }
 /*
 	| IF '(' '!' BUILTIN_EXPECT '(' constant_expression ',' CONSTANT_INT ')' ')' statement ELSE statement
-             { 
-                  $$ = new selection_statement_if_else_builtin($6,$8,$11,$13,false); 
-                  dprintf("IF !builtin_expect\n"); 
+             {
+                  $$ = new selection_statement_if_else_builtin($6,$8,$11,$13,false);
+                  dprintf("IF !builtin_expect\n");
              }
 */
 	| SWITCH '(' expression ')' statement
-             { 
-                  $$ = new selection_statement_switch($3,$5); 
-                  dprintf("SWITCH\n"); 
+             {
+                  $$ = new selection_statement_switch($3,$5);
+                  dprintf("SWITCH\n");
              }
 	;
 
 iteration_statement
 	: WHILE '(' expression ')' statement
-             { 
-                  $$ = new iteration_statement_while($3,$5); 
-                  dprintf("WHILE\n"); 
+             {
+                  $$ = new iteration_statement_while($3,$5);
+                  dprintf("WHILE\n");
              }
 	| DO statement WHILE '(' expression ')' ';'
-             { 
-                  $$ = new iteration_statement_do($2,$5); 
-                  dprintf("DO\n"); 
+             {
+                  $$ = new iteration_statement_do($2,$5);
+                  dprintf("DO\n");
              }
 	| FOR '(' expression_statement expression_statement ')' statement
-             { 
-                  $$ = new iteration_statement_for_eses($3,$4,$6); 
-                  dprintf("FOR\n"); 
+             {
+                  $$ = new iteration_statement_for_eses($3,$4,$6);
+                  dprintf("FOR\n");
              }
 	| FOR '(' expression_statement expression_statement expression ')' statement
-             { 
-                  $$ = new iteration_statement_for_esese($3,$4,$5,$7); 
-                  dprintf("FOR\n"); 
+             {
+                  $$ = new iteration_statement_for_esese($3,$4,$5,$7);
+                  dprintf("FOR\n");
              }
 	| FOR '(' declaration expression_statement ')' statement
-             { 
-                  $$ = new iteration_statement_for_des($3,$4,$6); 
-                  dprintf("FOR\n"); 
+             {
+                  $$ = new iteration_statement_for_des($3,$4,$6);
+                  dprintf("FOR\n");
              }
 	| FOR '(' declaration expression_statement expression ')' statement
-             { 
-                  $$ = new iteration_statement_for_dese($3,$4,$5,$7); 
-                  dprintf("FOR\n"); 
+             {
+                  $$ = new iteration_statement_for_dese($3,$4,$5,$7);
+                  dprintf("FOR\n");
              }
 	;
 
@@ -3021,7 +3021,7 @@ ae_list
 	;
 
 multiple_ret_expr
-	: MULT_START assignment_expression ':' ae_list MULT_END 
+	: MULT_START assignment_expression ':' ae_list MULT_END
 	         {
                   $$ = new multiple_ret_expr_assignment_expression_assignment_expression_list($2,$4);
                   dprintf("multiple_ret_expr\n");
@@ -3030,93 +3030,93 @@ multiple_ret_expr
 
 jump_statement
 	: GOTO IDENTIFIER ';'
-             { 
-                  jump_statement_goto *jsg = new jump_statement_goto($2->get_name()); 
+             {
+                  jump_statement_goto *jsg = new jump_statement_goto($2->get_name());
                   $$ = jsg;
                   if($2->is_label()) {
                       jsg->set_backward();
-                      dprintf("GOTO IDENTIFIER(backward)=%s\n",$2->get_name()); 
+                      dprintf("GOTO IDENTIFIER(backward)=%s\n",$2->get_name());
                   } else {
-                      dprintf("GOTO IDENTIFIER=%s\n",$2->get_name()); 
+                      dprintf("GOTO IDENTIFIER=%s\n",$2->get_name());
                   }
              }
 	| CONTINUE ';'
-             { 
-                  $$ = new jump_statement_continue(); 
-                  dprintf("CONTINUE\n"); 
+             {
+                  $$ = new jump_statement_continue();
+                  dprintf("CONTINUE\n");
              }
 	| BREAK ';'
-             { 
-                  $$ = new jump_statement_break(); 
-                  dprintf("BREAK\n"); 
+             {
+                  $$ = new jump_statement_break();
+                  dprintf("BREAK\n");
              }
 	| RETURN ';'
-             { 
-                  $$ = new jump_statement_return(); 
-                  dprintf("RETURN\n"); 
+             {
+                  $$ = new jump_statement_return();
+                  dprintf("RETURN\n");
              }
 	| RETURN expression ';'
-             { 
-                  $$ = new jump_statement_return_expression($2); 
-                  dprintf("RETURN expression\n"); 
+             {
+                  $$ = new jump_statement_return_expression($2);
+                  dprintf("RETURN expression\n");
              }
 	| RETURN multiple_ret_expr ';'
              {
                   $$ = new jump_statement_return_mre($2);
-                  dprintf("RETURN multiple\n"); 
+                  dprintf("RETURN multiple\n");
              }
 	| RETURN PRT_TAILCALL call_expression ';'
-             { 
-                  $$ = new jump_statement_prt_tailcall($3); 
-                  dprintf("RETURN PRT_TAILCALL call_expression ;\n"); 
+             {
+                  $$ = new jump_statement_prt_tailcall($3);
+                  dprintf("RETURN PRT_TAILCALL call_expression ;\n");
              }
 	| PRT_CUT PRT_TO assignment_expression ';'
-             { 
-                  $$ = new jump_statement_prt_cut_to_argument_expression_list($3,NULL); 
-                  dprintf("PRT_CUT PRT_TO assignment_expression\n"); 
+             {
+                  $$ = new jump_statement_prt_cut_to_argument_expression_list($3,NULL);
+                  dprintf("PRT_CUT PRT_TO assignment_expression\n");
              }
 	| PRT_CUT PRT_TO assignment_expression PRT_ALSO PRT_CUTS PRT_TO '(' identifier_list ')' ';'
-             { 
-                  $$ = new jump_statement_prt_cut_to_argument_expression_list($3,NULL,$8); 
-                  dprintf("PRT_CUT PRT_TO assignment_expression also cuts to ( identifier_list )\n"); 
+             {
+                  $$ = new jump_statement_prt_cut_to_argument_expression_list($3,NULL,$8);
+                  dprintf("PRT_CUT PRT_TO assignment_expression also cuts to ( identifier_list )\n");
              }
 	| PRT_CUT PRT_TO assignment_expression PRT_ALSO PRT_CUTS PRT_TO IDENTIFIER ';'
-             { 
-                  $$ = new jump_statement_prt_cut_to_argument_expression_list($3,NULL,new identifier_list_identifier($7)); 
-                  dprintf("PRT_CUT PRT_TO assignment_expression also cuts to identifier\n"); 
+             {
+                  $$ = new jump_statement_prt_cut_to_argument_expression_list($3,NULL,new identifier_list_identifier($7));
+                  dprintf("PRT_CUT PRT_TO assignment_expression also cuts to identifier\n");
              }
     | PRT_CUT PRT_TO assignment_expression PRT_WITH '(' argument_expression_list ')' ';'
-             { 
-                  $$ = new jump_statement_prt_cut_to_argument_expression_list($3,$6); 
-                  dprintf("PRT_CUT PRT_TO assignment_expression PRT_WITH ( argument_expression_list )\n"); 
+             {
+                  $$ = new jump_statement_prt_cut_to_argument_expression_list($3,$6);
+                  dprintf("PRT_CUT PRT_TO assignment_expression PRT_WITH ( argument_expression_list )\n");
              }
     | PRT_CUT PRT_TO assignment_expression PRT_WITH '(' argument_expression_list ')' PRT_ALSO PRT_CUTS PRT_TO '(' identifier_list ')'  ';'
-             { 
-                  $$ = new jump_statement_prt_cut_to_argument_expression_list($3,$6,$12); 
-                  dprintf("PRT_CUT PRT_TO assignment_expression PRT_WITH ( argument_expression_list ) also cuts to ( identifier_list )\n"); 
+             {
+                  $$ = new jump_statement_prt_cut_to_argument_expression_list($3,$6,$12);
+                  dprintf("PRT_CUT PRT_TO assignment_expression PRT_WITH ( argument_expression_list ) also cuts to ( identifier_list )\n");
              }
     | PRT_CUT PRT_TO assignment_expression PRT_WITH '(' argument_expression_list ')' PRT_ALSO PRT_CUTS PRT_TO IDENTIFIER ';'
-             { 
-                  $$ = new jump_statement_prt_cut_to_argument_expression_list($3,$6,new identifier_list_identifier($11)); 
-                  dprintf("PRT_CUT PRT_TO assignment_expression PRT_WITH ( argument_expression_list ) also cuts to identifier\n"); 
+             {
+                  $$ = new jump_statement_prt_cut_to_argument_expression_list($3,$6,new identifier_list_identifier($11));
+                  dprintf("PRT_CUT PRT_TO assignment_expression PRT_WITH ( argument_expression_list ) also cuts to identifier\n");
              }
 	;
 
 translation_unit
-	: external_declaration 
-      { 
+	: external_declaration
+      {
           if($1) {
 		      switch(phase_selector) {
 				case FULLFILE:
 #ifndef NO_TOP_LIST
                   $1->set_iter(g_ed_list.insert(g_ed_list.end(),$1));
-                  dprintf("external_declaration\n"); 
-                  dprintf("==============================================\n"); 
+                  dprintf("external_declaration\n");
+                  dprintf("==============================================\n");
                   $$ = NULL;
 #else
-                  $$ = new translation_unit_external_declaration($1); 
-                  dprintf("external_declaration\n"); 
-                  dprintf("==============================================\n"); 
+                  $$ = new translation_unit_external_declaration($1);
+                  dprintf("external_declaration\n");
+                  dprintf("==============================================\n");
                   g_ast_tree = (translation_unit*)$$;
 #endif
 			      break;
@@ -3134,20 +3134,20 @@ translation_unit
 			  }
           }
       }
-	| translation_unit external_declaration 
-      { 
+	| translation_unit external_declaration
+      {
 		  if($2) {
 		      switch(phase_selector) {
 				case FULLFILE:
 #ifndef NO_TOP_LIST
                   $2->set_iter(g_ed_list.insert(g_ed_list.end(),$2));
-                  dprintf("translation_unit external_declaration\n"); 
-                  dprintf("==============================================\n"); 
+                  dprintf("translation_unit external_declaration\n");
+                  dprintf("==============================================\n");
                   $$ = NULL;
 #else
-                  $$ = new translation_unit_translation_unit_external_declaration($1,$2); 
-                  dprintf("translation_unit external_declaration\n"); 
-                  dprintf("==============================================\n"); 
+                  $$ = new translation_unit_translation_unit_external_declaration($1,$2);
+                  dprintf("translation_unit external_declaration\n");
+                  dprintf("==============================================\n");
                   g_ast_tree = (translation_unit*)$$;
 #endif
 			      break;
@@ -3187,15 +3187,15 @@ saa_expr_list
 	    {
 	    }
 	;
- 
+
 external_declaration
-	: function_definition 
+	: function_definition
              {
                   $$ = new external_declaration_function_definition($1);
                   dprintf("function_definition\n");
                   unset_type_into_identifier();
              }
-	| declaration 
+	| declaration
              {
                   $$ = new external_declaration_declaration($1);
                   dprintf("declaration\n");
@@ -3338,7 +3338,7 @@ function_definition
 					  assert(fmiter != g_func_map.end());
 
 					  $$ = fmiter->second;
-					  
+
 					  function_definition_no_decl_list *fdndl = dynamic_cast<function_definition_no_decl_list *>(fmiter->second);
 					  assert(fdndl);
 					  fdndl->reset($1,$2,$4);
@@ -3373,15 +3373,15 @@ function_definition
 	;
 
 declaration_list
-	: declaration 
-             { 
+	: declaration
+             {
                   $$ = new declaration_list_declaration($1);
-                  dprintf("declaration\n"); 
+                  dprintf("declaration\n");
              }
-	| declaration_list declaration 
-             { 
+	| declaration_list declaration
+             {
                   $$ = new declaration_list_declaration_list_declaration($1,$2);
-                  dprintf("declaration_list declaration\n"); 
+                  dprintf("declaration_list declaration\n");
              }
 	;
 
@@ -3409,7 +3409,7 @@ extern "C" int check_type(char *id, unsigned free_it) {
 	if(free_it) {
 		free(id);
     }
-    
+
 	if(s == "PrtTaskHandle") {
 	   s = s;
 	}
@@ -3434,7 +3434,7 @@ extern "C" int check_type(char *id, unsigned free_it) {
 extern "C" int pillar_or_check_type(int token) {
     if(g_cc_stack.top() == ST_PDECL) {
         return token;
-    } else { 
+    } else {
         switch(token) {
         case PRT_ALSO:
             return check_type("also",0);

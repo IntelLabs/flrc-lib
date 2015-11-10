@@ -6,20 +6,20 @@
 #include <iostream>
 
 // GC header files
-#include "gc_cout.h"
-#include "gc_header.h"
-#include "gc_v4.h"
-#include "remembered_set.h"
-#include "block_store.h"
-#include "object_list.h"
-#include "work_packet_manager.h"
-#include "garbage_collector.h"
-#include "gc_plan.h"
-#include "gc_globals.h"
-#include "gc_thread.h"
-#include "mark.h"
-#include "descendents.h"
-#include "gcv4_synch.h"
+#include "tgc/gc_cout.h"
+#include "tgc/gc_header.h"
+#include "tgc/gc_v4.h"
+#include "tgc/remembered_set.h"
+#include "tgc/block_store.h"
+#include "tgc/object_list.h"
+#include "tgc/work_packet_manager.h"
+#include "tgc/garbage_collector.h"
+#include "tgc/gc_plan.h"
+#include "tgc/gc_globals.h"
+#include "tgc/gc_thread.h"
+#include "tgc/mark.h"
+#include "tgc/descendents.h"
+#include "tgc/gcv4_synch.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -46,7 +46,7 @@ void Garbage_Collector::setup_mark_scan_pools() {
 		if (*slot == NULL) {
 			continue;
 		}
-		// Mark the object. 
+		// Mark the object.
 		if (mark_object_in_block(*slot)) {
 			// Check if packet is empty
 			if ((wp->is_full() == true) || (num_root_objects_per_packet == roots_in_this_packet)) {
@@ -56,9 +56,9 @@ void Garbage_Collector::setup_mark_scan_pools() {
 				roots_in_this_packet = 0;
 			}
 			assert(wp && !wp->is_full());
-			wp->add_unit_of_work(*slot);		
+			wp->add_unit_of_work(*slot);
 			roots_in_this_packet++;
-		}	
+		}
 		// the object may have a already been marked if an earlier root pointed to it.
 		// In this case we dont duplicate this object reference in the mark scan pool
 	}
@@ -119,7 +119,7 @@ void Garbage_Collector::scan_one_slot (Slot p_slot, GC_Thread *gc_thread) {
 		if (gc_thread->_p_gc->is_compaction_block(p_obj_block_info)) {
 			gc_thread->_p_gc->add_slot_to_compaction_block(p_slot, p_obj_block_info, gc_thread->get_id());
 			if (stats_gc) {
-				gc_thread->increment_num_slots_collected_for_later_fixing();	
+				gc_thread->increment_num_slots_collected_for_later_fixing();
 			}
 		}
 	}
@@ -139,7 +139,7 @@ void Garbage_Collector::mark_scan_pools(GC_Thread *gc_thread) {
 	while (true) {
 		// try to get work-packet from common mark/scan pool
 		Work_Packet *i_wp = _mark_scan_pool->get_input_work_packet();
-		
+
 		if (i_wp == NULL) {
 			//...return output packet if non-empty
 			Work_Packet *o_wp = gc_thread->get_output_packet();
@@ -194,13 +194,13 @@ void Garbage_Collector::mark_scan_pools(GC_Thread *gc_thread) {
                type_info_is_general_array(tih)) {
                 // Initialize the array scanner which will scan the array from the
                 // top to the bottom. IE from the last element to the first element.
-            
+
                 int32 array_length = vector_get_length_with_vt((Vector_Handle)p_obj,p_obj->vt());
                 for (int32 i=array_length-1; i>=0; i--) {
                     Slot p_element(vector_get_element_address_ref_with_vt((Vector_Handle)p_obj, i, p_obj->vt()));
                     scan_one_slot(p_element, gc_thread);
                 }
-            } else if(type_info_is_primitive(tih)) { 
+            } else if(type_info_is_primitive(tih)) {
                 // intentionally do nothing
             } else if(type_info_is_unboxed(tih)) {
                 Class_Handle ech = type_info_get_class(tih);
@@ -227,14 +227,14 @@ void Garbage_Collector::mark_scan_pools(GC_Thread *gc_thread) {
                     cur_value_type_entry_as_object = (Byte*)cur_value_type_entry_as_object + elem_size;
                 }
             } else assert(!"Tried to scan an array of unknown internal type.");
-        } 
+        }
 
 		unsigned int *offset_scanner = init_object_scanner (p_obj);
         Slot pp_target_object(NULL);
         while ((pp_target_object.set(p_get_ref(offset_scanner, p_obj))) != NULL) {
             // Each live object in the heap gets scanned exactly once...so each live EDGE in the heap gets looked at exactly once...
-            // So, the logic here is independent of whether the object pointed to by this slot has already been reached and 
-            // marked by the collector...we still need to collect edge counts since this edge is being visited for the first 
+            // So, the logic here is independent of whether the object pointed to by this slot has already been reached and
+            // marked by the collector...we still need to collect edge counts since this edge is being visited for the first
             // and last time...
             // If parent is not a delinquent type we are not interested in this edge at all....
             scan_one_slot (pp_target_object, gc_thread);

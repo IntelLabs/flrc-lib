@@ -9,26 +9,26 @@
 #include <iostream>
 
 // GC header files
-#include "gc_cout.h"
-#include "gc_header.h"
-#include "gc_v4.h"
-#include "remembered_set.h"
-#include "block_store.h"
-#include "object_list.h"
-#include "work_packet_manager.h"
-#include "garbage_collector.h"
-#include "gc_plan.h"
-#include "gc_globals.h"
-#include "gcv4_synch.h"
-#include "compressed_references.h"
-#include "micro_nursery.h"
+#include "tgc/gc_cout.h"
+#include "tgc/gc_header.h"
+#include "tgc/gc_v4.h"
+#include "tgc/remembered_set.h"
+#include "tgc/block_store.h"
+#include "tgc/object_list.h"
+#include "tgc/work_packet_manager.h"
+#include "tgc/garbage_collector.h"
+#include "tgc/gc_plan.h"
+#include "tgc/gc_globals.h"
+#include "tgc/gcv4_synch.h"
+#include "tgc/compressed_references.h"
+#include "tgc/micro_nursery.h"
 
 #if _MSC_VER >= 1400 || defined __GNUC__ // vs2005+
 #include <set>
 #else
 #include <..\stlport\set>
 #endif
-#include "pgc.h"
+#include "pgc/pgc.h"
 
 ///////////////////////////////////////////////////////////////////////////////////
 
@@ -48,7 +48,7 @@ extern bool g_treat_wpo_as_normal;
 ///////////////////////////////////////////////////////////////////////////////////
 
 #ifdef CONCURRENT
-#include "mark.h"
+#include "tgc/mark.h"
 #endif // CONCURRENT
 
 static inline bool gc_has_begun() {

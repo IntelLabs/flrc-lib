@@ -6,15 +6,15 @@
 #include <iostream>
 
 // GC header files
-#include "gc_cout.h"
-#include "gc_header.h"
-#include "gc_v4.h"
-#include "remembered_set.h"
-#include "block_store.h"
-#include "object_list.h"
-#include "work_packet_manager.h"
-#include "garbage_collector.h"
-#include "gcv4_synch.h"
+#include "tgc/gc_cout.h"
+#include "tgc/gc_header.h"
+#include "tgc/gc_v4.h"
+#include "tgc/remembered_set.h"
+#include "tgc/block_store.h"
+#include "tgc/object_list.h"
+#include "tgc/work_packet_manager.h"
+#include "tgc/garbage_collector.h"
+#include "tgc/gcv4_synch.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -26,7 +26,7 @@ extern unsigned int g_root_index_hint;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-/* 
+/*
 *  I have this root but the slot is only valid while the thread being enumerated is
 *  is suspended so action. This means that the ref can't be saved, instead we must save
 *  the *ref, which points to the object.
@@ -80,9 +80,9 @@ void Garbage_Collector::gc_internal_add_root_set_entry(Partial_Reveal_Object **r
     if (_num_roots >= num_root_limit) {
         expand_root_arrays();
     }
-    
+
     // The eumeration needs to provide a set which means no duplicates. Remove duplicates here.
-    
+
     assert (dup_removal_enum_hash_table->size() == _num_roots);
     if (dup_removal_enum_hash_table->add_entry_if_required((void *)ref)) {
         gc_trace_slot((void **)ref, (void *)*ref, "In gc_internal_add_root_set_entry.");
@@ -116,18 +116,18 @@ Partial_Reveal_Object ** Garbage_Collector::get_fresh_root_to_trace() {
     // Search the array from left to right...
     for (unsigned int i = g_root_index_hint; i < _num_roots; i++) {
         volatile Partial_Reveal_Object **ref = (volatile Partial_Reveal_Object ** ) _array_of_roots[i];
-        
+
         if (ref == NULL) {
             continue;
         }
         assert(*ref); //RLH
         // Atomically grab a root....multiple GC threads compete for roots
-        if (LockedCompareExchangePOINTER_SIZE_INT( 
+        if (LockedCompareExchangePOINTER_SIZE_INT(
             (POINTER_SIZE_INT *)&_array_of_roots[i],
             (POINTER_SIZE_INT) NULL,
             (POINTER_SIZE_INT) ref
             ) == (POINTER_SIZE_INT) ref) {
-            
+
 			g_root_index_hint = i+1;
             assert(ref);
             if (ref) {
@@ -136,7 +136,7 @@ Partial_Reveal_Object ** Garbage_Collector::get_fresh_root_to_trace() {
             }
         }
     }
-    
+
     return NULL;
 }
 

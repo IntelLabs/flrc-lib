@@ -6,25 +6,25 @@
 #include <iostream>
 
 // GC header files
-#include "gc_cout.h"
-#include "gc_header.h"
-#include "gc_v4.h"
-#include "remembered_set.h"
-#include "block_store.h"
-#include "object_list.h"
-#include "work_packet_manager.h"
-#include "garbage_collector.h"
-#include "gcv4_synch.h"
+#include "tgc/gc_cout.h"
+#include "tgc/gc_header.h"
+#include "tgc/gc_v4.h"
+#include "tgc/remembered_set.h"
+#include "tgc/block_store.h"
+#include "tgc/object_list.h"
+#include "tgc/work_packet_manager.h"
+#include "tgc/garbage_collector.h"
+#include "tgc/gcv4_synch.h"
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-Object_List::Object_List() 
+Object_List::Object_List()
 {
     _size_in_entries = DEFAULT_OBJECT_SIZE_IN_ENTRIES;
 
-    _store = (Partial_Reveal_Object **)malloc(_size_in_entries * 
+    _store = (Partial_Reveal_Object **)malloc(_size_in_entries *
                                           sizeof(Partial_Reveal_Object *));
 
     if (_store==NULL) {
@@ -53,14 +53,14 @@ Object_List::add_entry(Partial_Reveal_Object *p_obj)
     return (_resident_count - 1);
 }
 
-bool 
+bool
 Object_List::exists(Partial_Reveal_Object *p_obj)
 {
 	for (unsigned int i = 0; i < _resident_count; i++) {
 		if (_store[i] == p_obj) {
 			return true;
-		} 
-	} 
+		}
+	}
 	return false;
 }
 
@@ -75,7 +75,7 @@ Object_List::_extend()
     //
     _size_in_entries = _size_in_entries * 2;
 
-    _store = (Partial_Reveal_Object **)malloc(_size_in_entries * 
+    _store = (Partial_Reveal_Object **)malloc(_size_in_entries *
                                           sizeof (Partial_Reveal_Object *));
 
     if (_store==NULL) {
@@ -84,8 +84,8 @@ Object_List::_extend()
         orp_exit(17024);
     }
 
-    memcpy((void *)_store, 
-           (void *)old_store, 
+    memcpy((void *)_store,
+           (void *)old_store,
            _resident_count * sizeof(Partial_Reveal_Object *));
 
 	free(old_store);
@@ -101,7 +101,7 @@ Object_List::next()
     return _store[_current_pointer++];
 }
 
-void 
+void
 Object_List::debug_dump_list()
 {
     printf ("Dump of object list:\n");
@@ -132,15 +132,15 @@ Object_List::size()
 
 // end Object_List.cpp
 
-// Start Root list which is similar to object list but hold pointers to 
+// Start Root list which is similar to object list but hold pointers to
 // slots not in the heap that hold references to objects in the heap.
 //
 
-Root_List::Root_List() 
+Root_List::Root_List()
 {
     _size_in_entries = DEFAULT_OBJECT_SIZE_IN_ENTRIES;
 
-    _store = (Partial_Reveal_Object ***)malloc(_size_in_entries * 
+    _store = (Partial_Reveal_Object ***)malloc(_size_in_entries *
                                           sizeof(Partial_Reveal_Object **));
 #ifdef GC_ROOT_PINNING
 	// Allocate _is_root_pinned[] when root _store is allocated too.
@@ -199,8 +199,8 @@ Root_List::_extend()
         assert(0);
         orp_exit(17026);
     }
-    memcpy((void *)_is_root_pinned, 
-           (void *)old_is_root_pinned, 
+    memcpy((void *)_is_root_pinned,
+           (void *)old_is_root_pinned,
            _resident_count * sizeof(bool *));
 	free(old_is_root_pinned);
 #endif // GC_ROOT_PINNING
@@ -211,10 +211,10 @@ Root_List::_extend()
     // Present policy: double it.
     //
     _size_in_entries = _size_in_entries * 2;
-  
+
 //    orp_cout << "Extending root list to " << _size_in_entries << std::endl;
 
-    _store = (Partial_Reveal_Object ***)malloc(_size_in_entries * 
+    _store = (Partial_Reveal_Object ***)malloc(_size_in_entries *
                                           sizeof (Partial_Reveal_Object *));
 
     if (_store==NULL) {
@@ -223,8 +223,8 @@ Root_List::_extend()
         orp_exit(17027);
     }
 
-    memcpy((void *)_store, 
-           (void *)old_store, 
+    memcpy((void *)_store,
+           (void *)old_store,
            _resident_count * sizeof(Partial_Reveal_Object *));
 
 	free(old_store);
@@ -255,7 +255,7 @@ Root_List::pp_next()
     return _store[_current_pointer++];
 }
 
-void 
+void
 Root_List::debug_dump_list()
 {
     printf ("Dump of object list: ");
@@ -292,11 +292,11 @@ Root_List::size()
 
 
 
-VTable_List::VTable_List() 
+VTable_List::VTable_List()
 {
     _size_in_entries = DEFAULT_OBJECT_SIZE_IN_ENTRIES;
 
-    _store = (Partial_Reveal_VTable **)malloc(_size_in_entries * 
+    _store = (Partial_Reveal_VTable **)malloc(_size_in_entries *
                                           sizeof(Partial_Reveal_VTable *));
 
     memset (_store, 0, _size_in_entries * sizeof(Partial_Reveal_VTable *));
@@ -326,14 +326,14 @@ VTable_List::add_entry(Partial_Reveal_VTable *p_obj)
     return (_resident_count - 1);
 }
 
-bool 
+bool
 VTable_List::exists(Partial_Reveal_VTable *p_obj)
 {
 	for (unsigned int i = 0; i < _resident_count; i++) {
 		if (_store[i] == p_obj) {
 			return true;
-		} 
-	} 
+		}
+	}
 	return false;
 }
 
@@ -349,9 +349,9 @@ VTable_List::_extend()
     //
     _size_in_entries = _size_in_entries * 2;
 
-    _store = (Partial_Reveal_VTable **)malloc(_size_in_entries * 
+    _store = (Partial_Reveal_VTable **)malloc(_size_in_entries *
                                           sizeof (Partial_Reveal_VTable *));
-    
+
     if (_store==NULL) {
         printf ("Error: malloc failed while creating object list.\n");
         assert(0);
@@ -359,8 +359,8 @@ VTable_List::_extend()
     }
 
     memset (_store, 0, _size_in_entries * sizeof(Partial_Reveal_VTable *));
-    memcpy((void *)_store, 
-           (void *)old_store, 
+    memcpy((void *)_store,
+           (void *)old_store,
            _resident_count * sizeof(Partial_Reveal_VTable *));
 
 	free(old_store);
@@ -376,7 +376,7 @@ VTable_List::next()
     return _store[_current_pointer++];
 }
 
-void 
+void
 VTable_List::debug_dump_list()
 {
     printf ("Dump of object list:\n");

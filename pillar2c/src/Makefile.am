@@ -1,5 +1,5 @@
-INCLUDES = -I.. -I../include
-PRT_FLAGS = -fno-reorder-functions -I../../prt/include
+INCLUDES = -I../../include
+PRT_FLAGS = -fno-reorder-functions
 EXTRA_OBJS = pillar2c_crt_begin.o pillar2c_crt_end.o pillar2c.asm.o
 
 AM_CFLAGS = $(INCLUDES)
@@ -7,6 +7,9 @@ AM_CXXFLAGS = $(INCLUDES)
 AM_YFLAGS = -d
 
 bin_PROGRAMS = pillar2c
+sharedir = $(datadir)/pillar2c
+share_DATA = pcdecl.txt
+EXTRA_DIST = $(share_DATA)
 pillar2c_SOURCES = pillar2c_yacc.yy pillar2c.main.cpp
 pillar2c_DEPENDENCIES = $(EXTRA_OBJS)
 

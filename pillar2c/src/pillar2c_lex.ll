@@ -18,8 +18,8 @@ ULLIS                   ((ui64|i64))
  */
 
 #include <stdio.h>
-#include "pillar2c.ast_c.h"
-#include "pillar2c.tab.hh"
+#include "pillar2c/pillar2c.ast_c.h"
+#include "pillar2c/pillar2c.tab.hh"
 #include <ctype.h>
 
 #ifdef __cplusplus

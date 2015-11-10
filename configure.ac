@@ -4,7 +4,18 @@
 AC_PREREQ([2.60])
 AC_INIT([iflc-lib], [0.1], [BUG-REPORT-ADDRESS])
 AM_INIT_AUTOMAKE([0.1 foreign])
+AC_CONFIG_SRCDIR([include/tgc/block_store.h])
+AC_CONFIG_SRCDIR([include/toolkit/ptkfuture_common.c])
 AC_CONFIG_SRCDIR([pillar2c/src/pillar2c_crt_begin.c])
+AC_CONFIG_SRCDIR([pgc/src/pgc.cpp])
+AC_CONFIG_SRCDIR([prt/src/prttls.cpp])
+
+AH_TOP([#ifndef IFLC_LIB_CONFIG_H])
+AH_TOP([#define IFLC_LIB_CONFIG_H])
+AH_BOTTOM([#endif // IFLC_LIB_CONFIG_H])
+
+AC_CONFIG_SRCDIR([include/iflclibconfig.h.in])
+AC_CONFIG_HEADERS([include/iflclibconfig.h])
 
 # Checks for programs.
 AC_PROG_YACC
@@ -20,24 +31,30 @@ AC_CHECK_LIB([dl], [main])
 AC_CHECK_LIB([pthread], [main])
 
 # Checks for header files.
-AC_FUNC_ALLOCA
-AC_CHECK_HEADERS([inttypes.h libintl.h limits.h malloc.h stddef.h stdint.h stdlib.h string.h unistd.h])
+AC_CHECK_HEADERS([fcntl.h inttypes.h libintl.h limits.h malloc.h memory.h pthread.h stddef.h stdint.h stdlib.h string.h sys/time.h unistd.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_HEADER_STDBOOL
 AC_C_INLINE
+AC_TYPE_INT64_T
+AC_TYPE_INT32_T
 AC_TYPE_INT16_T
 AC_TYPE_INT32_T
 AC_TYPE_INT8_T
+AC_TYPE_INTPTR_T
 AC_TYPE_SIZE_T
 AC_TYPE_UINT16_T
 AC_TYPE_UINT32_T
+AC_TYPE_UINT64_T
 AC_TYPE_UINT8_T
+AC_TYPE_UINTPTR_T
+AC_CHECK_TYPES([ptrdiff_t])
 
 # Checks for library functions.
+AC_FUNC_ALLOCA
 AC_FUNC_MALLOC
 AC_FUNC_REALLOC
-AC_CHECK_FUNCS([atexit memset strdup])
+AC_CHECK_FUNCS([atexit getcwd getpagesize gettimeofday memmove memset strchr strdup])
 
 # Check for NASM
 AC_PATH_PROG(NASM, nasm, no)
@@ -67,6 +84,6 @@ esac
 AM_CONDITIONAL([OS_WIN32], [test "x$os" = "xwin32"])
 AM_CONDITIONAL([OS_LINUX], [test "x$os" = "xlinux"])
 
-AC_CONFIG_FILES([Makefile pgc/Makefile pgc/src/Makefile tgc/Makefile tgc/src/Makefile prt/Makefile prt/src/Makefile pillar2c/Makefile pillar2c/src/Makefile toolkit/Makefile toolkit/future/Makefile])
-AC_CONFIG_SUBDIRS([prt pgc tgc pillar2c toolkit])
+AC_CONFIG_FILES([Makefile include/Makefile pgc/Makefile pgc/src/Makefile tgc/Makefile tgc/src/Makefile prt/Makefile prt/src/Makefile pillar2c/Makefile pillar2c/src/Makefile toolkit/Makefile toolkit/future/Makefile])
+# AC_CONFIG_SUBDIRS([prt pgc tgc pillar2c toolkit])
 AC_OUTPUT

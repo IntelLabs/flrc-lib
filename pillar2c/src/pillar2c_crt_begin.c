@@ -14,7 +14,7 @@
 #include <assert.h>
 #include <stdarg.h>
 #include <stdint.h>
-#include <prtcodegenerator.h>
+#include "prt/prtcodegenerator.h"
 
 EXTERN_C void __prt_code_start(void);
 EXTERN_C void __prt_code_end(void);

@@ -2,7 +2,7 @@
  * COPYRIGHT_NOTICE_1
  */
 
-#include "pgc.h"
+#include "pgc/pgc.h"
 #include <stddef.h>
 
 unsigned g_tls_offset_bytes = 0;
@@ -22,7 +22,7 @@ void STDCALL_FUNC_OUT (STDCALL_FUNC_IN *gc_heap_slot_write_barrier_indirect_prt)
             Managed_Object_Handle *p_slot,
             Managed_Object_Handle value,
 #ifndef NO_P2C_TH
-            PrtTaskHandle taskHandle, 
+            PrtTaskHandle taskHandle,
 #endif  // NO_P2C_TH
             void *prev_frame);
 void STDCALL_FUNC_OUT (STDCALL_FUNC_IN *gc_heap_slot_write_interior_indirect_prt)(
@@ -30,7 +30,7 @@ void STDCALL_FUNC_OUT (STDCALL_FUNC_IN *gc_heap_slot_write_interior_indirect_prt
             Managed_Object_Handle value,
 			unsigned offset,
 #ifndef NO_P2C_TH
-            PrtTaskHandle taskHandle, 
+            PrtTaskHandle taskHandle,
 #endif  // NO_P2C_TH
             void *prev_frame);
 
@@ -51,7 +51,7 @@ Managed_Object_Handle STDCALL_FUNC_OUT (STDCALL_FUNC_IN *gc_cas_write_barrier_in
             Managed_Object_Handle value,
             Managed_Object_Handle cmp,
 #ifndef NO_P2C_TH
-            PrtTaskHandle taskHandle, 
+            PrtTaskHandle taskHandle,
 #endif  // NO_P2C_TH
             void *prev_frame);
 Managed_Object_Handle STDCALL_FUNC_OUT (STDCALL_FUNC_IN *gc_cas_write_interior_indirect_prt)(
@@ -60,7 +60,7 @@ Managed_Object_Handle STDCALL_FUNC_OUT (STDCALL_FUNC_IN *gc_cas_write_interior_i
 			unsigned offset,
             Managed_Object_Handle cmp,
 #ifndef NO_P2C_TH
-            PrtTaskHandle taskHandle, 
+            PrtTaskHandle taskHandle,
 #endif  // NO_P2C_TH
             void *prev_frame);
 

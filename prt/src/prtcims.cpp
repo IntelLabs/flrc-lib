@@ -6,13 +6,13 @@
 //
 // This file implements the built-in code info managers.
 
-#include "prtcodegenerator.h"
+#include "prt/prtcodegenerator.h"
 
-#include "prtvse.h"
-#include "prtcims.h"
-#include "prtcodeinfo.h"
-#include "prttls.h"
-#include "prtglobals.h"
+#include "prt/prtvse.h"
+#include "prt/prtcims.h"
+#include "prt/prtcodeinfo.h"
+#include "prt/prttls.h"
+#include "prt/prtglobals.h"
 
 PrtVseType PRT_VSE_M2U               = (PrtVseType) &prt_InvokeUnmanagedFuncDestructor;
 PrtVseType PRT_VSE_PCALL             = (PrtVseType) &prt_PcallDestructor;

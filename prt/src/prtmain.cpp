@@ -11,18 +11,18 @@
 
 #include <assert.h>
 
-#include "prtcodegenerator.h"
+#include "prt/prtcodegenerator.h"
 
-#include "prtvse.h"
-#include "prttls.h"
-#include "prtcims.h"
-#include "prtcodeinfo.h"
-#include "prtglobals.h"
-#include "prtmisc.h"
-#include "prtconcurrency.h"
+#include "prt/prtvse.h"
+#include "prt/prttls.h"
+#include "prt/prtcims.h"
+#include "prt/prtcodeinfo.h"
+#include "prt/prtglobals.h"
+#include "prt/prtmisc.h"
+#include "prt/prtconcurrency.h"
 
 #ifdef _WINDOWS
-#include "VtuneApi.h"
+#include <VtuneApi.h>
 #endif // _WINDOWS
 #ifdef _WIN32
 #include <windows.h>
@@ -40,7 +40,7 @@
 // #define BTL_DEBUGGING 1
 
 // BTL 20071203 Uncomment to enable malloc heap debugging
-#if 0 
+#if 0
 #if defined(BTL_DEBUGGING) && defined(_DEBUG)
 // BTL 20071130 Used to enable malloc heap checking. You must use the debug version of the CRT.
 #include <crtdbg.h>
@@ -180,7 +180,7 @@ PILLAR_EXPORT void prtInit(void)
 {
     if(!prt_Globals) {
 // BTL 20071203 Uncomment to enable malloc heap debugging
-#if 0 
+#if 0
 #if defined(BTL_DEBUGGING) && defined(_DEBUG)
         // BTL 20071130 Turn on malloc heap checking on every allocation. You must use the debug version of the CRT.
         int tmpDbgFlag;
@@ -331,21 +331,21 @@ PILLAR_EXPORT void prtExit(int status)
 } //prtExit
 
 
-// To avoid making Pillar programs depend on having VTuneAPI.DLL on the local system, we get pointers to the 
-// VTune API functions dynamically. If you link against a .dll, then on each machine you run the program, 
-// you either have to specify its location in the PATH environment variable, or you have to put the .dll 
+// To avoid making Pillar programs depend on having VTuneAPI.DLL on the local system, we get pointers to the
+// VTune API functions dynamically. If you link against a .dll, then on each machine you run the program,
+// you either have to specify its location in the PATH environment variable, or you have to put the .dll
 // in one of a few standard directories such as the current directory or the program's directory.
-static void CDECL_FUNC_OUT (CDECL_FUNC_IN *prt_vtResume)(void) = NULL; 
-static void CDECL_FUNC_OUT (CDECL_FUNC_IN *prt_vtPause) (void) = NULL; 
+static void CDECL_FUNC_OUT (CDECL_FUNC_IN *prt_vtResume)(void) = NULL;
+static void CDECL_FUNC_OUT (CDECL_FUNC_IN *prt_vtPause) (void) = NULL;
 
 
-static void initVTuneFunctions() 
+static void initVTuneFunctions()
 {
 #ifdef _WINDOWS
     HINSTANCE prt_vtuneDll = LoadLibrary("vtuneapi.dll");
     if (prt_vtuneDll != NULL) {
-        prt_vtResume = (void (__cdecl *)())GetProcAddress(prt_vtuneDll, "VTResume"); 
-        prt_vtPause  = (void (__cdecl *)())GetProcAddress(prt_vtuneDll, "VTPause"); 
+        prt_vtResume = (void (__cdecl *)())GetProcAddress(prt_vtuneDll, "VTResume");
+        prt_vtPause  = (void (__cdecl *)())GetProcAddress(prt_vtuneDll, "VTPause");
     }
     prt_vtune_initialized = true;
 #endif
@@ -401,7 +401,7 @@ PILLAR_EXPORT PRT_CALL_FROM_ANYWHERE void PRT_CDECL prtLogEvent(PRT_IN void *cli
         QueryPerformanceCounter(&currTime);
         double elapsedTicks = (double)(currTime.QuadPart - perfEventsStartTime.QuadPart);
         float elapsedTimeInMilliseconds = (float)((elapsedTicks/(double)perfCtrFrequency.QuadPart) * 1000.0);
-        fprintf(perfEventsLogFile, "%.3f,%p,%p,%s,%s\n", 
+        fprintf(perfEventsLogFile, "%.3f,%p,%p,%s,%s\n",
                 elapsedTimeInMilliseconds, prtGetTaskHandle(),
                 clientData, transition, state);
         fflush(perfEventsLogFile);
@@ -438,4 +438,3 @@ GetSystemInfo(&info);
     assert(0);
 #endif
 }
-

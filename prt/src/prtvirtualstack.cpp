@@ -4,12 +4,12 @@
 
 // $Header: /nfs/sc/proj/ctg/psl002/CVS/pillar_pthread/src/base/prtvirtualstack.cpp,v 1.2 2011/03/09 19:09:53 taanders Exp $
 
-#include "prtcodegenerator.h"
+#include "prt/prtcodegenerator.h"
 
-#include "prtvse.h"
-#include "prttls.h"
-#include "prtcodeinfo.h"
-#include "prtglobals.h"
+#include "prt/prtvse.h"
+#include "prt/prttls.h"
+#include "prt/prtcodeinfo.h"
+#include "prt/prtglobals.h"
 
 PILLAR_EXPORT PrtVseHandle prtGetVsh(void)
 {

@@ -2,7 +2,7 @@
  * COPYRIGHT_NOTICE_1
  */
 
-#include "pgcconfig.h"
+#include "iflclibconfig.h"
 
 #ifndef __GNUC__
 #include <windows.h>
@@ -10,18 +10,18 @@
 #include <stdio.h>
 #include <assert.h>
 
-#include "pgc.h"
+#include "pgc/pgc.h"
 #include <stdlib.h>
 
 #ifdef HAVE_PTHREAD_H
-#include "pthread.h"
+#include <pthread.h>
 #else // HAVE_PTHREAD_H
-#include "mcrt.h"
+#include <mcrt.h>
 #endif // HAVE_PTHREAD_H
-#include "prtcodegenerator.h"
+#include "prt/prtcodegenerator.h"
 
 #ifdef WIN32
-#include "Imagehlp.h"
+#include <Imagehlp.h>
 #endif // WIN32
 
 #include <list>

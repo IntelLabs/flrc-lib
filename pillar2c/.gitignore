@@ -1,9 +1,6 @@
 # /
 ylwrap
 
-# /include
-/include/pillar2cconfig.h
-
 # /src
 /src/pillar2c
 /src/pillar2c_lex.cc

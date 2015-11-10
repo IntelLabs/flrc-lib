@@ -6,19 +6,19 @@
 #include <iostream>
 
 // GC header files
-#include "gc_cout.h"
-#include "gc_header.h"
-#include "gc_v4.h"
-#include "remembered_set.h"
-#include "block_store.h"
-#include "object_list.h"
-#include "work_packet_manager.h"
-#include "garbage_collector.h"
-#include "gc_plan.h"
-#include "gc_globals.h"
-#include "gc_thread.h"
-#include "descendents.h"
-#include "gcv4_synch.h"
+#include "tgc/gc_cout.h"
+#include "tgc/gc_header.h"
+#include "tgc/gc_v4.h"
+#include "tgc/remembered_set.h"
+#include "tgc/block_store.h"
+#include "tgc/object_list.h"
+#include "tgc/work_packet_manager.h"
+#include "tgc/garbage_collector.h"
+#include "tgc/gc_plan.h"
+#include "tgc/gc_globals.h"
+#include "tgc/gc_thread.h"
+#include "tgc/descendents.h"
+#include "tgc/gcv4_synch.h"
 
 const int MAX_OBJECTS = 1024 * 1024 * 8;
 #define JAVA_OBJECT_OVERHEAD (Partial_Reveal_Object::object_overhead_bytes())
@@ -88,7 +88,7 @@ void add_repointed_info_for_thread(Partial_Reveal_Object *p_old, Partial_Reveal_
 	if (curr_index_for_thread >= MAX_OBJECTS) {
 		printf("add_repointed_info_for_thread() -- OVERFLOW of all_moved_lives_during_gc\n");
 		orp_exit(17047);
-	} 
+	}
 	all_moved_lives_during_gc[thread_id][curr_index_for_thread].p_obj = p_old;
 	all_moved_lives_during_gc[thread_id][curr_index_for_thread].p_obj_moved = p_new;
 	cursors[thread_id]++;
@@ -132,7 +132,7 @@ void take_snapshot_of_lives_before_gc(unsigned int num_lives, Object_List *all_l
 			// stricly sorted and no duplicates...
 			assert((POINTER_SIZE_INT) all_lives_before_gc[j-1].p_obj < (POINTER_SIZE_INT) all_lives_before_gc[j].p_obj);
 			assert(all_lives_before_gc[j].p_obj_copied->vt() == all_lives_before_gc[j].p_obj->vt());
-		} 
+		}
 	}
 
 	printf("total_bytes_allocated_by_verifier_to_replicate_live_heap = %d\n", total_bytes_allocated_by_verifier_to_replicate_live_heap);
@@ -155,12 +155,12 @@ void insert_moved_reference(Partial_Reveal_Object *p_old, Partial_Reveal_Object 
 			// DONE
 			done = true;
 			break;
-		} else if ((POINTER_SIZE_INT) all_lives_before_gc[mid].p_obj <  (POINTER_SIZE_INT) p_old) { 
+		} else if ((POINTER_SIZE_INT) all_lives_before_gc[mid].p_obj <  (POINTER_SIZE_INT) p_old) {
 			low = mid + 1;
 		} else {
 			high = mid - 1;
 		}
-	} 
+	}
 	if (!done) {
 		assert((low > high) || ((low == high) && (all_lives_before_gc[low].p_obj != p_old)));
 		printf("insert_moved_reference() -- CANT FIND LIVE OBJECT %p \n", p_old);
@@ -188,12 +188,12 @@ Partial_Reveal_Object * find_saved_away_copy_of_live_before_GC_started(Partial_R
 			assert(all_lives_before_gc[mid].p_obj_copied != NULL);
 			// DONE
 			return all_lives_before_gc[mid].p_obj_copied;
-		} else if ((POINTER_SIZE_INT) all_lives_before_gc[mid].p_obj <  (POINTER_SIZE_INT) p_old) { 
+		} else if ((POINTER_SIZE_INT) all_lives_before_gc[mid].p_obj <  (POINTER_SIZE_INT) p_old) {
 			low = mid + 1;
 		} else {
 			high = mid - 1;
 		}
-	} 
+	}
 
 	assert((low > high) || ((low == high) && (all_lives_before_gc[low].p_obj != p_old)));
 	printf("find_saved_away_copy_of_live_before_GC_started() -- CANT FIND LIVE OBJECT %p \n", p_old);
@@ -214,14 +214,14 @@ void verify_live_object_was_not_corrupted_by_gc(Partial_Reveal_Object *p_obj_bef
 
 	// VTable needs to be the same before and after GC, otherwise this is a corruption problem
 	assert(p_obj_before_gc->vt() == p_obj_after_gc->vt());
-	
+
 	// Now verify the rest of the bytes....
 	struct Partial_Reveal_VTable *obj_vt = p_obj_before_gc->vt();
 	unsigned int obj_sz = get_object_size_bytes(p_obj_before_gc);
 	assert(obj_sz == get_object_size_bytes(p_obj_after_gc));
 
 	if (obj_vt->get_gcvt()->gc_object_has_slots) {
-		
+
 		// Either an array of references....or an object with reference slots...
 		assert(!is_array_of_primitives(p_obj_before_gc));
 
@@ -231,20 +231,20 @@ void verify_live_object_was_not_corrupted_by_gc(Partial_Reveal_Object *p_obj_bef
 			// Make sure that array lengths match up...
 			int32 array_length = vector_get_length_with_vt((Vector_Handle)p_obj_before_gc,p_obj_before_gc->vt());
 			assert(array_length == vector_get_length_with_vt((Vector_Handle)p_obj_after_gc,p_obj_before_gc->vt()));
-			
+
             for (int32 i= array_length - 1; i >= 0; i--) {
                 Slot p_old_slot(vector_get_element_address_ref_with_vt((Vector_Handle)p_obj_before_gc, i, p_obj_before_gc->vt()), false);
                 Slot p_new_slot(vector_get_element_address_ref_with_vt((Vector_Handle)p_obj_after_gc , i, p_obj_after_gc->vt()));
-                if (p_old_slot.is_null()) { 
+                if (p_old_slot.is_null()) {
                     assert(p_new_slot.is_null()) ;
                     continue;
-                } 
-                // Non-NULL slot before GC 
+                }
+                // Non-NULL slot before GC
                 if (p_old_slot.dereference() == p_new_slot.dereference()) {
-                    // Slot was not updated or updated to the same value...it may have pointed to an object 
+                    // Slot was not updated or updated to the same value...it may have pointed to an object
                     // in a non-moving part of the heap or was in the moving part but did not move..
                     continue;
-                } 
+                }
                 assert(p_global_gc->is_compaction_block(GC_BLOCK_INFO(p_new_slot.dereference())));
                 // The types of the objects pointed to before and after GC from this slot need to be the same...
                 Partial_Reveal_Object *p_saved_copy = find_saved_away_copy_of_live_before_GC_started(p_old_slot.dereference());
@@ -267,7 +267,7 @@ void verify_live_object_was_not_corrupted_by_gc(Partial_Reveal_Object *p_obj_bef
 				Slot p_old_slot(p_get_ref(old_obj_offset_scanner, p_obj_before_gc), false);
 				Slot p_new_slot(p_get_ref(new_obj_offset_scanner, p_obj_after_gc));
 
-				if (p_old_slot.get_value() == NULL) { 
+				if (p_old_slot.get_value() == NULL) {
 					// Went past the last reference slot in this object...
 					assert(p_new_slot.get_value() == NULL);
 					break;
@@ -278,18 +278,18 @@ void verify_live_object_was_not_corrupted_by_gc(Partial_Reveal_Object *p_obj_bef
 					assert(*p_byte_old == *p_byte_new);
 					p_byte_old++;
 					p_byte_new++;
-				} 
+				}
 				assert(p_byte_new == (uint8*) p_new_slot.get_value());
-				
+
 				// Now check the reference slots for integrity
-				// Non-NULL slot before GC 
+				// Non-NULL slot before GC
 				if (p_old_slot.dereference() != p_new_slot.dereference()) {
 					assert(p_global_gc->is_compaction_block(GC_BLOCK_INFO(p_new_slot.dereference())));
 					// The types of the objects pointed to before and after GC from this slot need to be the same...
 					Partial_Reveal_Object *p_saved_copy = find_saved_away_copy_of_live_before_GC_started(p_old_slot.dereference());
 					assert(p_saved_copy->vt() == p_new_slot.dereference()->vt());
 				} else {
-					// Slot was not updated or updated to the same value...it may have pointed to an object 
+					// Slot was not updated or updated to the same value...it may have pointed to an object
 					// in a non-moving part of the heap or was in the moving part but did not move..
 				}
 				// Move the scanners to the next reference slot
@@ -309,9 +309,9 @@ void verify_live_object_was_not_corrupted_by_gc(Partial_Reveal_Object *p_obj_bef
 				assert(*p_byte_old == *p_byte_new);
 				p_byte_old++;
 				p_byte_new++;
-			} 
+			}
 			assert(p_byte_new == (uint8 *) ((POINTER_SIZE_INT)p_obj_after_gc + obj_sz));
-		} 
+		}
 
 	} else {
 		// This is either an array of primitives or an object with no reference slots...
@@ -321,7 +321,7 @@ void verify_live_object_was_not_corrupted_by_gc(Partial_Reveal_Object *p_obj_bef
 			// Need simple byte compare of rest of the bytes...regardless of what this is....
 			if (memcmp(	(void *)((POINTER_SIZE_INT)p_obj_before_gc + JAVA_OBJECT_OVERHEAD),
 						(void *)((POINTER_SIZE_INT)p_obj_after_gc  + JAVA_OBJECT_OVERHEAD),
-						obj_sz - JAVA_OBJECT_OVERHEAD	
+						obj_sz - JAVA_OBJECT_OVERHEAD
 						) != 0) {
 				// BAD
 				assert(0);
@@ -346,7 +346,7 @@ void verify_live_heap_before_and_after_gc(unsigned int num_lives_after_gc, Objec
 		for (unsigned int k = 0; k < cursors[j]; k++) {
 			insert_moved_reference(all_moved_lives_during_gc[j][k].p_obj, all_moved_lives_during_gc[j][k].p_obj_moved);
 			assert(all_moved_lives_during_gc[j][k].p_obj_copied == NULL);
-		} 
+		}
 	}
 
 	// Lets move the "all_lives_after_gc" from a Object_List to a HashTable so that has a faster "exists" implementation
@@ -354,7 +354,7 @@ void verify_live_heap_before_and_after_gc(unsigned int num_lives_after_gc, Objec
 	all_lives_after_gc->rewind();
 	Partial_Reveal_Object *p_obj = NULL;
 	Hash_Table *all_lives_after_gc_ht = new Hash_Table();
-	
+
 	while ((p_obj = all_lives_after_gc->next()) != NULL) {
 		// It is not already present...
 		assert(all_lives_after_gc_ht->is_not_present(p_obj));
@@ -385,7 +385,7 @@ void verify_live_heap_before_and_after_gc(unsigned int num_lives_after_gc, Objec
 
 	// Free the hash table that we just constructed...
 	delete all_lives_after_gc_ht;
-	
+
 	// We need to free up the live heap that was malloced befored we leave...
 	for (unsigned int x = 0; x < num_lives_before_gc; x++) {
 		// some object exists here....and it was copied properly before GC
@@ -393,6 +393,6 @@ void verify_live_heap_before_and_after_gc(unsigned int num_lives_after_gc, Objec
 		assert(all_lives_before_gc[x].p_obj_copied);
 		free(all_lives_before_gc[x].p_obj_copied);
 	}
-	
+
 	printf("LIVE HEAP VERIFICATION COMPLETED WITH NO ERRORS FOUND!!\n");
 }

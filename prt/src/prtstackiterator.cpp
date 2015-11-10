@@ -11,13 +11,13 @@
 
 #include <string.h>
 
-#include "prtcodegenerator.h"
+#include "prt/prtcodegenerator.h"
 
-#include "prtvse.h"
-#include "prtcims.h"
-#include "prttls.h"
-#include "prtcodeinfo.h"
-#include "prtglobals.h"
+#include "prt/prtvse.h"
+#include "prt/prtcims.h"
+#include "prt/prttls.h"
+#include "prt/prtcodeinfo.h"
+#include "prt/prtglobals.h"
 #ifdef __GNUC__
 #include <ext/hash_map>
 #define HASH_MAP_NAMESPACE __gnu_cxx

@@ -9,11 +9,11 @@
 #include <time.h>
 
 // GC header files
-#include "gc_cout.h"
-#include "gc_header.h"
-#include "gc_v4.h"
-#include "work_packet_manager.h"
-#include "gcv4_synch.h"
+#include "tgc/gc_cout.h"
+#include "tgc/gc_header.h"
+#include "tgc/gc_v4.h"
+#include "tgc/work_packet_manager.h"
+#include "tgc/gcv4_synch.h"
 
 #ifdef ORP_POSIX
 #define InterlockedIncrement(x) (assert(0))
@@ -88,7 +88,7 @@ Work_Packet_Manager::get_full_work_packet()
 		POINTER_SIZE_INT old_val = (POINTER_SIZE_INT)_full_work_packets;
 		if (old_val) {
 			POINTER_SIZE_INT wp_next = (POINTER_SIZE_INT) ((Work_Packet *)old_val)->get_next();
-			POINTER_SIZE_INT val = 
+			POINTER_SIZE_INT val =
 				LockedCompareExchangePOINTER_SIZE_INT((POINTER_SIZE_INT *)&_full_work_packets,
 														wp_next,
 														old_val
@@ -141,7 +141,7 @@ Work_Packet_Manager::get_almost_full_work_packet()
 		POINTER_SIZE_INT old_val = (POINTER_SIZE_INT)_almost_full_work_packets;
 		if (old_val) {
 			POINTER_SIZE_INT wp_next = (POINTER_SIZE_INT) ((Work_Packet *)old_val)->get_next();
-			POINTER_SIZE_INT val = 
+			POINTER_SIZE_INT val =
 				LockedCompareExchangePOINTER_SIZE_INT((POINTER_SIZE_INT *)&_almost_full_work_packets,
 														wp_next,
 														old_val
@@ -205,7 +205,7 @@ Work_Packet_Manager::get_empty_work_packet(bool dont_fail_me)
 		POINTER_SIZE_INT old_val = (POINTER_SIZE_INT)_empty_work_packets;
 		if (old_val) {
 			POINTER_SIZE_INT wp_next = (POINTER_SIZE_INT) ((Work_Packet *)old_val)->get_next();
-			POINTER_SIZE_INT val = 
+			POINTER_SIZE_INT val =
 				LockedCompareExchangePOINTER_SIZE_INT((POINTER_SIZE_INT *)&_empty_work_packets,
 														wp_next,
 														old_val
@@ -265,7 +265,7 @@ Work_Packet_Manager::get_almost_empty_work_packet()
 		POINTER_SIZE_INT old_val = (POINTER_SIZE_INT)_almost_empty_work_packets;
 		if (old_val) {
 			POINTER_SIZE_INT wp_next = (POINTER_SIZE_INT) ((Work_Packet *)old_val)->get_next();
-			POINTER_SIZE_INT val = 
+			POINTER_SIZE_INT val =
 				LockedCompareExchangePOINTER_SIZE_INT((POINTER_SIZE_INT *)&_almost_empty_work_packets,
 														wp_next,
 														old_val
@@ -282,7 +282,7 @@ Work_Packet_Manager::get_almost_empty_work_packet()
 }
 
 
-void 
+void
 Work_Packet_Manager::return_work_packet(Work_Packet *wp)
 {
 #ifdef USE_ONE_LOCK
@@ -306,7 +306,7 @@ Work_Packet_Manager::return_work_packet(Work_Packet *wp)
 		printf("Work packet returned was still connected to some list...\n");
 		orp_exit(17048);
 	}
-	
+
 	Work_Packet **ptr = NULL;
 
 	if (wp->fullness() == packet_full) {
@@ -325,7 +325,7 @@ Work_Packet_Manager::return_work_packet(Work_Packet *wp)
 	}
 
 	assert(ptr);
-	
+
 	Work_Packet *old_val = (Work_Packet *) *ptr;
 	wp->set_next((Work_Packet *)old_val);
 
@@ -338,7 +338,7 @@ Work_Packet_Manager::return_work_packet(Work_Packet *wp)
 		printf("Work packet returned was still connected to some list...\n");
 		orp_exit(17049);
 	}
-	
+
 	volatile Work_Packet **ptr = NULL;
 
 	if (wp->fullness() == packet_full) {
@@ -357,12 +357,12 @@ Work_Packet_Manager::return_work_packet(Work_Packet *wp)
 	}
 
 	assert(ptr);
-	
+
 	while (true) {
 		Work_Packet *old_val = (Work_Packet *) *ptr;
 		wp->set_next((Work_Packet *)old_val);
 
-		POINTER_SIZE_INT val = 
+		POINTER_SIZE_INT val =
 			LockedCompareExchangePOINTER_SIZE_INT(	(POINTER_SIZE_INT *)ptr,
 													(POINTER_SIZE_INT) wp,
 													(POINTER_SIZE_INT) old_val
@@ -406,7 +406,7 @@ Work_Packet_Manager::get_input_work_packet() {
 	}
 	if (wp == NULL) {
 		wp = get_almost_empty_work_packet();
-	} 
+	}
 	if (wp) {
 		// this packet loses its context
 		wp->set_next(NULL);
@@ -416,7 +416,7 @@ Work_Packet_Manager::get_input_work_packet() {
 
 
 
-void 
+void
 Work_Packet_Manager::_dump_state()
 {
 	printf("==========================================================================\n");
@@ -447,7 +447,7 @@ Work_Packet_Manager::wait_till_there_is_work_or_no_work()
 
 	while (true) {
 #ifdef USE_LOCK_PER_QUEUE
-		if (!m_full_queue.is_empty() || 
+		if (!m_full_queue.is_empty() ||
 			!m_almost_full_queue.is_empty() ||
 			!m_almost_empty_queue.is_empty()) {
 			// there is some work to be done....
@@ -458,7 +458,7 @@ Work_Packet_Manager::wait_till_there_is_work_or_no_work()
 			return false;
 		}
 #else // !USE_LOCK_PER_QUEUE
-		if ((_full_work_packets != NULL) || 
+		if ((_full_work_packets != NULL) ||
 			(_almost_empty_work_packets != NULL) ||
 			(_almost_full_work_packets != NULL)) {
 			// there is some work to be done....
@@ -471,14 +471,14 @@ Work_Packet_Manager::wait_till_there_is_work_or_no_work()
 #endif // !USE_LOCK_PER_QUEUE
 
 #if 0
-		if ((_full_work_packets == NULL) && 
+		if ((_full_work_packets == NULL) &&
 			(_almost_empty_work_packets == NULL) &&
 			(_almost_full_work_packets == NULL)) {
 
 			if ((_num_full_work_packets == 0) &&
-				(_num_almost_full_work_packets == 0) && 
+				(_num_almost_full_work_packets == 0) &&
 				(_num_almost_empty_work_packets == 0)) {
-					
+
 					return false;
 			}
 		}
@@ -494,7 +494,7 @@ Work_Packet_Manager::wait_till_there_is_work_or_no_work()
 #endif // ORP_POSIX
 #endif // _IA64_
 
-  
+
 		finish = clock();
 		if (((finish - start) / CLOCKS_PER_SEC) > 5) {
 #ifndef USE_LOCK_PER_QUEUE
@@ -523,27 +523,27 @@ Work_Packet_Manager::wait_till_there_is_work_or_no_work()
 
 
 
-void 
+void
 Work_Packet_Manager::verify_after_gc()
 {
 #ifdef USE_LOCK_PER_QUEUE
-	if (!m_full_queue.is_empty() || !m_almost_full_queue.is_empty() || !m_almost_empty_queue.is_empty() || 
+	if (!m_full_queue.is_empty() || !m_almost_full_queue.is_empty() || !m_almost_empty_queue.is_empty() ||
 		m_empty_queue.get_packet_count_unsafe() != _num_total_work_packets) {
 		// Bad termination of mark/scan phase...
 		printf("BAD values in _mark_scan_pool...unfinished phase...\n");
 		_dump_state();
 		orp_exit(17051);
-	} 
+	}
 #else // !USE_LOCK_PER_QUEUE
-	if (_num_almost_empty_work_packets || _num_full_work_packets || _num_almost_full_work_packets || 
-		_almost_empty_work_packets || _full_work_packets || _almost_full_work_packets || 
+	if (_num_almost_empty_work_packets || _num_full_work_packets || _num_almost_full_work_packets ||
+		_almost_empty_work_packets || _full_work_packets || _almost_full_work_packets ||
 		(_num_almost_empty_work_packets + _num_full_work_packets + _num_almost_full_work_packets + _num_empty_work_packets != _num_total_work_packets)
 		) {
 		// Bad termination of mark/scan phase...
 		printf("BAD values in _mark_scan_pool...unfinished phase...\n");
 		_dump_state();
 		orp_exit(17052);
-	} 
+	}
 	assert(_empty_work_packets);
 	assert(_num_empty_work_packets > 0);
 
@@ -568,8 +568,3 @@ Work_Packet_Manager::verify_after_gc()
 #endif // _DEBUG
 #endif // !USE_LOCK_PER_QUEUE
 }
-
-
-
-
-

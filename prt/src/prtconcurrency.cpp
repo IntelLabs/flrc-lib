@@ -8,16 +8,16 @@
  * Pillar runtime task and synchronization support.
  */
 
-#include "prtcodegenerator.h"
+#include "prt/prtcodegenerator.h"
 
-#include "prtvse.h"
-#include "prtcims.h"
-#include "prttls.h"
-#include "prtcodeinfo.h"
-#include "prtglobals.h"
-#include "prtmisc.h"
-#include "prtconcurrency.h"
-#include "prttypes.h"
+#include "prt/prtvse.h"
+#include "prt/prtcims.h"
+#include "prt/prttls.h"
+#include "prt/prtcodeinfo.h"
+#include "prt/prtglobals.h"
+#include "prt/prtmisc.h"
+#include "prt/prtconcurrency.h"
+#include "prt/prttypes.h"
 
 #include <pthread.h>
 #include <stdlib.h>

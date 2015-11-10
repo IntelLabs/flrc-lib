@@ -3,10 +3,10 @@
  */
 
 #include <assert.h>
-#include <gc_header.h>
-#include "gc_v4.h"
+#include "tgc/gc_header.h"
+#include "tgc/gc_v4.h"
 // to get the locked compare exchange routines.
-#include "mark.h"
+#include "tgc/mark.h"
 //
 // The low level heap access routines. All access to the heap must be done through these routines.
 //
@@ -30,7 +30,7 @@
 //
 #ifdef MANGLEPOINTERS
 // If MANGLEDPOINTERS is not defined the mangleBits and unmangelBits are identity macros that
-// return the arguments passed wihtout modification. 
+// return the arguments passed wihtout modification.
 static int manglerInt = 0x040000000;
 
 HeapObject *mangleBits(HeapObject *mangledObject)
@@ -42,7 +42,7 @@ HeapObject *mangleBits(HeapObject *mangledObject)
         if ( ((int)mangledObject & manglerInt) == manglerInt ) {
             printf ("In mangleBits manglerInt 0x0%x interfers with object address. 0x0%x\n", manglerInt, (uint32)mangledObject);
         }
-    }   
+    }
     return (HeapObject *)((char *)mangledObject + manglerInt);
 }
 
@@ -171,7 +171,7 @@ GCEXPORT(void, heapSetGlobalObject)(volatile uint32 *txnRec, HeapObject **slot, 
 }
 
 
-/* 
+/*
  * References to heap ojbects that are not in the heap or on local threads stacks but are not
  * application visible, end up here. For example object handles used for JNI constructs.
  */
@@ -255,7 +255,7 @@ GCEXPORT(void, heapSetF8Fenced)(HeapObject *object, uint32 offset, f8 value)
 
 /*
  * References to the heap that are not in the heap or on the local threads stack.
- * For example Java statics. 
+ * For example Java statics.
  * We do not need the fenced verison of routines like heapGetInternalObjectFenced
  */
 
@@ -283,7 +283,7 @@ GCEXPORT(Boolean,      heapCASG1)(HeapObject *object, uint32 offset, g1 oldValue
     return success;
 }
 GCEXPORT(Boolean,      heapCASG2)(HeapObject *object, uint32 offset, g2 oldValue, g2 newValue)
-{    
+{
     Boolean success = FALSE;
 
     success = (oldValue == LockedCompareExchangeUint16((uint16 *)((char *)object+offset), newValue, oldValue));

@@ -6,15 +6,15 @@
 #include <iostream>
 
 // GC header files
-#include "gc_cout.h"
-#include "gc_header.h"
-#include "gc_v4.h"
-#include "remembered_set.h"
-#include "block_store.h"
-#include "object_list.h"
-#include "work_packet_manager.h"
-#include "garbage_collector.h"
-#include "gcv4_synch.h"
+#include "tgc/gc_cout.h"
+#include "tgc/gc_header.h"
+#include "tgc/gc_v4.h"
+#include "tgc/remembered_set.h"
+#include "tgc/block_store.h"
+#include "tgc/object_list.h"
+#include "tgc/work_packet_manager.h"
+#include "tgc/garbage_collector.h"
+#include "tgc/gcv4_synch.h"
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -30,7 +30,7 @@ Remembered_Set::p_clone()
     Remembered_Set *p_cloned_rs = new Remembered_Set();
 
     rewind();
-    
+
     Slot pp_obj_ref(NULL);
     while (pp_obj_ref.set(next().get_value()) != NULL) {
         p_cloned_rs->add_entry(pp_obj_ref);
@@ -50,8 +50,8 @@ Remembered_Set::p_clone()
 // tenuring, and updates appropriately.
 //
 void Remembered_Set::reflect_tenuring(Partial_Reveal_Object *p_old,
-                                      Train_Generation  *p_mature_generation) 
-{       
+                                      Train_Generation  *p_mature_generation)
+{
 
     for (int index = 0; index < _size_in_entries; index++) {
 
@@ -80,5 +80,3 @@ void Remembered_Set::reflect_tenuring(Partial_Reveal_Object *p_old,
 
 
 // end file gc\remembered_set.cpp
-
-

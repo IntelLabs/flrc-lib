@@ -1,5 +1,2 @@
-# /include
-/include/pgcconfig.h
-
 # /src
 /src/libpgc.a

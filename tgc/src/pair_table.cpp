@@ -2,9 +2,9 @@
  * COPYRIGHT_NOTICE_1
  */
 
-#include "pair_table.h"
-#include "string.h"
-#include "gc_header.h"
+#include "tgc/pair_table.h"
+#include <string.h>
+#include "tgc/gc_header.h"
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Gray_Ssb::Gray_Ssb()
@@ -29,7 +29,7 @@ Gray_Ssb::~Gray_Ssb()
 }
 
 void Gray_Ssb::add(Partial_Reveal_Object *obj)
-{    
+{
     if (current->free_index == SSB_SIZE) {
         current->next = (gray_ssb *)malloc(sizeof(gray_ssb));
         current->next = current;
@@ -120,7 +120,7 @@ void Pair_Table::add(Partial_Reveal_Object *key, POINTER_SIZE_INT val, int32 val
     this_ssb->buffer[this_ssb->free_index].key = key;
     this_ssb->buffer[this_ssb->free_index].val = val;
     this_ssb->buffer[this_ssb->free_index].val2 = val2;
-    
+
 //    printf ("latency in is %d\n", val2);
     this_ssb->free_index++;
 }
@@ -159,7 +159,7 @@ void Pair_Table::rewind()
 
 /****************************** Triple_Table code *************************/
 // This table has a key and three values.
-  
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Triple_Table::Triple_Table()
 {
@@ -202,7 +202,7 @@ void Triple_Table::add(Partial_Reveal_Object *key, POINTER_SIZE_INT val, int32 v
     this_ssb->buffer[this_ssb->free_index].val = val;
     this_ssb->buffer[this_ssb->free_index].val2 = val2;
     this_ssb->buffer[this_ssb->free_index].val3 = val3;
-    
+
 //    printf ("latency in is %d\n", val2);
     this_ssb->free_index++;
 }
@@ -242,14 +242,14 @@ void Triple_Table::rewind()
 /****************************** Sorted_Table code *************************/
 //
 // This table is populated, sorted and then probed to membership. If an object is added
-// to the table after it has been sorted then an error is reported. Currently the 
+// to the table after it has been sorted then an error is reported. Currently the
 // probe is log N where N is the number of entries.
 //
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 const int SORTED_TABLE_SIZE = 256;
 
-static int 
+static int
 pair_table_intcompare( const void *arg1, const void *arg2 )
 {
     POINTER_SIZE_INT a = *(POINTER_SIZE_INT *)arg1;
@@ -305,7 +305,7 @@ void Sorted_Table::add(void *val)
     if (free_index == sorted_table_size) {
         void *old_sorted_table = sorted_table;
         init_sorted_table (sorted_table_size * 2);
-        memmove(sorted_table, old_sorted_table, free_index * sizeof (void *)); 
+        memmove(sorted_table, old_sorted_table, free_index * sizeof (void *));
         free(old_sorted_table);
     }
     table_sorted = false;
@@ -327,7 +327,7 @@ void Sorted_Table::sort()
         if (i > 0) {
             assert (sorted_table[i] >= sorted_table[i-1]);
         }
-    } 
+    }
     */
 }
 #if 0
@@ -349,12 +349,12 @@ bool Sorted_Table::member (POINTER_SIZE_INT val)
             members_found++;
             // printf ("Found val = %d, mid = %d\n", val, mid);
             return true;
-        } else if ((POINTER_SIZE_INT) sorted_table[mid] < (POINTER_SIZE_INT) val) { 
+        } else if ((POINTER_SIZE_INT) sorted_table[mid] < (POINTER_SIZE_INT) val) {
             low = mid + 1;
         } else {
             high = mid - 1;
         }
-    } 
+    }
     // printf ("Not found val = %d\n", val);
     // couldnt find val ....return false
     return false;

@@ -6,17 +6,17 @@
 #include <iostream>
 
 // GC header files
-#include "gc_cout.h"
-#include "gc_header.h"
-#include "gc_v4.h"
-#include "remembered_set.h"
-#include "block_store.h"
-#include "object_list.h"
-#include "work_packet_manager.h"
-#include "garbage_collector.h"
-#include "descendents.h"
-#include "gcv4_synch.h"
-#include "compressed_references.h"
+#include "tgc/gc_cout.h"
+#include "tgc/gc_header.h"
+#include "tgc/gc_v4.h"
+#include "tgc/remembered_set.h"
+#include "tgc/block_store.h"
+#include "tgc/object_list.h"
+#include "tgc/work_packet_manager.h"
+#include "tgc/garbage_collector.h"
+#include "tgc/descendents.h"
+#include "tgc/gcv4_synch.h"
+#include "tgc/compressed_references.h"
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -34,13 +34,13 @@ static void verify_slot(Slot p_slot) {
     }
     Partial_Reveal_Object *the_obj = p_slot.dereference();
     block_info *target_block_info = GC_BLOCK_INFO(the_obj);
-    
-    // verify the block is in the heap and not on the free list and 
+
+    // verify the block is in the heap and not on the free list and
     // that the target object appears valid.
     assert (the_obj->vt());
     // The class is in the pinned single block large object space
 
-    if (!((target_block_info->in_los_p) 
+    if (!((target_block_info->in_los_p)
 //        || (target_block_info->in_sos_p)
         )) {
 #ifdef NO_GC_V4
@@ -52,10 +52,10 @@ static void verify_slot(Slot p_slot) {
 
 void verify_object (Partial_Reveal_Object *p_object, POINTER_SIZE_INT size) {
     Partial_Reveal_VTable *obj_vt = p_object->vt();
-    assert (obj_vt); 
+    assert (obj_vt);
     gc_trace(p_object, "Verifying this object.");
 
-    unsigned int *offset_scanner; 
+    unsigned int *offset_scanner;
     Slot pp_target_object(NULL);
 
 #ifdef WRITE_BUFFERING
@@ -70,7 +70,7 @@ void verify_object (Partial_Reveal_Object *p_object, POINTER_SIZE_INT size) {
         verify_slot(pp_target_object);
     }
 #endif // WRITE_BUFFERING
-    
+
     // Loop through slots in array or objects verify what is in the slot
     if (is_array(p_object)) {
         Type_Info_Handle tih = class_get_element_type_info(obj_vt->get_gcvt()->gc_clss);
@@ -118,7 +118,7 @@ void verify_object (Partial_Reveal_Object *p_object, POINTER_SIZE_INT size) {
 				// Move the scanner to the next reference.
 				offset_scanner = p_next_ref (offset_scanner);
             }
-            
+
             // advance to the next value struct
             cur_value_type_entry_as_object = (Byte*)cur_value_type_entry_as_object + elem_size;
         }
@@ -141,7 +141,7 @@ void verify_object (Partial_Reveal_Object *p_object, POINTER_SIZE_INT size) {
 
 //
 // Called from sweep code....to make sure that the sweep logic is accurate...
-// 
+//
 
 bool verify_consec_bits_using_asm(uint8 *p_byte_start, unsigned int bit_index_to_search_from, unsigned int *num_consec_bits, uint8 *p_ceil) {
 #ifndef _IA64_
@@ -152,7 +152,7 @@ bool verify_consec_bits_using_asm(uint8 *p_byte_start, unsigned int bit_index_to
 	unsigned int max_bits_to_search = (p_ceil - p_byte_start) * GC_NUM_BITS_PER_BYTE - bit_index_to_search_from;
 
 	if (is_zero_str) {
-		__asm 
+		__asm
 		{
 			mov eax, [p_byte_start]
 			mov ecx, bit_index_to_search_from
@@ -161,8 +161,8 @@ bool verify_consec_bits_using_asm(uint8 *p_byte_start, unsigned int bit_index_to
 			dec ebx							// as above
 
 _SEARCH_FOR_ZERO_STR_:
-			clc				
-			bt [eax], ecx			
+			clc
+			bt [eax], ecx
 			jc _ALL_DONE_ZERO_STR
 			inc ecx							// one more '0'
 			dec ebx
@@ -172,17 +172,17 @@ _ALL_DONE_ZERO_STR:
 			mov len, ecx
 		}
 	} else {
-		__asm 
+		__asm
 		{
 			mov eax, [p_byte_start]
-			mov ecx, bit_index_to_search_from	
-			inc ecx							
-			mov ebx, max_bits_to_search		
+			mov ecx, bit_index_to_search_from
+			inc ecx
+			mov ebx, max_bits_to_search
 			dec ebx
 
 _SEARCH_FOR_ONE_STR_:
-			clc				
-			bt [eax], ecx			
+			clc
+			bt [eax], ecx
 			jnc _ALL_DONE_ONE_STR
 			inc ecx							// one more '1'
 			dec ebx
@@ -207,7 +207,7 @@ _ALL_DONE_ONE_STR:
 
 // This verifies the C code for get_next_set_bit() defined in gc_utils.cpp
 
-void verify_get_next_set_bit_code(set_bit_search_info *info) { 
+void verify_get_next_set_bit_code(set_bit_search_info *info) {
 #ifndef _IA64_
 #ifndef ORP_POSIX
 	// Verification code only for IA32 windows....
@@ -219,35 +219,35 @@ void verify_get_next_set_bit_code(set_bit_search_info *info) {
 	uint8 *p_non_zero_byte = NULL;
 	unsigned int set_bit_index = 0;
 
-	__asm {	
+	__asm {
 
 				mov eax, [p_byte]			// eax holds byte ptr
 				mov ecx, start_bit_index	// ecx holds bit index into byte
-				mov edx, [p_ceil]			// limit ptr 
+				mov edx, [p_ceil]			// limit ptr
 
-_LOOP_:			clc				
+_LOOP_:			clc
 				bt [eax], ecx				// bit test
 				jc _FOUND_SET_BIT_			// carry bit contains the bit value at eax[ecx]
 				add ecx, 1					// '0' ...,move to next bit
-				cmp ecx, GC_NUM_BITS_PER_BYTE					
+				cmp ecx, GC_NUM_BITS_PER_BYTE
 				jge _INCR_BYTE_PTR_
 				jmp _LOOP_
 
 _INCR_BYTE_PTR_:add eax, 1					// into next byte..increment byte ptr...
 				mov ecx, 0					// start search at bit index 0
 				cmp eax, edx				// have we reached p_ceil ?
-				jge _HIT_THE_CEILING_	
+				jge _HIT_THE_CEILING_
 				jmp _LOOP_
 
 _FOUND_SET_BIT_:mov [p_non_zero_byte], eax	// found a '1' within range...
 				mov set_bit_index, ecx
 				jmp _ALL_DONE_
-				
+
 _HIT_THE_CEILING_:
 				mov [p_non_zero_byte], 0	// hit p_ceil
 				mov set_bit_index, 0
-				
-_ALL_DONE_:		
+
+_ALL_DONE_:
 	}
 
 	// CHECKS
@@ -289,7 +289,7 @@ void Block_Store::verify_no_duplicate_slots_into_compaction_areas() {
 					while ((one_slot.set(some_slots->next().get_value()))) {
 						if (test_rem_set->is_present(one_slot)) {
 							// this is BAD!!!
-							orp_cout	<< "verify_no_duplicate_slots_into_compaction_areas(): found duplicate slot -- " 
+							orp_cout	<< "verify_no_duplicate_slots_into_compaction_areas(): found duplicate slot -- "
 										<< one_slot.get_value() << " into compaction block : " << _blocks_in_block_store[i].block << std::endl;
 							assert(0);
 							orp_exit(17041);
@@ -310,7 +310,7 @@ void Block_Store::verify_no_duplicate_slots_into_compaction_areas() {
 #endif
 
 
-// ***SOB LOOKUP*** Do the lookup in the _blocks_in_block_store. 
+// ***SOB LOOKUP*** Do the lookup in the _blocks_in_block_store.
 
 bool Garbage_Collector::obj_belongs_in_single_object_blocks(Partial_Reveal_Object *p_obj) {
     unsigned int block_store_block_number = (unsigned int) (((POINTER_SIZE_INT) p_obj - (POINTER_SIZE_INT) get_gc_heap_base_address()) >> GC_BLOCK_SHIFT_COUNT);
