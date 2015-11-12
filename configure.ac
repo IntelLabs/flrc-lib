@@ -71,18 +71,20 @@ AC_CANONICAL_HOST
 
 case "$host" in
     *-mingw*|*-*-cygwin*)
-        os=win32
+        PIL_SCRIPT_SUBDIR="windows"
         ;;
     *-*-linux*)
-        os=linux
+        PIL_SCRIPT_SUBDIR="linux"
         ;;
     *)
         AC_MSG_ERROR([Unsupported host: $host])
         ;;
 esac
 
-AM_CONDITIONAL([OS_WIN32], [test "x$os" = "xwin32"])
-AM_CONDITIONAL([OS_LINUX], [test "x$os" = "xlinux"])
+PIL_SCRIPT_DIR=scripts/"$PIL_SCRIPT_SUBDIR"
+
+AC_SUBST([PIL_SCRIPT_SUBDIR])
+AC_SUBST([PIL_SCRIPT_DIR])
 
 AC_CONFIG_FILES([Makefile iflc-lib.pc include/Makefile pgc/Makefile pgc/src/Makefile tgc/Makefile tgc/src/Makefile prt/Makefile prt/src/Makefile pillar2c/Makefile pillar2c/src/Makefile toolkit/Makefile toolkit/future/Makefile])
 # AC_CONFIG_SUBDIRS([prt pgc tgc pillar2c toolkit])

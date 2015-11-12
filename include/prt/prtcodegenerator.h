@@ -18,6 +18,10 @@
 extern "C" {
 #endif /* __cplusplus */
 
+#pragma pillar_managed(off)
+# include <setjmp.h>
+#pragma pillar_managed(on)
+
 #include "prt/prt.h"
 
 typedef enum {

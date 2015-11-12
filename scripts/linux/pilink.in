@@ -1,0 +1,46 @@
+#!/bin/sh
+
+unset P2C_ARGS[@]
+
+# Allow RUN_P2C to be passed in as "yes", "no", or blank (default)
+#RUN_P2C=
+if [ ! "$RUN_P2C" ] ; then
+    RUN_P2C=no
+fi
+while (( "$#" )) ; do
+    arg="$1"
+    #echo "Processing arg $arg"
+    case "$arg" in
+        -p2c) RUN_P2C=yes ;;
+        -nop2c) RUN_P2C=no ;;
+        -out:*) P2C_ARGS[${#P2C_ARGS[@]}]="-o"; P2C_ARGS[${#P2C_ARGS[@]}]="${arg:5}" ;;
+        /LIBPATH:*) P2C_ARGS[${#P2C_ARGS[@]}]="-L${arg:9}" ;;
+        -stack:*) ;;
+        pillar2c_crt_begin.obj) P2C_ARGS[${#P2C_ARGS[@]}]="@libdir@/pillar2c_crt_begin.o" ;;
+        pillar2c_crt_begind.obj) P2C_ARGS[${#P2C_ARGS[@]}]="@libdir@/pillar2c_crt_begind.o" ;;
+        pillar2c_crt_end.obj) P2C_ARGS[${#P2C_ARGS[@]}]="@libdir@/pillar2c_crt_end.o" ;;
+        pillar2c_crt_endd.obj) P2C_ARGS[${#P2C_ARGS[@]}]="@libdir@/pillar2c_crt_endd.o" ;;
+        mcrt.lib) ;;
+        mcrtd.lib) ;;
+        imagehlp.lib) ;;
+        Ws2_32.lib) ;;
+        pthreadVC2*.lib) ;;
+        -nologo) ;;
+        -INCREMENTAL:NO) ;;
+        ptkfutures_p*_*.obj) future_name="`echo $arg | sed \"s/_pillar_/_p2c_/g\" | sed \"s/obj/o/g\"`" ; future_path="@libdir@/${future_name}" ; P2C_ARGS[${#P2C_ARGS[@]}]="${future_path}" ;;
+        *.obj) generic_name="`echo $arg | sed \"s/obj/o/g\"`" ; P2C_ARGS[${#P2C_ARGS[@]}]="${generic_name}" ;;
+        *.lib) generic_name="`echo $arg | sed \"s/\(.*\).lib/-l\1/g\"`" ; P2C_ARGS[${#P2C_ARGS[@]}]="${generic_name}" ;;
+        lib*.a) generic_name="`echo $arg | sed \"s/lib\(.*\).a/-l\1/g\"`" ; P2C_ARGS[${#P2C_ARGS[@]}]="${generic_name}" ;;
+        *) P2C_ARGS[${#P2C_ARGS[@]}]="$arg" ;;
+    esac
+    shift
+done
+
+#echo "P2C_ARGS=$P2C_ARGS"
+
+if [ "$RUN_P2C" == "yes" ] ; then
+    echo gcc -m64 -g -L"@libdir@" "${P2C_ARGS[@]}" "@libdir@"/pillar2c.asm.o -lpthread
+    exec gcc -fno-reorder-functions -m64 -g -L"@libdir@" "${P2C_ARGS[@]}" "@libdir@"/pillar2c.asm.o -lpthread
+else
+    echo Linux iflc-lib only supports p2c.
+fi

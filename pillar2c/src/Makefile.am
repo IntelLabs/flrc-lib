@@ -1,4 +1,4 @@
-INCLUDES = -I../../include
+INCLUDES = -I$(top_srcdir)/include
 PRT_FLAGS = -fno-reorder-functions
 EXTRA_OBJS = pillar2c_crt_begin.o pillar2c_crt_end.o pillar2c.asm.o
 
