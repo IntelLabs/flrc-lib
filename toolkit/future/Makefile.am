@@ -20,9 +20,9 @@ ptkfutures_p2c_parallel.o: ptkfuture.c $(SCRIPT_DIR)/pilicl
 	$(CC) $(AM_CFLAGS) /Fo"ptkfutures_p2c_parallel.obj" ptkfuture.c
 
 do_subst = sed -e 's,[@]bindir[@],$(bindir),g' \
-			         -e 's,[@]datadir[@],$(datadir),g' \
-		      	   -e 's,[@]includedir[@],$(includedir),g' \
-		    	     -e 's,[@]libdir[@],$(libdir),g'
+               -e 's,[@]datadir[@],$(datadir),g' \
+               -e 's,[@]includedir[@],$(includedir),g' \
+               -e 's,[@]libdir[@],$(libdir),g'
 
 $(SCRIPT_DIR)/pilicl: $(SCRIPT_DIR)/pilicl.in Makefile
 	$(do_subst) < $(SCRIPT_DIR)/pilicl.in > $(SCRIPT_DIR)/pilicl
