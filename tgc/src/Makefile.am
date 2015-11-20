@@ -12,5 +12,5 @@ libtgc_a_SOURCES = $(SOURCES)
 libtgc_a_LIBADD = tgc_asm.o
 
 .nasm.o:
-	$(NASM) -f elf -o $@ $<
+	$(NASM) -f elf64 -D__x86_64__ -o $@ $<
 

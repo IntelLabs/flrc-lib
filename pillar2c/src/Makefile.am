@@ -22,7 +22,7 @@ install-exec-hook: $(EXTRA_OBJS)
 	 $(MKDIR_P) $(DESTDIR)$(libdir) && $(INSTALL_DATA) $(EXTRA_OBJS) "$(DESTDIR)$(libdir)"
 
 pillar2c.asm.o: pillar2c.nasm
-	$(NASM) -f elf -o $@ $<
+	$(NASM) -f elf64 -D__x86_64__ -g -o $@ $<
 
 pillar2c_crt_begin.o:   pillar2c_crt_begin.c
 	$(COMPILE) $(PRT_FLAGS) -c pillar2c_crt_begin.c -o pillar2c_crt_begin.o

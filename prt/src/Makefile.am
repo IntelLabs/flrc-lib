@@ -11,5 +11,5 @@ lib_LIBRARIES = libprt.a
 libprt_a_SOURCES = $(SOURCES)
 
 .nasm.o:
-	$(NASM) -f elf -o $@ $<
+	$(NASM) -f elf64 -D__x86_64__ -o $@ $<
 

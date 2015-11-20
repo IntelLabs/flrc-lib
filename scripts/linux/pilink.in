@@ -40,7 +40,7 @@ done
 
 if [ "$RUN_P2C" == "yes" ] ; then
     echo gcc -m64 -g -L"@libdir@" "${P2C_ARGS[@]}" "@libdir@"/pillar2c.asm.o -lpthread
-    exec gcc -fno-reorder-functions -m64 -g -L"@libdir@" "${P2C_ARGS[@]}" "@libdir@"/pillar2c.asm.o -lpthread
+    exec gcc -fno-reorder-functions -m64 -g -L"@libdir@" "${P2C_ARGS[@]}" "@libdir@"/pillar2c.asm.o -lpthread -lpgc -ltgc -lprt
 else
     echo Linux iflc-lib only supports p2c.
 fi
