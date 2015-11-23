@@ -22,7 +22,6 @@ AC_PROG_YACC
 AC_PROG_CXX
 AC_PROG_CC
 AC_PROG_LEX
-AC_PROG_NASM
 AC_PROG_RANLIB
 
 # Checks for libraries.
@@ -61,7 +60,7 @@ AC_CHECK_FUNCS([atexit getcwd getpagesize gettimeofday memmove memset strchr str
 AC_PATH_PROG(NASM, nasm, no)
 AC_SUBST(NASM)
 if test x$NASM = xno; then
-  AC_MSG_WARN([Could not find nasm])
+  AC_MSG_ERROR([Could not find nasm])
   HAVE_NASM="no"
 else AC_DEFINE(HAVE_NASM, 1, [Define if NASM, the netwide assembler, is available])
   HAVE_NASM="yes"
