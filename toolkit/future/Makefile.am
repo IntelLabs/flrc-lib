@@ -1,5 +1,5 @@
 SCRIPT_DIR=$(top_srcdir)/$(PIL_SCRIPT_DIR)
-CC=IFLC_BIN_DIR=$(top_srcdir)/pillar2c/src IFLC_DATA_DIR=$(top_srcdir)/pillar2c/src IFLC_INCLUDE_DIR=$(includedir) $(SCRIPT_DIR)/pilicl
+CC=IFLC_BIN_DIR=$(top_srcdir)/pillar2c/src IFLC_DATA_DIR=$(top_srcdir)/pillar2c/src IFLC_INCLUDE_DIR=$(top_srcdir)/include $(SCRIPT_DIR)/pilicl
 INCLUDES = -I"$(top_srcdir)"/include
 AM_CFLAGS = $(INCLUDES) -p2c -c -Zi -nologo -I. -std=c99
 
