@@ -1,5 +1,9 @@
 #!/bin/sh
 
+if [ -z ${HRC_CC+x} ]; then
+  HRC_CC=gcc
+fi
+
 unset P2C_ARGS[@]
 
 # Allow RUN_P2C to be passed in as "yes", "no", or blank (default)
@@ -39,8 +43,8 @@ done
 #echo "P2C_ARGS=$P2C_ARGS"
 
 if [ "$RUN_P2C" == "yes" ] ; then
-    echo icc -m64 -g -L"@libdir@" "${P2C_ARGS[@]}" "@libdir@"/pillar2c.asm.o -lpthread
-    exec icc -fno-reorder-functions -m64 -g -L"@libdir@" "${P2C_ARGS[@]}" "@libdir@"/pillar2c.asm.o -lpthread -lpgc -ltgc -lprt
+    echo ${HRC_CC} -m64 -g -L"@libdir@" "${P2C_ARGS[@]}" "@libdir@"/pillar2c.asm.o -lpthread
+    exec ${HRC_CC} -fno-reorder-functions -m64 -g -L"@libdir@" "${P2C_ARGS[@]}" "@libdir@"/pillar2c.asm.o -lpthread -lpgc -ltgc -lprt
 else
     echo Linux iflc-lib only supports p2c.
 fi
