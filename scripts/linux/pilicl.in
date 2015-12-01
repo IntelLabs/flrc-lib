@@ -68,8 +68,8 @@ if [ "$RUN_P2C" == "yes" ] ; then
     cat ${IFLC_INCLUDE_DIR}/prt/prtcodegenerator.h "$PILLAR_INPUT" | gcc -m64 -E -D__pillar__ "${CPP_ARGS_P2C[@]}" "${CPP_ARGS[@]}" $P2C_CPP_ARGS - | sed "s/__extension__//g" > "$PILLAR_INPUT".cpp.c && \
     echo ${IFLC_BIN_DIR}/pillar2c $P2C_ARGS -p2c-outbase:"$PILLAR_INPUT".p2c -p2c-force-pcdecl:${IFLC_DATA_DIR}/pcdecl.txt "$PILLAR_INPUT".cpp.c && \
     ${IFLC_BIN_DIR}/pillar2c $P2C_ARGS -p2c-outbase:"$PILLAR_INPUT".p2c -p2c-force-pcdecl:${IFLC_DATA_DIR}/pcdecl.txt "$PILLAR_INPUT".cpp.c && \
-    echo gcc -m64 -std=c99 "${CC_ARGS[@]}" "${OTHER_ARGS[@]}" -I. "$PILLAR_INPUT".p2c.c && \
-    gcc -fno-omit-frame-pointer -fno-reorder-functions -m64 -std=c99 "${CC_ARGS[@]}" "${OTHER_ARGS[@]}" -I. "$PILLAR_INPUT".p2c.c && \
+    echo gcc -m64 -std=c99 "${CC_ARGS[@]}" "${OTHER_ARGS[@]}" -I. -I"${IFLC_INCLUDE_DIR}" "$PILLAR_INPUT".p2c.c && \
+    gcc -fno-omit-frame-pointer -fno-reorder-functions -m64 -std=c99 "${CC_ARGS[@]}" "${OTHER_ARGS[@]}" -I. -I"${IFLC_INCLUDE_DIR}" "$PILLAR_INPUT".p2c.c && \
     true
 else
     echo Linux iflc-lib only support p2c.
