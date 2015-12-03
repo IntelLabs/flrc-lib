@@ -2426,6 +2426,19 @@ T * search_up_for_type(const AST_node *node) {
     }
 }
 
+bool search_up_for_node(const AST_node *node, AST_node *search_node) {
+    AST_node *parent = (AST_node*)node;
+    while(1) {
+        parent = parent->get_parent();
+        if(!parent) {
+            return false;
+        }
+		if (parent == search_node) {
+			return true;
+		}
+    }
+}
+
 #define TRANSLATE(x,tr) \
     do {                                                       \
         try {                                                  \
@@ -6954,6 +6967,9 @@ public:
         }
         aeprintf("Don't think should get here.\n");
     }
+
+	bool is_part_of_lhs(AST_node *node);
+	void add_volatile_void_rhs_cast();
 
     AST_DEF_CHILDREN_3(m_ue,m_ao,m_ae)
 };
@@ -24252,6 +24268,22 @@ assignment_expression_unary_expression_assignment_operator_assignment_expression
     delete m_ae;
 }
 
+void assignment_expression_unary_expression_assignment_operator_assignment_expression::add_volatile_void_rhs_cast() {
+	type_name *the_cast = new type_name_specifier_qualifier_list_abstract_declarator(
+							new specifier_qualifier_list_type_qualifier_specifier_qualifier_list(
+                            new type_qualifier_volatile(),
+				            new specifier_qualifier_list_type_specifier(new type_specifier_VOID())),
+							new abstract_declarator_pointer(new pointer_star()));
+
+	replace(m_ae, expr_gen(assignment_expression,cast_expression,
+                                new cast_expression_type_name_cast_expression(
+                                    the_cast,
+                                    expr_gen(cast_expression,postfix_expression,
+									new postfix_expression_primary_expression(
+                                    new primary_expression_expression(
+                                    new expression_assignment_expression(m_ae)))))));
+}
+
 TranslateResult assignment_expression_unary_expression_assignment_operator_assignment_expression::translate_pillar(function_definition *fd) {
     TranslateResult tr1, tr2, tr3;
 
@@ -32163,13 +32195,31 @@ void primary_expression_identifier::replace_refs_with_pseudo_expression(void) {
 										   new unary_operator_and(),
 										   expr_gen(cast_expression,postfix_expression,new_node)))))))))))));
 				} else {
-                    new_node = new postfix_expression_primary_expression(
-                                new primary_expression_expression(
-                                 new expression_assignment_expression(
-                                  expr_gen(assignment_expression,cast_expression,
-                                   new cast_expression_type_name_cast_expression(
-                                    the_cast,
-                                    expr_gen(cast_expression,postfix_expression,new_node))))));
+    				assignment_expression_unary_expression_assignment_operator_assignment_expression *assign_node = search_up_for_type<assignment_expression_unary_expression_assignment_operator_assignment_expression>(node_to_replace);
+#ifndef USE_IS_LVALUE
+		            LRB_VALUE lrb_res = node_to_replace->get_parent()->get_lrb_value(node_to_replace,NULL);
+					bool res_lvalue;
+					if(lrb_res == LRB_LVALUE || lrb_res == LRB_LRVALUE) {
+						res_lvalue = true;
+					} else {
+						res_lvalue = false;
+					}
+#else
+	                bool res_lvalue = node_to_replace->get_parent()->is_lvalue(node_to_replace,NULL);
+#endif
+					if (assign_node &&
+						assign_node->is_part_of_lhs(node_to_replace) &&
+						res_lvalue) {
+						assign_node->add_volatile_void_rhs_cast();
+					} else {
+                        new_node = new postfix_expression_primary_expression(
+                                    new primary_expression_expression(
+                                     new expression_assignment_expression(
+                                      expr_gen(assignment_expression,cast_expression,
+                                       new cast_expression_type_name_cast_expression(
+                                        the_cast,
+                                        expr_gen(cast_expression,postfix_expression,new_node))))));
+					}
 				}
             }
             AST_node *parent = node_to_replace->get_parent();
@@ -38673,6 +38723,10 @@ AST_node * declaration_specifiers_type_qualifier::remove_volatile(void) {
     } else {
         return this;
     }
+}
+
+bool assignment_expression_unary_expression_assignment_operator_assignment_expression::is_part_of_lhs(AST_node *node) {
+	return search_up_for_node(node, m_ue);
 }
 
 #endif // __cplusplus
