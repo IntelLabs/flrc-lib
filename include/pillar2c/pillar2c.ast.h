@@ -4001,6 +4001,7 @@ public:
     virtual unary_expression * clone(void);
 
     virtual AST_node * ref_used(void);
+	virtual unary_operator * get_uo(void) { return m_uo; }
 
     virtual bool value_used(AST_node *node) {
         return true;
@@ -10665,7 +10666,7 @@ public:
     }
 
     virtual bool param_larger_than_register(void) const {
-#ifdef __x86_64
+#ifdef __x86_64__
         return false;
 #else
         return true;
@@ -10811,7 +10812,7 @@ public:
     }
 
     virtual bool param_larger_than_register(void) const {
-#ifdef __x86_64
+#ifdef __x86_64__
         return false;
 #else
         return true;
@@ -28991,7 +28992,7 @@ void translate_tailcall(call_expression *m_ce, function_definition *fd, statemen
         block_item_list *tailcall_translation = NULL;
 
         // ****************************************************************
-        // *             _x86_64__ TAILCALL TRANSLATION                   *
+        // *             _X86_64__ TAILCALL TRANSLATION                   *
         // ****************************************************************
 #ifdef __x86_64__
         std::stringstream tc_trans;
@@ -32127,34 +32128,49 @@ void primary_expression_identifier::replace_refs_with_pseudo_expression(void) {
     const char *rfn = m_ii->get_qualified_ref_field_name();
     if(rfn) {
         if(m_ii->has_ref_index()) {
-            postfix_expression *node_to_replace = dynamic_cast<postfix_expression*>(m_parent);
+            AST_node *node_to_replace = dynamic_cast<postfix_expression*>(m_parent);
             if(!node_to_replace) {
                 aeprintf("primary_expression_identifier::replace_refs_with_pseudo_expression parent not postfix_expression.\n");
             }
-            postfix_expression *new_node =
+            AST_node *new_node =
                 new postfix_expression_postfix_expression_dot_identifier(
                   new postfix_expression_postfix_expression_dot_identifier(
                     gen_pseudo_pe("prt_refs_and_array",this),
                     "prt_refs"),
                   rfn);
             if(m_ii->is_volatile()) {
-                type_name *the_cast;
-                the_cast = new type_name_specifier_qualifier_list_abstract_declarator(
-                                new specifier_qualifier_list_type_specifier(new type_specifier_VOID()),
-                                new abstract_declarator_pointer(new pointer_star()));
+				type_name *the_cast;
+				the_cast = new type_name_specifier_qualifier_list_abstract_declarator(
+								new specifier_qualifier_list_type_specifier(new type_specifier_VOID()),
+								new abstract_declarator_pointer(new pointer_star()));
 
-                new_node = new postfix_expression_primary_expression(
-                            new primary_expression_expression(
-                             new expression_assignment_expression(
-                              expr_gen(assignment_expression,cast_expression,
-                               new cast_expression_type_name_cast_expression(
-                                the_cast,
-                                expr_gen(cast_expression,postfix_expression,new_node)
-                               )
-                              )
-                             )
-                            )
-                           );
+				unary_expression_unary_operator_cast_expression *ueuoce = search_up_for_type<unary_expression_unary_operator_cast_expression>(node_to_replace);
+				if (ueuoce && dynamic_cast<unary_operator_and*>(ueuoce->get_uo()) != NULL) {
+					node_to_replace = ueuoce;
+                    new_node = new unary_expression_postfix_expression(
+						        new postfix_expression_primary_expression(
+                                 new primary_expression_expression(
+                                  new expression_assignment_expression(
+                                   expr_gen(assignment_expression,cast_expression,
+                                    new cast_expression_type_name_cast_expression(
+                                     the_cast,
+                                     expr_gen(cast_expression,postfix_expression,
+									  new postfix_expression_primary_expression(
+                                       new primary_expression_expression(
+                                        new expression_assignment_expression(
+                                         expr_gen(assignment_expression,unary_expression,
+										  new unary_expression_unary_operator_cast_expression(
+										   new unary_operator_and(),
+										   expr_gen(cast_expression,postfix_expression,new_node)))))))))))));
+				} else {
+                    new_node = new postfix_expression_primary_expression(
+                                new primary_expression_expression(
+                                 new expression_assignment_expression(
+                                  expr_gen(assignment_expression,cast_expression,
+                                   new cast_expression_type_name_cast_expression(
+                                    the_cast,
+                                    expr_gen(cast_expression,postfix_expression,new_node))))));
+				}
             }
             AST_node *parent = node_to_replace->get_parent();
             parent->replace(node_to_replace,new_node);
