@@ -6970,6 +6970,7 @@ public:
 
 	bool is_part_of_lhs(AST_node *node);
 	void add_volatile_void_rhs_cast();
+	void add_rhs_cast(type_name *the_cast);
 
     AST_DEF_CHILDREN_3(m_ue,m_ao,m_ae)
 };
@@ -24268,13 +24269,7 @@ assignment_expression_unary_expression_assignment_operator_assignment_expression
     delete m_ae;
 }
 
-void assignment_expression_unary_expression_assignment_operator_assignment_expression::add_volatile_void_rhs_cast() {
-	type_name *the_cast = new type_name_specifier_qualifier_list_abstract_declarator(
-							new specifier_qualifier_list_type_qualifier_specifier_qualifier_list(
-                            new type_qualifier_volatile(),
-				            new specifier_qualifier_list_type_specifier(new type_specifier_VOID())),
-							new abstract_declarator_pointer(new pointer_star()));
-
+void assignment_expression_unary_expression_assignment_operator_assignment_expression::add_rhs_cast(type_name *the_cast) {
 	replace(m_ae, expr_gen(assignment_expression,cast_expression,
                                 new cast_expression_type_name_cast_expression(
                                     the_cast,
@@ -24282,6 +24277,16 @@ void assignment_expression_unary_expression_assignment_operator_assignment_expre
 									new postfix_expression_primary_expression(
                                     new primary_expression_expression(
                                     new expression_assignment_expression(m_ae)))))));
+}
+
+
+void assignment_expression_unary_expression_assignment_operator_assignment_expression::add_volatile_void_rhs_cast() {
+	type_name *the_cast = new type_name_specifier_qualifier_list_abstract_declarator(
+							new specifier_qualifier_list_type_qualifier_specifier_qualifier_list(
+                            new type_qualifier_volatile(),
+				            new specifier_qualifier_list_type_specifier(new type_specifier_VOID())),
+							new abstract_declarator_pointer(new pointer_star()));
+    add_rhs_cast(the_cast);
 }
 
 TranslateResult assignment_expression_unary_expression_assignment_operator_assignment_expression::translate_pillar(function_definition *fd) {
@@ -32232,6 +32237,9 @@ void primary_expression_identifier::replace_refs_with_pseudo_expression(void) {
 
 void primary_expression_identifier::cast_off_volatile(void) {
     std::string name = m_ii->get_string();
+	if(name == "pLsrAllocFrontier") {
+		printf("Got here1\n");
+	}
 #if 0
     if(name == "v536147_baseZCGHCzziIOzziHandlezziInternalszietaX3V_tslam_code" ||
        name == "v540900_ws3x9_tslam_code" ||
@@ -32247,6 +32255,9 @@ void primary_expression_identifier::cast_off_volatile(void) {
             printf("cast_off_volatile for function %s\n",find_enclosing_function()->get_symbol()->get_name());
         }
 #endif
+		if(name == "pLsrAllocFrontier") {
+			printf("Got here2\n");
+		}
         postfix_expression *parent = dynamic_cast<postfix_expression*>(m_parent);
         if(!parent) {
             aeprintf("primary_expression_identifier::cast_off_volatile parent not postfix_expression.\n");
@@ -32288,11 +32299,7 @@ void primary_expression_identifier::cast_off_volatile(void) {
                       expr_gen(assignment_expression,cast_expression,
                        new cast_expression_type_name_cast_expression(
                         apet->gen_type_name(NULL),
-                        expr_gen(cast_expression,primary_expression,this)
-                       )
-                      )
-                     )
-                    );
+                        expr_gen(cast_expression,primary_expression,this)))));
 
                 parent->replace(this,new_node);
 
@@ -32308,21 +32315,35 @@ void primary_expression_identifier::cast_off_volatile(void) {
         auto_ptr<expression_type> apet(m_ii->get_return_type());
 
         if(apet->is_pointer()) {
-            apet->remove_volatile();
+    		assignment_expression_unary_expression_assignment_operator_assignment_expression *assign_node = search_up_for_type<assignment_expression_unary_expression_assignment_operator_assignment_expression>(this);
+#ifndef USE_IS_LVALUE
+		    LRB_VALUE lrb_res = get_parent()->get_lrb_value(this, NULL);
+			bool res_lvalue;
+			if(lrb_res == LRB_LVALUE || lrb_res == LRB_LRVALUE) {
+				res_lvalue = true;
+			} else {
+				res_lvalue = false;
+			}
+#else
+	        bool res_lvalue = get_parent()->is_lvalue(this, NULL);
+#endif
+			if (assign_node &&
+				assign_node->is_part_of_lhs(this) &&
+				res_lvalue) {
+				assign_node->add_rhs_cast(apet->gen_type_name(NULL));
+			} else {
+				apet->remove_volatile();
 
-            primary_expression *new_node =
-                new primary_expression_expression(
-                 new expression_assignment_expression(
-                  expr_gen(assignment_expression,cast_expression,
-                   new cast_expression_type_name_cast_expression(
-                    apet->gen_type_name(NULL),
-                    expr_gen(cast_expression,primary_expression,this)
-                   )
-                  )
-                 )
-                );
+				primary_expression *new_node =
+					new primary_expression_expression(
+					 new expression_assignment_expression(
+					  expr_gen(assignment_expression,cast_expression,
+					   new cast_expression_type_name_cast_expression(
+						apet->gen_type_name(NULL),
+						expr_gen(cast_expression,primary_expression,this)))));
 
-            parent->replace(this,new_node);
+				parent->replace(this,new_node);
+			}
 
     //      parent->print();
     //      printf("\n");
@@ -32346,21 +32367,9 @@ void primary_expression_identifier::cast_off_volatile(void) {
                          expr_gen(assignment_expression,unary_expression,
                           new unary_expression_unary_operator_cast_expression(
                            new unary_operator_and(),
-                           expr_gen(cast_expression,primary_expression,this)
-                          )
-                         )
-                        )
-                       )
-                      )
-                     )
-                    )
-                   )
-                  )
-                 );
+                           expr_gen(cast_expression,primary_expression,this)))))))))));
 
             parent->replace(this,new_node);
-
-
         }
     }
 }
