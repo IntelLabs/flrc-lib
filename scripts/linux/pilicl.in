@@ -29,7 +29,6 @@ if [ ! "$RUN_P2C" ] ; then
     RUN_P2C=no
 fi
 P2C_ARGS="-p2c-no-yields -p2c-spill-rare -p2c-gcc -p2c-intel64"
-SLOPPY=
 while (( "$#" )) ; do
     arg="$1"
     #echo "Processing arg $arg"
@@ -37,7 +36,20 @@ while (( "$#" )) ; do
         -p2c) RUN_P2C=yes ;;
         -nop2c) RUN_P2C=no ;;
         -p2c-*) P2C_ARGS="$P2C_ARGS $arg" ;;
-        [-/]fsloppy) SLOPPY=yes ;;
+
+        # TODO: Allow these to go through with icc
+        [-/]ftz|[-/]no-ftz|[-/]Qftz) ;;
+        [-/]prec-div|[-/]no-prec-div|[-/]Qprec-div) ;;
+        [-/]prec-sqrt|[-/]no-prec-sqrt|[-/]Qprec-sqrt) ;;
+        [-/]no-vec|[-/]Q-vec) ;;
+        [-/]ip|[-/]Qip) ;;
+        [-/]vec-report0|[-/]Qvec-report0) ;;
+        [-/]Qdiag-disable:cpu-dispatch) ;;
+        [-/]diag-disable) ;;
+        cpu-dispatch) ;;
+        [-/]fp-model|fast|source) ;;
+        [-/]QxAVX|[-/]xAVX) CC_ARGS[${#CC_ARGS[@]}]="-msse3" ;;
+
         [-/]Qwd) shift ;;
         [-/]Qwd*|[-/]Od) ;;
         [-/]Qc99|[-/]Qnoyield|[-/]mCG_opt_mask*|[-/]mP2OPT*|[-/]Ob0) PILLAR_ONLY="$PILLAR_ONLY $arg" ;;
