@@ -13,7 +13,7 @@ if [ -z ${IFLC_INCLUDE_DIR+x} ]; then
 fi
 
 if [ -z ${HRC_CC+x} ]; then
-  HRC_CC=gcc
+  HRC_CC="gcc -w"
 fi
 
 unset CPP_ARGS[@]

@@ -1,7 +1,7 @@
 #!/bin/sh
 
 if [ -z ${HRC_CC+x} ]; then
-  HRC_CC=gcc
+  HRC_CC="gcc -w"
 fi
 
 unset P2C_ARGS[@]

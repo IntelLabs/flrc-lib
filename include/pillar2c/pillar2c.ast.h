@@ -32237,9 +32237,11 @@ void primary_expression_identifier::replace_refs_with_pseudo_expression(void) {
 
 void primary_expression_identifier::cast_off_volatile(void) {
     std::string name = m_ii->get_string();
+#ifdef TODD_DEBUG
 	if(name == "pLsrAllocFrontier") {
 		printf("Got here1\n");
 	}
+#endif
 #if 0
     if(name == "v536147_baseZCGHCzziIOzziHandlezziInternalszietaX3V_tslam_code" ||
        name == "v540900_ws3x9_tslam_code" ||
@@ -32255,9 +32257,11 @@ void primary_expression_identifier::cast_off_volatile(void) {
             printf("cast_off_volatile for function %s\n",find_enclosing_function()->get_symbol()->get_name());
         }
 #endif
+#ifdef TODD_DEBUG
 		if(name == "pLsrAllocFrontier") {
 			printf("Got here2\n");
 		}
+#endif
         postfix_expression *parent = dynamic_cast<postfix_expression*>(m_parent);
         if(!parent) {
             aeprintf("primary_expression_identifier::cast_off_volatile parent not postfix_expression.\n");
