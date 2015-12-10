@@ -29047,8 +29047,9 @@ void translate_tailcall(call_expression *m_ce, function_definition *fd, statemen
         tc_trans << "__asm__ (\n";
         tc_trans << "\"mov %%%%rsp, %%0\\n\\t\"\n";
         tc_trans << "\"sub $128, %%0\\n\\t\"\n";
+        tc_trans << "\"sub %%1, %%0\\n\\t\"\n";
         tc_trans << ": \"=r\" (" << callsite_tailcall_ptr_str.str() << ")\n";
-        tc_trans << ":\n";
+        tc_trans << ": \"g\" (sizeof(" << callsite_tailcall_str.str() << "))\n";
         tc_trans << ");\n";                // end of __asm__
 #endif
 
