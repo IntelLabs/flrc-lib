@@ -46,5 +46,5 @@ if [ "$RUN_P2C" == "yes" ] ; then
     echo ${HRC_CC} -m64 -g -L"@libdir@" "${P2C_ARGS[@]}" "@libdir@"/pillar2c.asm.o -lpthread -lpgc -ltgc -lprt -lstdc++
     exec ${HRC_CC} -fno-reorder-functions -m64 -g -L"@libdir@" "${P2C_ARGS[@]}" "@libdir@"/pillar2c.asm.o -lpthread -lpgc -ltgc -lprt -lstdc++
 else
-    echo Linux iflc-lib only supports p2c.
+    echo Linux flrc-lib only supports p2c.
 fi

@@ -1,4 +1,4 @@
-nobase_include_HEADERS = iflclibconfig.h \
+nobase_include_HEADERS = flrclibconfig.h \
                          pgc/pgc.h \
                          pillar2c/pillar2c.ast_c.h \
                          pillar2c/pillar2c.ast.h \

@@ -2,7 +2,7 @@
  * COPYRIGHT_NOTICE_1
  */
 
-#include "iflclibconfig.h"
+#include "flrclibconfig.h"
 #if _MSC_VER >= 1400 || defined __GNUC__ // vs2005+
 #include <map>
 #else

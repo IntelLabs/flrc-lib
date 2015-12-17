@@ -5,7 +5,7 @@
 #ifndef _gc_header_H_
 #define _gc_header_H_
 
-#include "iflclibconfig.h"
+#include "flrclibconfig.h"
 #include "pgc/pgc.h"
 #ifdef WIN32
 #include <Windows.h>

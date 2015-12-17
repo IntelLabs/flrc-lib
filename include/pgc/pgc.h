@@ -5,7 +5,7 @@
 #ifndef _PGC_H_
 #define _PGC_H_
 
-#include "iflclibconfig.h"
+#include "flrclibconfig.h"
 
 #ifdef HAVE_STDINT_H
 #include <stdint.h>

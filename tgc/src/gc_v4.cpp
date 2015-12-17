@@ -2,7 +2,7 @@
  * COPYRIGHT_NOTICE_1
  */
 
-#include "iflclibconfig.h"
+#include "flrclibconfig.h"
 
 // System header files
 #include <iostream>

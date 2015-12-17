@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.60])
-AC_INIT([iflc-lib], [0.1], [BUG-REPORT-ADDRESS])
+AC_INIT([flrc-lib], [0.1], [BUG-REPORT-ADDRESS])
 AM_INIT_AUTOMAKE([0.1 foreign])
 AC_CONFIG_SRCDIR([include/tgc/block_store.h])
 AC_CONFIG_SRCDIR([include/toolkit/ptkfuture_common.c])
@@ -10,12 +10,12 @@ AC_CONFIG_SRCDIR([pillar2c/src/pillar2c_crt_begin.c])
 AC_CONFIG_SRCDIR([pgc/src/pgc.cpp])
 AC_CONFIG_SRCDIR([prt/src/prttls.cpp])
 
-AH_TOP([#ifndef IFLC_LIB_CONFIG_H])
-AH_TOP([#define IFLC_LIB_CONFIG_H])
-AH_BOTTOM([#endif // IFLC_LIB_CONFIG_H])
+AH_TOP([#ifndef FLRC_LIB_CONFIG_H])
+AH_TOP([#define FLRC_LIB_CONFIG_H])
+AH_BOTTOM([#endif // FLRC_LIB_CONFIG_H])
 
-AC_CONFIG_SRCDIR([include/iflclibconfig.h.in])
-AC_CONFIG_HEADERS([include/iflclibconfig.h])
+AC_CONFIG_SRCDIR([include/flrclibconfig.h.in])
+AC_CONFIG_HEADERS([include/flrclibconfig.h])
 
 # Checks for programs.
 AC_PROG_YACC
@@ -50,7 +50,7 @@ AC_TYPE_UINT8_T
 AC_TYPE_UINTPTR_T
 AC_CHECK_TYPES([ptrdiff_t])
 
-# Checks for library functions
+# Checks for library functions.
 AC_FUNC_ALLOCA
 AC_FUNC_MALLOC
 AC_FUNC_REALLOC
@@ -86,6 +86,6 @@ PIL_SCRIPT_DIR=scripts/"$PIL_SCRIPT_SUBDIR"
 AC_SUBST([PIL_SCRIPT_SUBDIR])
 AC_SUBST([PIL_SCRIPT_DIR])
 
-AC_CONFIG_FILES([Makefile iflc-lib.pc include/Makefile pgc/Makefile pgc/src/Makefile tgc/Makefile tgc/src/Makefile prt/Makefile prt/src/Makefile pillar2c/Makefile pillar2c/src/Makefile toolkit/Makefile toolkit/future/Makefile])
+AC_CONFIG_FILES([Makefile flrc-lib.pc include/Makefile pgc/Makefile pgc/src/Makefile tgc/Makefile tgc/src/Makefile prt/Makefile prt/src/Makefile pillar2c/Makefile pillar2c/src/Makefile toolkit/Makefile toolkit/future/Makefile])
 # AC_CONFIG_SUBDIRS([prt pgc tgc pillar2c toolkit])
 AC_OUTPUT

@@ -10,7 +10,7 @@
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#include "iflclibconfig.h"
+#include "flrclibconfig.h"
 #include "tgc/pair_table.h"
 #include "tgc/slot_offset_list.h"
 #include "tgc/gcv4_synch.h"

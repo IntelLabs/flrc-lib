@@ -1,0 +1,12 @@
+# flrc-lib pkg-config source file
+
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@
+
+Name: flrc-lib
+Description: FLRC libraries
+Version: @VERSION@
+Libs: -L{libdir} -lpgc -lprt -ltgc
+Cflags: -I${includedir}
