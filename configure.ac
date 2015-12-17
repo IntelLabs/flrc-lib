@@ -50,7 +50,7 @@ AC_TYPE_UINT8_T
 AC_TYPE_UINTPTR_T
 AC_CHECK_TYPES([ptrdiff_t])
 
-# Checks for library functions.
+# Checks for library functions
 AC_FUNC_ALLOCA
 AC_FUNC_MALLOC
 AC_FUNC_REALLOC
