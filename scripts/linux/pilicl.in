@@ -77,6 +77,9 @@ done
 #echo "OTHER_ARGS=$OTHER_ARGS"
 OTHER_ARGS[${#OTHER_ARGS[@]}]="-malign-double"
 OTHER_ARGS[${#OTHER_ARGS[@]}]="-fno-omit-frame-pointer"
+OTHER_ARGS[${#OTHER_ARGS[@]}]="-fno-strict-aliasing"
+OTHER_ARGS[${#OTHER_ARGS[@]}]="-fno-reorder-functions"
+OTHER_ARGS[${#OTHER_ARGS[@]}]="-fno-schedule-insns2"
 #OTHER_ARGS[${#OTHER_ARGS[@]}]="-mregparm=0"
 
 P2C_CPP_ARGS="-DUSE_STDINT -DTBB -DNO_PRSCALL -D__pillar__ -D__pillar2c__ -DPLSR_LINUX -DLINUX"
@@ -87,7 +90,7 @@ if [ "$RUN_P2C" == "yes" ] ; then
     echo ${FLRC_BIN_DIR}/pillar2c $P2C_ARGS -p2c-outbase:"$PILLAR_INPUT".p2c -p2c-force-pcdecl:${FLRC_DATA_DIR}/pcdecl.txt "$PILLAR_INPUT".cpp.c && \
     ${FLRC_BIN_DIR}/pillar2c $P2C_ARGS -p2c-outbase:"$PILLAR_INPUT".p2c -p2c-force-pcdecl:${FLRC_DATA_DIR}/pcdecl.txt "$PILLAR_INPUT".cpp.c && \
     echo ${HRC_CC} -m64 -std=c99 "${CC_ARGS[@]}" "${OTHER_ARGS[@]}" -I. -I"${FLRC_INCLUDE_DIR}" "$PILLAR_INPUT".p2c.c && \
-    ${HRC_CC} -fno-omit-frame-pointer -fno-reorder-functions -m64 -std=c99 "${CC_ARGS[@]}" "${OTHER_ARGS[@]}" -I. -I"${FLRC_INCLUDE_DIR}" "$PILLAR_INPUT".p2c.c && \
+    ${HRC_CC} -m64 -std=c99 "${CC_ARGS[@]}" "${OTHER_ARGS[@]}" -I. -I"${FLRC_INCLUDE_DIR}" "$PILLAR_INPUT".p2c.c && \
     true
 else
     echo Linux flrc-lib only support p2c.
