@@ -9,7 +9,6 @@
  * - CONCURRENCY: Set this for any builds with multithreaded future generation/execution.
  * - __pillar__: The Pillar compiler automatically sets this.
  * - USE_PRSCALL: Set this (along with CONCURRENCY and __pillar__) to spawn via prscall.
- * - PTKFUTURE_USE_BDW_MALLOC: Set this to use the BDW malloc instead of system malloc
  */
 
 //#define DISABLE_STEALING
@@ -44,21 +43,12 @@ typedef unsigned int uint32;
 #include "prt/prtcodegenerator.h"
 #endif /* __pillar__ */
 
-#ifdef PTKFUTURE_USE_BDW_MALLOC
-# include "toolkit/gc.h"
-#endif
-
 #undef ptkFutureInit
 #undef ptkFutureSetStatus
 #undef ptkFutureGetStatus
 
-#ifdef PTKFUTURE_USE_BDW_MALLOC
-# define ptkMalloc GC_MALLOC
-# define ptkRealloc GC_REALLOC
-#else /* !PTKFUTURE_USE_BDW_MALLOC */
-# define ptkMalloc malloc
-# define ptkRealloc realloc
-#endif
+#define ptkMalloc malloc
+#define ptkRealloc realloc
 
 /* Set WEAK_MASK to 0 to disable reporting references on the future queues as weak. */
 #define WEAK_MASK (1 << 31)
