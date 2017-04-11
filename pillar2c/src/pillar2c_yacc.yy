@@ -3411,15 +3411,15 @@ extern "C" int yyerror(char const *s)
     return 0;
 }
 
-extern "C" int check_type(char *id, unsigned free_it) {
+extern "C" int check_type(const char *id, unsigned free_it) {
     if(strcmp(id,"_Complex")==0) {
-	    free(id);
+	    if (free_it) free((void*)id);
         id = yylval.str = "_pillar2c_Complex";
     }
 
     std::string s(id);
 	if(free_it) {
-		free(id);
+		free((void*)id);
     }
 
 	if(s == "PrtTaskHandle") {

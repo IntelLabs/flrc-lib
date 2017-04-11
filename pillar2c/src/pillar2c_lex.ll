@@ -42,7 +42,7 @@ void comment(void);
 void uuasmuu_get(void);
 int attribute_get(int *);
 void consume_uupragma(void);
-int check_type(char *,unsigned);
+int check_type(const char *,unsigned);
 int pillar_or_check_type(int token);
 void set_type_into_identifier();
 void unset_type_into_identifier();

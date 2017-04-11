@@ -36,8 +36,6 @@ nobase_include_HEADERS = flrclibconfig.h \
                          tgc/remembered_set.h \
                          tgc/slot_offset_list.h \
                          tgc/work_packet_manager.h \
-                         toolkit/gc_config_macros.h \
-                         toolkit/gc.h \
                          toolkit/pillar_tls_allocator.h \
                          toolkit/pillartoolkitrootsetcontext.h \
                          toolkit/ptkfuture_common.c \
