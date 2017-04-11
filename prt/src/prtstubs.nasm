@@ -700,7 +700,7 @@ prt_getTlsRegisterEnd:
 %ifdef TLS_REGISTER
     mov  rax, tlsreg
 %else
-    call dword prt_GetTaskNonInline
+    call qword prt_GetTaskNonInline
 %endif
 %endmacro
 
@@ -1164,7 +1164,7 @@ global prtYieldUntilDestructor
 prtYieldUntilDestructor:
     mov  rcx, [rdx+8]                           ; // edx = target continuation
     push rcx
-    call dword prtFatCutTo
+    call qword prtFatCutTo
 
 ; ==============================================================================
 
