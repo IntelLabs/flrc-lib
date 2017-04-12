@@ -1,12 +1,12 @@
 # Libraries for the Functional Language Research Compiler 
 
 This repository contains the following libraries and tools that are 
-part of the overall [FLRC](flrc) toolchain. Strictly speaking, they 
+part of the overall [FLRC] toolchain. Strictly speaking, they 
 are a pre-requsite to using FLRC, but not for compiling FLRC. But
 due to installation path dependencies, `flrc-lib` should be installed
 before `flrc`.
 
-1. A translator from [Pillar](pillar) to C++ (`pilla2c`).
+1. A translator from [Pillar] to C++ (`pilla2c`).
 
 2. Pillar Runtime (`prt`). 
 
@@ -39,18 +39,18 @@ under the given path `${PREFIX}`.
 
 ## Usage and FAQ
 
-These libraries and tools are mostly intended to be used by [FLRC](flrc).
+These libraries and tools are mostly intended to be used by [FLRC].
 Please use the issue track if you have questions.
 
 ## Related Publication
 
-Todd Anderson, Neal Glew, Peng Guo, Brian T. Lewis, Wei Liu, Zhanglin Liu, Leaf Petersen, Mohan Rajagopalan, James M. Stichnoth, Gansha Wu, and Dan Zhang. 2007. [Pillar: A Parallel Implementation Language](pillar). In Languages and Compilers for Parallel Computing, Vikram Adve, María Jesús Garzarán, and Paul Petersen (Eds.). Lecture Notes In Computer Science, Vol. 5234. Springer-Verlag, Berlin, Heidelberg 141-155. [(PDF)](doc/pillar-lcpc.pdf).
+Todd Anderson, Neal Glew, Peng Guo, Brian T. Lewis, Wei Liu, Zhanglin Liu, Leaf Petersen, Mohan Rajagopalan, James M. Stichnoth, Gansha Wu, and Dan Zhang. 2007. [Pillar: A Parallel Implementation Language][Pillar]. In Languages and Compilers for Parallel Computing, Vikram Adve, María Jesús Garzarán, and Paul Petersen (Eds.). Lecture Notes In Computer Science, Vol. 5234. Springer-Verlag, Berlin, Heidelberg 141-155. [(PDF)](doc/pillar-lcpc.pdf).
 
 ## License
 
 This software carries a BSD style license. See [LICENSE_INFO](LICENSE_INFO.txt) for more information.
 
 
-[pillar]: http://dl.acm.org/citation.cfm?id=1433050.1433063
-[flrc]: https://github.com/IntelLabs/flrc
+[Pillar]: http://dl.acm.org/citation.cfm?id=1433050.1433063
+[FLRC]: https://github.com/IntelLabs/flrc
 
