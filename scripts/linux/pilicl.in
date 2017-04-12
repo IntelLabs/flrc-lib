@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 if [ -z ${FLRC_BIN_DIR+x} ]; then
   FLRC_BIN_DIR=@bindir@
