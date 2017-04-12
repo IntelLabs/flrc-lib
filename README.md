@@ -1,8 +1,8 @@
 # Libraries for the Functional Language Research Compiler 
 
 This repository contains the following libraries and tools that are 
-part of the overall [FLRC] toolchain. Strictly speaking, they 
-are a pre-requsite to using FLRC, but not for compiling FLRC. But
+part of the overall [FLRC] tool-chain. Strictly speaking, they 
+are a pre-requisite to using FLRC, but not for compiling FLRC. But
 due to installation path dependencies, `flrc-lib` should be installed
 before `flrc`.
 
@@ -22,9 +22,9 @@ All released code has only been tested to work on x86 64-bit
 Linux distros, although they were originally written for x86 32-bit 
 Windows.
 
-The installation uses the typical autoconf/automake facilites on
+The installation uses the typical autoconf/automake facilities on
 Linux. It also requires a C/C++ compiler (gcc or icc), and an 
-assember (nasm) to compile. The steps are:
+assembler (nasm) to compile.
 
 To install:
 
