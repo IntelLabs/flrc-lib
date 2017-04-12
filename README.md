@@ -1,4 +1,4 @@
-# Intel Labs Functional Language Research Compiler Libraries
+# Libraries for the Functional Language Research Compiler 
 
 This repository contains the following libraries and tools that are 
 part of the overall [FLRC](flrc) toolchain. Strictly speaking, they 
@@ -25,6 +25,8 @@ Windows.
 The installation uses the typical autoconf/automake facilites on
 Linux. It also requires a C/C++ compiler (gcc or icc), and an 
 assember (nasm) to compile. The steps are:
+
+To install:
 
 ```
 sh bootstrap.sh
