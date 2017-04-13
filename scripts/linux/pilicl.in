@@ -59,7 +59,7 @@ while (( "$#" )) ; do
         [-/]Zi) PILLAR_ONLY="$PILLAR_ONLY $arg" ;;
         [-/]debug) CC_ARGS[${#CC_ARGS[@]}]="-g" ;;
         [-/]fp:*|[-/]W*|[-/]Q*) ;;
-        [-/]m*|[-/]Zi|[-/]TC|[-/]MT*) ;;
+        [-/]m*|[-/]Zi|[-/]TC|[-/]MT*) CPP_ARGS_P2C[${#CPP_ARGS_P2C[@]}]="${arg}";;
         [-/]c|[-/]O*) CC_ARGS[${#CC_ARGS[@]}]="$arg" ;;
         [-/]Fo*) CC_ARGS[${#CC_ARGS[@]}]="-o" ; reformat="${arg:3}" ; CC_ARGS[${#CC_ARGS[@]}]="`echo $reformat | sed \"s/obj/o/g\"`" ;;
         [-/]DWIN32|[-/]nologo) ;;
