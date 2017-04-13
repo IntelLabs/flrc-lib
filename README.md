@@ -46,6 +46,8 @@ Please use the issue track if you have questions.
 
 Todd Anderson, Neal Glew, Peng Guo, Brian T. Lewis, Wei Liu, Zhanglin Liu, Leaf Petersen, Mohan Rajagopalan, James M. Stichnoth, Gansha Wu, and Dan Zhang. 2007. [Pillar: A Parallel Implementation Language][Pillar]. In Languages and Compilers for Parallel Computing, Vikram Adve, María Jesús Garzarán, and Paul Petersen (Eds.). Lecture Notes In Computer Science, Vol. 5234. Springer-Verlag, Berlin, Heidelberg 141-155. [(PDF)](doc/pillar-lcpc.pdf).
 
+Todd A. Anderson.  2010. [Optimizations in a Private Nursery-based Garbage Collector][TGC]. In International Symposium on Memory Management 2010.  [(PDF}](doc/optimizations-private-nursery.pdf).
+
 ## License
 
 This software carries a BSD style license. See [LICENSE_INFO](LICENSE_INFO.txt) for more information.
@@ -53,4 +55,5 @@ This software carries a BSD style license. See [LICENSE_INFO](LICENSE_INFO.txt) 
 
 [Pillar]: http://dl.acm.org/citation.cfm?id=1433050.1433063
 [FLRC]: https://github.com/IntelLabs/flrc
+[TGC]: http://dl.acm.org/citation.cfm?id=1806655
 
