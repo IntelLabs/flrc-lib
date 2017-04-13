@@ -2445,9 +2445,9 @@ bool search_up_for_node(const AST_node *node, AST_node *search_node) {
         if(!parent) {
             return false;
         }
-		if (parent == search_node) {
-			return true;
-		}
+        if (parent == search_node) {
+            return true;
+        }
     }
 }
 
@@ -3036,7 +3036,7 @@ public:
     }
 
     virtual primary_expression * is_simple_pe(void) {
-        return false;
+        return NULL;
     }
 
     virtual postfix_expression * clone(void) = 0;
@@ -3276,7 +3276,7 @@ public:
 #endif
 
     virtual primary_expression * is_simple_pe(void) {
-        return false;
+        return NULL;
     }
 
     virtual postfix_expression * clone(void) {
@@ -3330,7 +3330,7 @@ public:
 #endif
 
     virtual primary_expression * is_simple_pe(void) {
-        return false;
+        return NULL;
     }
 
     virtual postfix_expression * clone(void) {
