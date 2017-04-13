@@ -38317,7 +38317,7 @@ type_specifier * id_info::get_type(void) const {
                         aeprintf("Could not get type for func_decl expression in type_specifier_TYPE_NAME::is_struct.\n");
                     }
                     if(apet->is_pointer()) {
-                        return false;
+                        return NULL;
                     } else if(apet->m_ad) {
                         aeprintf("abstract declarator is not a pointer but is non-NULL in type_specifier_TYPE_NAME::is_struct.\n");
                     } else {
