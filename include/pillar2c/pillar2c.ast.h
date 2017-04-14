@@ -10693,6 +10693,41 @@ public:
     virtual AST_node * param_clone(void) const;
 };
 
+class type_specifier_INT128 : public type_specifier {
+public:
+    virtual void print(void) const {
+        oprintf("__int128");
+    }
+    virtual type_specifier * clone(void) const {
+        type_specifier_INT128 *copy = new type_specifier_INT128();
+        copy->clone_copy(this);
+        return copy;
+    }
+    virtual std::ostream & strprint(std::ostream &os) const {
+        os << "__int128";
+        return os;
+    }
+
+    virtual bool is_int_type(void) const {
+        return true;
+    }
+
+    virtual bool param_larger_than_register(void) const {
+#ifdef __x86_128__
+        return false;
+#else
+        return true;
+#endif
+    }
+
+    virtual unsigned get_minimum_size(void) {
+        return 16;
+    }
+    virtual unsigned get_param_size(void) {
+        return 16;
+    }
+};
+
 class type_specifier_INT64 : public type_specifier {
 public:
     virtual void print(void) const {

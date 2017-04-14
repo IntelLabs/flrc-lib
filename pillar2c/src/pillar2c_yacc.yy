@@ -286,7 +286,7 @@ extern int g_short_mainline;
 %token XOR_ASSIGN OR_ASSIGN SIZEOF BUILTIN_EXPECT BUILTIN_OFFSETOF
 
 %token TYPEDEF EXTERN STATIC AUTO REGISTER INLINE RESTRICT UURESTRICT UUINLINE UINLINE UUINLINEUU
-%token CHAR SHORT INT LONG SIGNED UNSIGNED FLOAT DOUBLE CONST VOLATILE VOID BUILTIN_VA_LIST INT64 INT32 INT16 INT8
+%token CHAR SHORT INT LONG SIGNED UNSIGNED FLOAT DOUBLE CONST VOLATILE VOID BUILTIN_VA_LIST INT128 INT64 INT32 INT16 INT8
 %token BOOL COMPLEX IMAGINARY
 %token STRUCT UNION ENUM ELLIPSIS FORCEINLINE
 
@@ -1665,6 +1665,12 @@ type_specifier
              {
                   $$ = new type_specifier_INT();
                   dprintf("INT\n");
+                  set_type_into_identifier();
+             }
+	| INT128
+             {
+                  $$ = new type_specifier_INT128();
+                  dprintf("INT128\n");
                   set_type_into_identifier();
              }
 	| INT64
