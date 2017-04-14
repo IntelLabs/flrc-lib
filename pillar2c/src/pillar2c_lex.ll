@@ -31,7 +31,7 @@ ULLIS                   ((ui64|i64))
 
 #include <stdio.h>
 #include "pillar2c/pillar2c.ast_c.h"
-#include "pillar2c/pillar2c.tab.hh"
+#include "pillar2c_yacc.hh"
 #include <ctype.h>
 
 #ifdef __cplusplus
@@ -93,6 +93,7 @@ int column = 0;
 "#"[ ]*"pragma"[ ]*"comment"[^\n]* { count(); }
 "#"[ ]*"pragma"[ ]*"region"[^\n]* { count(); }
 "#"[ ]*"pragma"[ ]*"endregion"[^\n]* { count(); }
+"#"[ ]*"pragma"[ ]*"GCC"[^\n]* { count(); }
 "#"[ ]*"line"[^\n]*     { count(); SAVE_TOKEN; return POUND_LINE; }
 "#"[ ]*{D}[^\n]* { }
 "__asm__"               { uuasmuu_get(); return(UUASMUU); }
@@ -153,6 +154,7 @@ int column = 0;
 "__inline__"		{ count(); return(UUINLINEUU); }
 "__forceinline"         { count(); return(FORCEINLINE); }
 "int"			{ count(); return(INT); }
+"__int128"		{ count(); return(INT128); }
 "__int64"		{ count(); return(INT64); }
 "__int32"		{ count(); return(INT32); }
 "__int16"		{ count(); return(INT16); }
