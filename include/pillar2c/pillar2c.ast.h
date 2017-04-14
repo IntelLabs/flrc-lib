@@ -5876,6 +5876,12 @@ public:
         m_ee->print();
     }
 
+    virtual expression_type * get_type(void) {
+        auto_ptr<expression_type> ae(m_ae->get_type());
+        auto_ptr<expression_type> ee(m_ee->get_type());
+        return determine_type_numeric_binary_operation(ae,ee);
+    }
+
     virtual TranslateResult translate_pillar(function_definition *fd);
 
 #ifndef USE_IS_LVALUE
@@ -6053,6 +6059,12 @@ public:
         m_eoe->print();
         oprintf(" ^ ");
         m_ae->print();
+    }
+
+    virtual expression_type * get_type(void) {
+        auto_ptr<expression_type> eoe(m_eoe->get_type());
+        auto_ptr<expression_type> ae(m_ae->get_type());
+        return determine_type_numeric_binary_operation(eoe,ae);
     }
 
     virtual TranslateResult translate_pillar(function_definition *fd) {
@@ -6255,6 +6267,12 @@ public:
         return false;
     }
 #endif
+
+    virtual expression_type * get_type(void) {
+        auto_ptr<expression_type> ioe(m_ioe->get_type());
+        auto_ptr<expression_type> eoe(m_eoe->get_type());
+        return determine_type_numeric_binary_operation(ioe,eoe);
+    }
 
     virtual inclusive_or_expression * clone(void) {
         inclusive_or_expression *copy = new inclusive_or_expression_inclusive_or_expression_exclusive_or_expression(m_ioe->clone(),m_eoe->clone());
