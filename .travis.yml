@@ -4,7 +4,6 @@ addons:
   apt:
     packages:
     - mlton-compiler
-    - menhir
     - nasm
 before_install:
   - date
@@ -14,6 +13,13 @@ before_install:
   - cat /proc/cpuinfo
   - cat /proc/meminfo
   - g++ --version
+  # Install menhir
+  - cd ${HOME}
+  - mkdir deb
+  - cd deb
+  - wget https://launchpad.net/ubuntu/+source/menhir/20160808+dfsg-1/+build/10623429/+files/libmenhir-ocaml-dev_20160808+dfsg-1_amd64.deb
+  - wget https://launchpad.net/ubuntu/+source/menhir/20160808+dfsg-1/+build/10623429/+files/menhir_20160808+dfsg-1_amd64.deb
+  - sudo dpkg -i *.deb
   # Download flrc
   - cd ${HOME}
   - git clone https://github.com/IntelLabs/flrc.git
