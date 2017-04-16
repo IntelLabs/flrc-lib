@@ -1,4 +1,4 @@
-# Libraries for the Functional Language Research Compiler 
+# Libraries for the Functional Language Research Compiler [![Build Status](https://travis-ci.org/IntelLabs/flrc-lib.svg)](https://travis-ci.org/IntelLabs/flrc-lib)
 
 This repository contains the following libraries and tools that are 
 part of the overall [FLRC] tool-chain. Strictly speaking, they 
