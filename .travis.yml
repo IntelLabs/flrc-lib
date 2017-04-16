@@ -5,13 +5,14 @@ addons:
   apt:
     packages:
     - mlton-compiler
+    - nasm
 before_install:
   - date
   - cd ${HOME}
   # Download flrc
   - git clone https://github.com/IntelLabs/flrc.git
 script:
-  - ${GCC} --version
+  - g++ --version
   # Build flrc-lib
   - cd ${TRAVIS_BUILD_DIR}
   - sh bootstrap.sh
