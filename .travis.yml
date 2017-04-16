@@ -1,0 +1,28 @@
+os:
+  - linux
+sudo: required
+addons:
+  apt:
+    packages:
+    - mlton-compiler
+before_install:
+  - date
+  - cd ${HOME}
+  # Download flrc
+  - git clone https://github.com/IntelLabs/flrc.git
+script:
+  - ${GCC} --version
+  # Build flrc-lib
+  - cd ${TRAVIS_BUILD_DIR}
+  - sh bootstrap.sh
+  - ./configure
+  - make
+  - make install
+  # Building flrc
+  - cd ${HOME}/flrc
+  - sh bootstrap.sh
+  - ./configure
+  - make
+  - make install
+after_script:
+  - date
