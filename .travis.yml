@@ -21,13 +21,13 @@ script:
   - cd ${TRAVIS_BUILD_DIR}
   - sh bootstrap.sh
   - ./configure
-  - make
-  - make install
+  - make |& grep '^g++'
+  - sudo make install
   # Building flrc
   - cd ${HOME}/flrc
   - sh bootstrap.sh
   - ./configure
   - make
-  - make install
+  - sudo make install
 after_script:
   - date
