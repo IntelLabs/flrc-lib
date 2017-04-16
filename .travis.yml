@@ -4,6 +4,7 @@ addons:
   apt:
     packages:
     - mlton-compiler
+    - menhir
     - nasm
 before_install:
   - date
