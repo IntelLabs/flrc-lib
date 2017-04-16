@@ -1,13 +1,11 @@
-language: c
 dist: trusty
 sudo: required
 addons:
   apt:
     packages:
     - mlton-compiler
+    - mlton-tools
     - nasm
-env:
-  - OCAML_VERSION=latest DEPOPTS=menhir
 before_install:
   - date
   # Show environment
