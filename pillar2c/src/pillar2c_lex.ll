@@ -473,6 +473,10 @@ int attribute_get(int *do_ret) {
 	    return ALIGN8;
     } else if(strcmp(agbuf,"__attribute__((aligned(4)))") == 0) {
 	    return ALIGN4;
+    } else if(strcmp(agbuf,"__attribute__((__nothrow__))") == 0) {
+	    return NOTHROW;
+    } else if(strcmp(agbuf,"__attribute__((__noreturn))") == 0) {
+	    return NORETURN;
 	}
 
     *do_ret = 0;

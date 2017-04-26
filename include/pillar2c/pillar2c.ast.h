@@ -13033,7 +13033,12 @@ public:
 class declspec_specifier_NORETURN : public declspec_specifier {
 public:
     virtual void print(void) const {
-        oprintf("noreturn");
+		if (g_gcc_compatible) {
+			oprintf("__attribute__((__noreturn__))");
+		}
+		else {
+			oprintf("noreturn");
+		}
     }
     virtual declspec_specifier * clone(void) {
         return new declspec_specifier_NORETURN;
@@ -13043,10 +13048,33 @@ public:
     }
 };
 
+class declspec_specifier_NOTHROW : public declspec_specifier {
+public:
+	virtual void print(void) const {
+		if (g_gcc_compatible) {
+			oprintf("__attribute__((__nothrow__))");
+		}
+		else {
+			oprintf("nothrow");
+		}
+	}
+	virtual declspec_specifier * clone(void) {
+		return new declspec_specifier_NOTHROW;
+	}
+	virtual bool has_nothrow(void) {
+		return false;
+	}
+};
+
 class declspec_specifier_ALIGN512 : public declspec_specifier {
 public:
     virtual void print(void) const {
-        oprintf("align(512)");
+		if (g_gcc_compatible) {
+			oprintf("__attribute__((align(512)))");
+		}
+		else {
+			oprintf("align(512)");
+		}
     }
     virtual declspec_specifier * clone(void) {
         return new declspec_specifier_ALIGN512;
@@ -13056,8 +13084,13 @@ public:
 class declspec_specifier_ALIGN256 : public declspec_specifier {
 public:
     virtual void print(void) const {
-        oprintf("align(256)");
-    }
+		if (g_gcc_compatible) {
+			oprintf("__attribute__((align(256)))");
+		}
+		else {
+			oprintf("align(256)");
+		}
+	}
     virtual declspec_specifier * clone(void) {
         return new declspec_specifier_ALIGN256;
     }
@@ -13066,8 +13099,13 @@ public:
 class declspec_specifier_ALIGN128 : public declspec_specifier {
 public:
     virtual void print(void) const {
-        oprintf("align(128)");
-    }
+		if (g_gcc_compatible) {
+			oprintf("__attribute__((align(128)))");
+		}
+		else {
+			oprintf("align(128)");
+		}
+	}
     virtual declspec_specifier * clone(void) {
         return new declspec_specifier_ALIGN128;
     }
@@ -13076,8 +13114,13 @@ public:
 class declspec_specifier_ALIGN64 : public declspec_specifier {
 public:
     virtual void print(void) const {
-        oprintf("align(64)");
-    }
+		if (g_gcc_compatible) {
+			oprintf("__attribute__((align(64)))");
+		}
+		else {
+			oprintf("align(64)");
+		}
+	}
     virtual declspec_specifier * clone(void) {
         return new declspec_specifier_ALIGN64;
     }
@@ -13086,8 +13129,13 @@ public:
 class declspec_specifier_ALIGN32 : public declspec_specifier {
 public:
     virtual void print(void) const {
-        oprintf("align(32)");
-    }
+		if (g_gcc_compatible) {
+			oprintf("__attribute__((align(32)))");
+		}
+		else {
+			oprintf("align(32)");
+		}
+	}
     virtual declspec_specifier * clone(void) {
         return new declspec_specifier_ALIGN32;
     }
@@ -13096,8 +13144,13 @@ public:
 class declspec_specifier_ALIGN16 : public declspec_specifier {
 public:
     virtual void print(void) const {
-        oprintf("align(16)");
-    }
+		if (g_gcc_compatible) {
+			oprintf("__attribute__((align(16)))");
+		}
+		else {
+			oprintf("align(16)");
+		}
+	}
     virtual declspec_specifier * clone(void) {
         return new declspec_specifier_ALIGN16;
     }
@@ -13106,8 +13159,13 @@ public:
 class declspec_specifier_ALIGN8 : public declspec_specifier {
 public:
     virtual void print(void) const {
-        oprintf("align(8)");
-    }
+		if (g_gcc_compatible) {
+			oprintf("__attribute__((align(8)))");
+		}
+		else {
+			oprintf("align(8)");
+		}
+	}
     virtual declspec_specifier * clone(void) {
         return new declspec_specifier_ALIGN8;
     }
@@ -13116,8 +13174,13 @@ public:
 class declspec_specifier_ALIGN4 : public declspec_specifier {
 public:
     virtual void print(void) const {
-        oprintf("align(4)");
-    }
+		if (g_gcc_compatible) {
+			oprintf("__attribute__((align(4)))");
+		}
+		else {
+			oprintf("align(4)");
+		}
+	}
     virtual declspec_specifier * clone(void) {
         return new declspec_specifier_ALIGN4;
     }
@@ -13126,8 +13189,13 @@ public:
 class declspec_specifier_ALIGN2 : public declspec_specifier {
 public:
     virtual void print(void) const {
-        oprintf("align(2)");
-    }
+		if (g_gcc_compatible) {
+			oprintf("__attribute__((align(2)))");
+		}
+		else {
+			oprintf("align(2)");
+		}
+	}
     virtual declspec_specifier * clone(void) {
         return new declspec_specifier_ALIGN2;
     }
@@ -13136,8 +13204,13 @@ public:
 class declspec_specifier_ALIGN1 : public declspec_specifier {
 public:
     virtual void print(void) const {
-        oprintf("align(1)");
-    }
+		if (g_gcc_compatible) {
+			oprintf("__attribute__((align(1)))");
+		}
+		else {
+			oprintf("align(1)");
+		}
+	}
     virtual declspec_specifier * clone(void) {
         return new declspec_specifier_ALIGN1;
     }
