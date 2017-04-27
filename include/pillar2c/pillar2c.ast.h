@@ -24872,7 +24872,7 @@ unsigned AST_node::get_line_number(void) const {
     if(m_parent) {
         return m_parent->get_line_number();
     } else {
-        return NULL;
+        return 0;
     }
 }
 
