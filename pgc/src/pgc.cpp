@@ -988,9 +988,9 @@ extern "C" ThreadThreadHandle orp_thread_create(unsigned int STDCALL_FUNC_OUT (S
     if(thrdaddr) {
         *thrdaddr =
 #ifdef WIN32
-            (unsigned)pthread_self().p;
+            (POINTER_SIZE_INT)pthread_self().p;
 #else // WIN32
-            (unsigned)pthread_self();
+            (POINTER_SIZE_INT)pthread_self();
 #endif // WIN32
     }
 #else // HAVE_PTHREAD_H
