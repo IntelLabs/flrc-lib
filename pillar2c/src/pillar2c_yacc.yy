@@ -295,8 +295,8 @@ extern int g_short_mainline;
 %token NOTHROW NORETURN NOINLINE NAKED DEPRECATED NOALIAS UUW64 UUPTR64 INTRIN_TYPE
 
 %token PRT_CUT PRT_TO PRT_TAILCALL PRT_MANAGED_OFF PRT_MANAGED_ON PRT_REF PRT_PDECL PRT_PCDECL PRT_NOYIELD PRT_PCALL PRT_WITH PRT_ALSO PRT_CUTS PRT_CONTINUATION PRT_CONTINUATION_VAR PRT_VSE
-%token SOURCE_ANNOTATION_ATTRIBUTE SAA_PARAM SAA_RETVAL SAA_METHOD MULT_START MULT_END PRT_PUSH_CC PRT_POP_CC
-%token <str> GCC_ATTRIBUTE
+%token SOURCE_ANNOTATION_ATTRIBUTE SAA_PARAM SAA_RETVAL SAA_METHOD MULT_START MULT_END PRT_PUSH_CC PRT_POP_CC ATTRIBUTE
+%token <str> GCC_ATTRIBUTE ATTR_BODY
 
 %nonassoc LOWER_THAN_ELSE
 %nonassoc ELSE
@@ -1473,69 +1473,13 @@ declaration_specifiers
                   $$ = new declaration_specifiers_function_specifier_declaration_specifiers($1,$2);
                   dprintf("function_specifier declaration_specifiers\n");
              }
-    | ALIGN512
+    | ATTRIBUTE '(' '(' ATTR_BODY ')' ')'
 	         {
-                  $$ = new declaration_specifiers_gcc_attribute("__attribute__((align((512))))");
+                  $$ = new declaration_specifiers_gcc_attribute($4);
 			 }
-    | ALIGN512 declaration_specifiers
+    | ATTRIBUTE '(' '(' ATTR_BODY ')' ')' declaration_specifiers
 	         {
-                  $$ = new declaration_specifiers_gcc_attribute_declaration_specifiers("__attribute__((aligned(512)))",$2);
-			 }
-    | ALIGN256
-	         {
-                  $$ = new declaration_specifiers_gcc_attribute("__attribute__((align((256))))");
-			 }
-    | ALIGN256 declaration_specifiers
-	         {
-                  $$ = new declaration_specifiers_gcc_attribute_declaration_specifiers("__attribute__((aligned(256)))",$2);
-			 }
-    | ALIGN128
-	         {
-                  $$ = new declaration_specifiers_gcc_attribute("__attribute__((align((128))))");
-			 }
-    | ALIGN128 declaration_specifiers
-	         {
-                  $$ = new declaration_specifiers_gcc_attribute_declaration_specifiers("__attribute__((aligned(128)))",$2);
-			 }
-    | ALIGN64
-	         {
-                  $$ = new declaration_specifiers_gcc_attribute("__attribute__((align((64))))");
-			 }
-    | ALIGN64 declaration_specifiers
-	         {
-                  $$ = new declaration_specifiers_gcc_attribute_declaration_specifiers("__attribute__((aligned(64)))",$2);
-			 }
-    | ALIGN32
-	         {
-                  $$ = new declaration_specifiers_gcc_attribute("__attribute__((align((32))))");
-			 }
-    | ALIGN32 declaration_specifiers
-	         {
-                  $$ = new declaration_specifiers_gcc_attribute_declaration_specifiers("__attribute__((aligned(32)))",$2);
-			 }
-    | ALIGN16
-	         {
-                  $$ = new declaration_specifiers_gcc_attribute("__attribute__((align((16))))");
-			 }
-    | ALIGN16 declaration_specifiers
-	         {
-                  $$ = new declaration_specifiers_gcc_attribute_declaration_specifiers("__attribute__((aligned(16)))",$2);
-			 }
-    | ALIGN8
-	         {
-                  $$ = new declaration_specifiers_gcc_attribute("__attribute__((align((8))))");
-			 }
-    | ALIGN8 declaration_specifiers
-	         {
-                  $$ = new declaration_specifiers_gcc_attribute_declaration_specifiers("__attribute__((aligned(8)))",$2);
-			 }
-    | ALIGN4
-	         {
-                  $$ = new declaration_specifiers_gcc_attribute("__attribute__((align((4))))");
-			 }
-    | ALIGN4 declaration_specifiers
-	         {
-                  $$ = new declaration_specifiers_gcc_attribute_declaration_specifiers("__attribute__((aligned(4)))",$2);
+                  $$ = new declaration_specifiers_gcc_attribute_declaration_specifiers($4,$7);
 			 }
 /*
 	| GCC_ATTRIBUTE

@@ -8657,7 +8657,7 @@ public:
     }
 
     virtual void print(void) const {
-        oprintf("%s",m_s.c_str());
+        oprintf(" __attribute__(( %s ))",m_s.c_str());
     }
     virtual TranslateResult translate_pillar(function_definition *fd) {
         return TranslateResult();
@@ -20382,7 +20382,7 @@ void declaration_specifiers_function_specifier_declaration_specifiers::print(voi
 }
 
 void declaration_specifiers_gcc_attribute_declaration_specifiers::print(void) const {
-    oprintf("%s ",m_s.c_str());
+    oprintf(" __attribute__(( %s )) ",m_s.c_str());
     m_ds->print();
 }
 

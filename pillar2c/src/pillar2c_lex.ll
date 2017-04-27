@@ -40,7 +40,6 @@ extern "C" {
 void count(void);
 void comment(void);
 void uuasmuu_get(void);
-int attribute_get(int *);
 void consume_uupragma(void);
 int check_type(const char *,unsigned);
 int pillar_or_check_type(int token);
@@ -101,7 +100,7 @@ int column = 0;
 "__asm"[^_][^}\n]*          { count(); SAVE_TOKEN; return(UUASM); }
 "_asm"[ ]*"{"[^}]*"}"   { count(); SAVE_TOKEN; return(UASM); }
 "_asm"[^}\n]*           { count(); SAVE_TOKEN; return(UASM); }
-"__attribute__"         { int do_ret=0; int ret = attribute_get(&do_ret); if(do_ret) return ret; }
+"__attribute__"         { count(); SAVE_TOKEN; return(ATTRIBUTE); }
 "__pragma"		{ consume_uupragma(); }
 
 "align"[ ]*"("[ ]*"512"[ ]*")"             { count(); return(ALIGN512); }
@@ -381,106 +380,6 @@ void uuasmuu_get(void) {
     }
     yylval.str = strdupn(agbuf,yyleng);
 //    printf("uuasmuu_get: %s, %d\n",yylval.str,yyleng);
-}
-
-int attribute_get(int *do_ret) {
-    char c;
-    unsigned paren_count = 2;
-    unsigned cur_count = yyleng;
-    char agbuf[200];
-    strcpy(agbuf,yytext);
-
-    while(1) {
-        ++yyleng;
-        c = input();
-
-		if (c == '\n') {
-			column = 0;
-                        ++yylineno;
-                }
-		else if (c == '\t')
-			column += 8 - (column % 8);
-		else
-			column++;
-
-        if(isspace(c)) continue;
-        append_char(agbuf,c,&cur_count,200);
-        if(c == '(') break;
-        fprintf(stderr,"malformed attribute\n");
-    }
-    while(1) {
-        ++yyleng;
-
-        c = input();
-		if (c == '\n') {
-			column = 0;
-                        ++yylineno;
-                }
-		else if (c == '\t')
-			column += 8 - (column % 8);
-		else
-			column++;
-        if(isspace(c)) continue;
-        append_char(agbuf,c,&cur_count,200);
-        if(c == '(') break;
-        fprintf(stderr,"malformed attribute\n");
-    }
-
-    while(paren_count) {
-        ++yyleng;
-        c = input();
-		if (c == '\n') {
-			column = 0;
-                        ++yylineno;
-                }
-		else if (c == '\t')
-			column += 8 - (column % 8);
-		else
-			column++;
-
-        if(isspace(c)) continue;
-
-        append_char(agbuf,c,&cur_count,200);
-        if(c == '(') {
-            ++paren_count;
-        }
-        if(c == ')') {
-            --paren_count;
-        }
-    }
-    yylval.str = strdupn(agbuf,yyleng);
-//    printf("attribute_get: %s, %d\n",yylval.str,yyleng);
-
-    *do_ret = 1;
-
-    if(strcmp(agbuf,"__attribute__((cdecl))") == 0) {
-        return CDECL;
-    } else if(strcmp(agbuf,"__attribute__((stdcall))") == 0) {
-        return STDCALL;
-    } else if(strcmp(agbuf,"__attribute__((aligned(512)))") == 0) {
-	    return ALIGN512;
-    } else if(strcmp(agbuf,"__attribute__((aligned(256)))") == 0) {
-	    return ALIGN256;
-    } else if(strcmp(agbuf,"__attribute__((aligned(128)))") == 0) {
-	    return ALIGN128;
-    } else if(strcmp(agbuf,"__attribute__((aligned(64)))") == 0) {
-	    return ALIGN64;
-    } else if(strcmp(agbuf,"__attribute__((aligned(32)))") == 0) {
-	    return ALIGN32;
-    } else if(strcmp(agbuf,"__attribute__((aligned(16)))") == 0) {
-	    return ALIGN16;
-    } else if(strcmp(agbuf,"__attribute__((aligned(8)))") == 0) {
-	    return ALIGN8;
-    } else if(strcmp(agbuf,"__attribute__((aligned(4)))") == 0) {
-	    return ALIGN4;
-    } else if(strcmp(agbuf,"__attribute__((__nothrow__))") == 0) {
-	    return NOTHROW;
-    } else if(strcmp(agbuf,"__attribute__((__noreturn))") == 0) {
-	    return NORETURN;
-	}
-
-    *do_ret = 0;
-    return 0;
 }
 
 void comment(void) {
