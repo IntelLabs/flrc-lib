@@ -147,6 +147,7 @@ extern int g_short_mainline;
 #include <stdlib.h>
 #include <stdint.h>
 #include <fstream>
+#include <functional>
 
 #if defined MULTITHREAD || defined PAR_COMPRESS
 #include <pthread.h>
