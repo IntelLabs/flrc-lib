@@ -12,6 +12,8 @@ LIS                     ((l|L|ll|LL))
 ULIS                    ((u|U)(l|L|ll|LL)|(l|L|ll|LL)(u|U))
 ULLIS                   ((ui64|i64))
 
+%option never-interactive
+
 %{
 /*
  * Redistribution and use in source and binary forms, with or without modification, are permitted 
